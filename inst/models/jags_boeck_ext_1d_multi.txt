@@ -1,0 +1,86 @@
+# 1,...j,...,J: number of items
+# 1,...i,...,N: number of participants
+# S: number of parameters (4: middle/trait/extremity/acquiescence)
+# X: N(person) x J(item) x C(categories) array of observed frequencies
+# revItem: logical vector of length J indicating reversed items (2...-2 instead of -2...2)
+
+#### Hyperpriors
+# df: degrees of freedom for scaled inverse wishart (>=S, typically df=S+1)
+# V: S x S hyperprior for wishart
+
+model{
+
+# individuals:
+for(i in 1:N){
+  # items
+	for(j in 1:J){
+		################################ Response styles ##########################
+			# multinomial distribution for observed frequencies
+			# assumption: one response per person/item
+			X[i,j,1:5] ~ dmulti(p[i,j,1:5], 1)
+			pred[i,j,1:5] ~ dmulti(p.corr[i,j,1:5], 1)
+      p.corr[i,j,1:5] <- p[i,j,1:5]+.00000001
+
+      ### posterior predictive
+      dev.obs[i,j] <- sum(( p.corr[i,j,1:5] - X[i,j,1:5])^2/ p.corr[i,j,1:5])
+      dev.pred[i,j] <- sum(( p.corr[i,j,1:5] - pred[i,j,1:5])^2/ p.corr[i,j,1:5])
+      
+      # reversed items: only relevant for trait-dimension/response process
+			p.trait[i,j] <- ifelse(revItem[j] == 1, 1-y[i,j], y[i,j])
+
+			# response probabilities: MPT model from -2, -1, 0, 1, 2 // 0,1,2,3,4
+      p[i,j,1] <- (1-a[i,j])*(1-m[i,j])*(1-p.trait[i,j])*e[i,j]
+			p[i,j,2] <- (1-a[i,j])*(1-m[i,j])*(1-p.trait[i,j])*(1-e[i,j])
+			p[i,j,3] <- (1-a[i,j])*m[i,j]
+			p[i,j,4] <- (1-a[i,j])*(1-m[i,j])*p.trait[i,j]*(1-e[i,j]) +a[i,j]*(1-e[i,j])
+			p[i,j,5] <- (1-a[i,j])*(1-m[i,j])*p.trait[i,j]*e[i,j]     +a[i,j]*e[i,j]
+
+
+			# probit link to continuous latent scale
+			m[i,j] <- phi(latent[i,j,1])
+			y[i,j] <- phi(latent[i,j,2])
+  		e[i,j] <- phi(latent[i,j,3])
+  		a[i,j] <- phi(latent[i,j,4])    
+			
+			# decompose to person ability and item difficulty
+			for(s in 1:S){
+				latent[i,j,s] <- theta[i,s] - beta[j,s]
+			}
+		}
+	
+	######### Hierarchical model for participant parameters ####################
+	for(s in 1:S){
+		theta[i,s] <- xi.theta[s]*theta.raw[i,s]
+	}
+	theta.raw[i,1:S] ~ dmnorm(theta_mu, Tau.theta.raw[,])  # fix person mean to zero!
+}
+
+# posterior predictive
+T_obs <- sum(dev.obs)
+T_pred <- sum(dev.pred) 
+post_p <- T_pred > T_obs
+
+### hierarchical model for item parameters
+for(j in 1:J){
+	for(s in 1:S){
+		#beta[j,s] <- xi.beta[s]*beta.raw[j,s]
+		beta[j,s] ~ dnorm(0, .01)T(-15,15)   # estimate item difficulties freely but in restricted range
+	}
+	# beta.raw[j,1:S] ~ dmnorm(mu.beta.raw, Tau.beta.raw[,]) 
+	# draw item difficulties from normal distribution
+	# requires more hyperpriors!
+}
+
+############### scaled inverse wishart for participants ####################
+
+Tau.theta.raw[1:S,1:S] ~ dwish(V, df)
+Sigma.Theta.raw[1:S,1:S] <- inverse(Tau.theta.raw[,])
+
+for(s in 1:S){
+	xi.theta[s] ~ dnorm (1, .01)
+  for(t in 1:S){
+    Sigma[s,t] <- xi.theta[s]*xi.theta[t]*Sigma.Theta.raw[s,t]
+  }
+}
+
+}
