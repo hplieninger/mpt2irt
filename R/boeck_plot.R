@@ -257,6 +257,9 @@ plot_Geweke <- function(fit, parameter = "beta", D = 1, frac1=0.1, frac2=0.5,
   if (plot == TRUE) {
     # col.1 <- rainbow(n.chains, alpha = .25)
     col.1 <- heat.colors(n.chains, alpha = .25)
+    
+    # First, two loops with plot=FALSE are done in order to calculate the break
+    # points and the heigth/ylim for the histograms
     plot.1 <- sapply(vector(length=n.chains*D), function(x) NULL)
     kk <- 1
     for (ii in 1:n.chains) {
