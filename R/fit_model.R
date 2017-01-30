@@ -73,16 +73,17 @@
 #'   working directory ("_Stanprogress.txt")
 #' @examples 
 #' \dontrun{
-#' # generate data
-#' N <- 20; J <- 10
-#' betas <- cbind(runif(J,0,1), seq(-2,2, length=J), runif(J,0,1))
-#' gen <- generate_irtree_2012(N=N, J=J, betas=betas, cat=T)
-#' 
-#' # fit model
-#' fit <- fit_irtree(gen$X, gen$revItem, M= 200, n.chains=2, 
-#'                  fitMethod="jags", outFormat="mcmc.list")
-#' summary(fit[,paste0("beta[",1:J,",1]")])$stat
-#' plot(fit[,paste0("beta[",1:3,",1]")])
+# N <- 20
+# J <- 10
+# betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+# dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+# 
+# # fit model
+# res <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+# res2 <- summarize_irtree_fit(res)
+# res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
+#                           traitItem = dat$traitItem, fitModel = res$fitModel)
+# res3$plot
 #' }
 # import runjags
 # @importFrom rstan stan sampling As.mcmc.list
@@ -104,7 +105,7 @@ fit_irtree <- function(X,
                        thin = 1,
                        # mail = NULL,
                        method = "parallel",
-                       return_defaults = FALSE,
+                       return_defaults = TRUE,
                        add2varlist = NULL,
                        cores = NULL,
                        summarise = FALSE,
@@ -130,7 +131,7 @@ fit_irtree <- function(X,
     checkmate::qassert(n.chains, "X1")
     checkmate::qassert(thin, "X1")
     checkmate::assert_character(add2varlist, any.missing = FALSE, null.ok = TRUE)
-    checkmate::qassert(cores, "X1")
+    checkmate::assert_int(cores, lower = 1, null.ok = TRUE)
     checkmate::assert_int(N2, lower = 0, upper = N)
     
     
@@ -171,7 +172,10 @@ fit_irtree <- function(X,
     # adjust starting values
     inits <- list()
     if(startSmall == TRUE){
-        inits <- lapply(1:n.chains, function(id) get_inits(N, J, S, n.trait, fitMethod))
+        inits <- lapply(1:n.chains, function(id) {
+            get_inits(N = N, J = J, S = S, n.trait = n.trait,
+                      fitMethod = fitMethod, fitModel = fitModel)
+            })
     } else if (fitMethod == "stan") {
         inits <- vector("list", length = n.chains)
         for (iii in 1:n.chains) {
@@ -291,7 +295,8 @@ fit_irtree <- function(X,
     if (return_defaults == FALSE) {
         return(boeck.samp)
     } else {
-        return(list(samples = boeck.samp, V = V, df = df, startSmall = startSmall))
+        return(list(samples = boeck.samp, V = V, df = df, startSmall = startSmall,
+                    fitModel = fitModel, fitMethod = fitMethod))
     }
     
 }
