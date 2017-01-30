@@ -187,14 +187,14 @@ plot_RS <- function(fit, S, N, J, revItem=rep(0,J), traitItem=rep(1,J), trait="s
 #' @param estimate Character, either \code{"point"} or \code{"upper"}. Whether
 #'   the point estimate or the upper limit of the 95\% CI is to be used.
 #' @param plot Logical. Either return a histogram or the results.
-#' @param return.odd Logical. Whether the output for parameters with a point
+#' @param return.odd Logical. Whether the output for (odd) parameters with a point
 #'   estimate > 1.05 should be returned.
 #' @inheritParams plot_RS
 #' @seealso \code{\link{gelman.diag}}
 #' @importFrom coda gelman.diag
 #' @export
 plot_GRS <- function(fit, parameter = "beta", estimate = "point", plot = TRUE,
-                     return.par = TRUE, ...){
+                     return.odd = TRUE, ...){
   param <- substr(parameter, 1, 4)
   cols <- grep(param, substr(dimnames(fit[[1]])[[2]], 1, 4))
   n.chains <- length(fit)
