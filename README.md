@@ -5,11 +5,24 @@ Overview
 
 `mpt2irt` is an `R` package that accompanies a manuscript submitted for publication. Therein, we extend the response style model of Böckenholt (2012) to acquiescence. The model is essentially a hierarchical multinomial processing tree (MPT) model with an item response theory (IRT) structure of its parameters. To estimate the model parameters, we build on Bayesian hierarchical modeling and fit the model in either Stan or JAGS.
 
+Installation
+============
+
+The package can be installed directly from GitHub usings the `devtools` package.
+
+``` r
+install.packages("devtools")
+devtools::install_github("hplieninger/mpt2irt")
+```
+
+In order to use the package, you will need either JAGS or Stan. To install Stan, visit [https://github.com/stan-dev](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) or <http://mc-stan.org>, to install JAGS, visit <https://sourceforge.net/projects/mcmc-jags>.
+
 Usage
 =====
 
 ``` r
 # This is a minimal working example, where data are generated and subsequently fit.
+library("mpt2irt")
 N <- 20
 J <- 10
 betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
