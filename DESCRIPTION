@@ -1,10 +1,29 @@
 Package: mpt2irt
 Type: Package
-Title: Using Multinomial Processing Tree Models to do Item Response Theory
+Title: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles
 Version: 1.0
 Date: 2015-03-24
-Author: Daniel W. Heck, Hansjoerg Plieninger
-Maintainer: Daniel W. Heck <heck@uni-mannheim.de>
-Depends: runjags, rjags, rstan, parallel
-Description: Fitting hierarchical MPT models to obtain IRT estimates for different response processes. At the moment, only response style models are implemented (separating bias towards middle category, extreme responding, and acquiesence). Requires the MCMC samplers JAGS and/or Stan.
+Author: Hansjoerg Plieninger, Daniel W. Heck
+Maintainer: Hansjoerg Plieninger <plieninger@uni-mannheim.de>
+Imports: checkmate,
+    coda,
+    doParallel,
+    foreach,
+    mail,
+    MASS,
+    MBESS,
+    parallel,
+    rstan,
+    runjags,
+    truncnorm
+Description: Fitting hierarchical MPT models to obtain IRT estimates for
+    different response processes. At the moment, only response style models are
+    implemented (separating bias towards middle category, extreme responding, and
+    acquiesence). Requires the MCMC samplers JAGS and/or Stan.
 License: GPL-2
+RoxygenNote: 5.0.1
+Suggests: dplyr,
+    ggplot2,
+    mail,
+    reshape2,
+    tidyr
