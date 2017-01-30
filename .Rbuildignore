@@ -1,0 +1,6 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+.RData
+compile_stan_models.R
+^README\.Rmd$
+^README-.*\.png$

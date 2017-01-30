@@ -14,20 +14,8 @@
 #'  \item theta[i,1:S] = c(middle, extreme, acquiesence, trait(s))
 #'  \item betas[j,1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on traitItem!)
 #'  }
-#' \item Model "ext2": S=3+number of traits
-#' \itemize{
-#'  \item theta[i,1:S] = c(middle, extreme, acquiesence, trait(s))
-#'  \item betas[j,1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on traitItem!)
-#'  \item beta_extreme_ARS = latent tendency to chosse cat. 5 in case of ARS (identical for all persons and items)
-#'  }
-#' \item Model "ext3": S=4+number of traits
-#' \itemize{
-#'  \item theta[i,1:S] = c(middle, extreme, acquiesence, trait(s), extreme_ARS)
-#'  \item betas[j,1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on traitItem!)
-#'  \item beta_extreme_ARS = latent tendency to chosse cat. 5 in case of ARS (identical for all items)
-#'  }
 #' }
-#' If more than a single trait is measured, beta and theta have more columns accordingly (e.g., theta[i,1:5]=c(mid, extr, acq, trait1,..., trait5))
+#' If more than a single trait is measured, theta has more columns accordingly (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
 #' 
 #' @param X an N x J matrix of observed responses for categories 1...5 (use
 #'   \code{\link{mult2cat}} to transform a multinomial frequency matrix with 1s/0s to
@@ -44,11 +32,8 @@
 #' @param V prior for wishart distribution (standard: diagonal matrix)
 #' @param fitModel Character. Either \code{"2012"} (without acquiescence) or \code{"ext"}
 #'   (assumes that in case of ARS, the probability of choosing the extreme
-#'   category 5 is determined by ERS) or \code{"pcm"} (partial credit model) or
-#'   \code{"ext2"} (separate probability of choosing category 5 in case of ARS;
-#'   requires at least two trait scales) or \code{"ext3"} (separate 
-#'   person-estimates theta[i,S] for latent tendency to choose cat.4/5 in case 
-#'   of ARS).
+#'   category 5 is determined by ERS) or \code{"pcm"} (partial credit model).
+#  or \code{"ext2"} (separate probability of choosing category 5 in case of ARS; requires at least two trait scales) or \code{"ext3"} (separate person-estimates theta[i,S] for latent tendency to choose cat.4/5 in case of ARS).
 #' @param fitMethod whether to use JAGS or Stan
 #' @param outFormat either "mcmc.list" (can be analyzed with coda package) or
 #'   "stan" or "runjags"

@@ -9,3 +9,19 @@
 #' @author Daniel W. Heck & Hansjoerg Plieninger
 #' @references Boeckenholt (2012). Modeling Multiple Response Processes in Judgment and Choice. Psychological Methods, 17, 665-678.
 NULL
+
+#' Compiled Stan Models (Windows x64)
+#' 
+#' Compiled Models
+#' 
+#' \itemize{
+#'   \item boeck_stan_ext
+#'   \item boeck_stan_2012
+#' }
+#' 
+#' @docType data
+#' @keywords datasets
+#' @name boeck_stan_models
+#' @usage data(boeck_stan_models)
+# @format A data frame with 53940 rows and 10 variables
+NULL
