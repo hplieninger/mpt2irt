@@ -2,36 +2,40 @@
 % Please edit documentation in R/generate_data.R
 \name{generate_irtree_2012}
 \alias{generate_irtree_2012}
-\title{Generate Data for Original Boeckenholt (2012)}
+\title{Generate data for Boeckenholt Model.}
 \usage{
 generate_irtree_2012(N, J, betas, traitItem = rep(1, J), theta.vcov = NULL,
-  prop.rev = 0.5, cat = T)
+  prop.rev = 0.5, cat = TRUE)
 }
 \arguments{
-\item{N}{number of participants}
+\item{N}{number of persons}
 
 \item{J}{number of items}
 
-\item{betas}{Jx3 matrix with item properties on three response dimensions (middle, extreme, relevant trait defined by traitItem)}
+\item{betas}{Jx3 matrix with item parameters on three response dimensions (middle, extreme, target trait defined by \code{traitItem}).}
 
-\item{traitItem}{vector of length J specifying latent traits, e.g., for Big5 from 1...5. standard: unidimensional test, all items measure the same trait.}
+\item{traitItem}{vector of length J specifying the underlying traits (e.g.,
+indexed from 1...5). Standard: only a single trait is measured by all
+items. If the Big5 are measures, might be something like
+c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{theta.vcov}{covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 for uncorrelated processes)}
+\item{theta.vcov}{3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).}
 
-\item{prop.rev}{proportion of reversed items (rounded to next integer)}
+\item{prop.rev}{proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.}
 
-\item{cat}{whether to return categorical data (response categories 1...5) or multinomial data (frequencies of 0 and 1)}
+\item{cat}{whether to return categorical data (response categories 1...5) or
+multinomial data (frequencies of 0 and 1)}
 }
 \value{
-a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters
+The function returns a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters.
 }
 \description{
-More general function: \link{generate_irtree_ext}
+Function generates categorical data 1...5 for \code{N} persons and \code{J} items given the item parameters \code{betas}.
 }
 \examples{
-# generate data
-N <- 20; J <- 10
-betas <- cbind(runif(J,0,1), runif(J,0,1), rnorm(J,0,2))
-gen <- generate_irtree_2012(N=N, J=J, betas=betas)
+N <- 20
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 0))
+dat <- generate_irtree_2012(N = N, J = J, betas = betas)
 }
 

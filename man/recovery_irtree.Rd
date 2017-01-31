@@ -67,7 +67,8 @@ Defaults to 10.}
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
 
-\item{...}{further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)}
+\item{...}{further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
+working directory ("_Stanprogress.txt")}
 
 \item{nCPU}{number of CPUs for parallel run of MCMC sampler}
 

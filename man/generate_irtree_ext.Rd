@@ -2,41 +2,49 @@
 % Please edit documentation in R/generate_data.R
 \name{generate_irtree_ext}
 \alias{generate_irtree_ext}
-\title{Generate Data for Extended Boeckenholt (2012)}
+\title{Generate data for Acquiescence Model.}
 \usage{
 generate_irtree_ext(N, J, betas, traitItem = rep(1, J), theta.vcov = NULL,
   prop.rev = 0.5, genModel = "ext", beta_ARS_extreme = NULL, cat = TRUE,
   theta = NULL)
 }
 \arguments{
-\item{N}{number of participants}
+\item{N}{number of persons}
 
 \item{J}{number of items}
 
-\item{betas}{Jx4 matrix with item properties on four response dimensions (middle, extreme, acquiescence, relevant trait defined by traitItem)}
+\item{betas}{Jx4 matrix with item parameters on four response dimensions (middle, extreme, acquiescence, relevant trait defined by \code{traitItem}).}
 
-\item{traitItem}{vector of length J specifying latent traits, e.g., for Big5 from 1...5 . standard: unidimensional test, all items measure the same trait.}
+\item{traitItem}{vector of length J specifying the underlying traits (e.g.,
+indexed from 1...5). Standard: only a single trait is measured by all
+items. If the Big5 are measures, might be something like
+c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{theta.vcov}{4x4 covariance matrix for middle, extremity, acquiesence, trait(s) (can be a vector of length 4 with variances for uncorrelated processes)}
+\item{theta.vcov}{4x4 covariance matrix for middle, extremity, acquiescence, trait(s) (can be a vector of length 4 with variances for uncorrelated processes).}
 
-\item{prop.rev}{proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by traitItem}
+\item{prop.rev}{proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.}
 
-\item{genModel}{defines the process model for choosing category 5 vs. 4 in case of ARS: either "ext" (p(cat5)=ERS_ij), "ext2" (p(cat5)=beta_ARS_extreme) or "ext3" (p(cat5)=beta_ARS_extreme_i, differnent for each person; requires an additional theta parameter)}
+\item{genModel}{Character. Either \code{"2012"} (Boeckenholt Model without
+acquiescence) or \code{"ext"} (Acquiescence Model)}
 
-\item{beta_ARS_extreme}{only for \code{genModel="ext"}, \code{genModel="ext2"}, or \code{genModel="ext3"}: (mean) probability (on probit scale) of choosing category 5 (vs.4) in case of ARS}
+\item{beta_ARS_extreme}{only for \code{genModel="ext"}: probability (on
+probit scale) of choosing category 5 (vs.4) in case of ARS}
 
-\item{cat}{whether to return categorical data (response categories 1...5) or multinomial data (frequencies of 0 and 1)}
+\item{cat}{whether to return categorical data (response categories 1...5) or
+multinomial data (frequencies of 0 and 1)}
 }
 \value{
-a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters
+The function returns a list containing the generated matrix of
+  responses X, a vector revItem indicating reversed items and true, latent
+  values of the parameters.
 }
 \description{
-Generate data
+Function generates categorical data 1...5 for \code{N} persons and \code{J} items given the item parameters \code{betas}.
 }
 \examples{
-# generate data for unidimensional scale
-N <- 20; J <- 10
-betas <- cbind(runif(J), runif(J), runif(J), rnorm(J, 0, 2))
-gendat <- generate_irtree_ext(N=N, J=J, betas=betas, traitItem=rep(1,J))
+N <- 20
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 }
 

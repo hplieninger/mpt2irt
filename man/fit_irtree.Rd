@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_model.R
 \name{fit_irtree}
 \alias{fit_irtree}
-\title{Analyze with Boeckenholt Model for Response Styles}
+\title{Fit an mpt2irt model.}
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
   V = NULL, fitModel = c("ext", "2012", "pcm"), fitMethod = c("stan",
@@ -28,9 +28,9 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{V}{prior for wishart distribution (standard: diagonal matrix)}
 
-\item{fitModel}{Character. Either \code{"2012"} (without acquiescence) or \code{"ext"}
-(assumes that in case of ARS, the probability of choosing the extreme
-category 5 is determined by ERS) or \code{"pcm"} (partial credit model).}
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
+acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
+credit model).}
 
 \item{fitMethod}{whether to use JAGS or Stan}
 
@@ -59,32 +59,48 @@ Specify equal to \code{nrow(X)} in order to draw values for all persons.
 This is mainly implemented for efficiency reasons in order to avoid
 massivly drawing samples which the user is not interested in.}
 
-\item{...}{further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)}
+\item{...}{further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
+working directory ("_Stanprogress.txt")}
+}
+\value{
+Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
 }
 \description{
-Using either the standard 2012 model (only response styles towards middle + extreme responding) or the extended version (additionally, aquiescence).
+This function fits an mpt2irt model. Either the so-called Boeckenholt Model
+can be fit (\code{fitModel = "2012"}) that assumes the three processes MRS,
+ERS, and target trait; or the so-called Acquiescence Model can be fit that
+additionally takes ARS into account (\code{fitModel = "ext"}).
 }
 \details{
-The estimated parameters are ordered as follows:
+The estimated parameters are arranged as follows:
 \itemize{
-\item Model "2012": S=2+number of traits
+\item Model "2012" (S = 2 + number of traits):
 \itemize{
- \item theta[i,1:S] = c(middle, extreme, trait(s))
- \item betas[j,1:3] = c(middle, extreme, trait) (which trait depends on traitItem!)
+ \item theta[i, 1:S] = c(middle, extreme, trait(s))
+ \item beta[j, 1:3] = c(middle, extreme, trait) (which trait depends on \code{traitItem}!)
  }
-\item Model "ext": S=3+number of traits
+\item Model "ext" (S = 3 + number of traits):
 \itemize{
- \item theta[i,1:S] = c(middle, extreme, acquiesence, trait(s))
- \item betas[j,1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on traitItem!)
+ \item theta[i, 1:S] = c(middle, extreme, acquiesence, trait(s))
+ \item beta[j, 1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on \code{traitItem}!)
  }
 }
-If more than a single trait is measured, theta has more columns accordingly (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
-
- Note that the progress of Stan is shown in a text file in the
-  working directory ("_Stanprogress.txt")
+If more than a single trait is measured, theta has more columns accordingly
+(e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
 }
 \examples{
 \dontrun{
+N <- 20
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+
+# fit model
+res <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+res2 <- summarize_irtree_fit(res)
+res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
+                          traitItem = dat$traitItem, fitModel = res$fitModel)
+res3$plot
 }
 }
 

@@ -29,9 +29,9 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
 0=not reversed)}
 
-\item{fitModel}{Character. Either \code{"2012"} (without acquiescence) or \code{"ext"}
-(assumes that in case of ARS, the probability of choosing the extreme
-category 5 is determined by ERS) or \code{"pcm"} (partial credit model).}
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
+acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
+credit model).}
 }
 \value{
 Returns a data frame containing the specified quantiles of the

@@ -9,10 +9,14 @@
 #' @param prop.rev proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.
 #' @param genModel Character. Either \code{"2012"} (Boeckenholt Model without
 #'   acquiescence) or \code{"ext"} (Acquiescence Model)
-#' @param beta_ARS_extreme only for \code{genModel="ext"}: probability (on probit scale) of choosing category 5 (vs.4) in case of ARS
-#' @param cat whether to return categorical data (response categories 1...5) or multinomial data (frequencies of 0 and 1)
+#' @param beta_ARS_extreme only for \code{genModel="ext"}: probability (on
+#'   probit scale) of choosing category 5 (vs.4) in case of ARS
+#' @param cat whether to return categorical data (response categories 1...5) or
+#'   multinomial data (frequencies of 0 and 1)
 #' @inheritParams fit_irtree
-#' @return a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters
+#' @return The function returns a list containing the generated matrix of
+#'   responses X, a vector revItem indicating reversed items and true, latent
+#'   values of the parameters.
 #' @examples
 #' N <- 20
 #' J <- 10
@@ -112,7 +116,7 @@ generate_irtree_ext <- function(N, J, betas, traitItem = rep(1,J), theta.vcov = 
 #' 
 #' @param betas Jx3 matrix with item parameters on three response dimensions (middle, extreme, target trait defined by \code{traitItem}).
 #' @param theta.vcov 3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).
-#' @return a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters.
+#' @return The function returns a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters.
 #' @inheritParams fit_irtree
 #' @inheritParams generate_irtree_ext
 #' @examples
@@ -186,10 +190,23 @@ generate_irtree_2012 <- function(N, J, betas, traitItem = rep(1, J),
 #' Function used internally in \code{\link{recovery_irtree}} to generate item parameters.
 #' 
 #' @inheritParams recovery_irtree
-#' @return A matrix with \code{J} rows containing the item parameters for MRS, ERS,---if \code{genModel != "2012"}---ARS, and trait.
+#' @return A matrix with \code{J} rows containing the item parameters for MRS,
+#'   ERS, ARS (if \code{genModel != "2012"}), and the target trait.
 #' @seealso \code{\link[truncnorm]{rtruncnorm}}
+#' @examples
+#' J <- 10
+#' # use defaults
+#' betapar <- mpt2irt:::gen_betas("ext", J = J, betas = NULL)
+#' dat <- generate_irtree_ext(N = N, J = J, betas = betapar)
+#' 
+#' # modify distribution (truncated normal) from which to draw betas, here for MRS
+#' tmp1 <- list("beta.mrs" = list("mean" =  0,
+#'                                "sd"   =  0.3,
+#'                                "a"    = -2,
+#'                                "b"    =  2))
+#' betapar <- mpt2irt:::gen_betas("ext", J = J, betas = tmp1)
 # @export
-gen_betas <- function(genModel = genModel, J = J, betas = betas) {
+gen_betas <- function(genModel = NULL, J = NULL, betas = NULL) {
     J <- sum(J)
     if (any(!names(betas) %in% c("beta.mrs", "beta.ers", "beta.trait", "beta.ars"))) {
         stop("Argument 'betas' is an optional list with possible entries 'beta.mrs', 'beta.ers', 'beta.trait', and 'beta.ars'. Check definition and spelling of 'betas'.")
@@ -261,7 +278,7 @@ gen_betas <- function(genModel = genModel, J = J, betas = betas) {
     return(res)
 }
 
-#' Convert to Categorical Data
+#' Convert to categorical data.
 #' 
 #' multinomial (1/0 frequencies) to categorical data (responses 1...5)
 #' 
@@ -282,7 +299,7 @@ mult_to_cat <- function(X){
     return(X.cat)
 }
 
-#' Convert to Multinomial Data
+#' Convert to multinomial data.
 #' 
 #' categorical  (responses 1...5) to multinomial (1/0 frequencies) data
 #' 
@@ -300,4 +317,3 @@ cat_to_mult <- function(X, C=5){
     }
     return(X.mult)
 }
-
