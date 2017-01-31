@@ -1,8 +1,8 @@
 Package: mpt2irt
 Type: Package
 Title: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles
-Version: 1.0
-Date: 2015-03-24
+Version: 0.1
+Date: 2017-01-31
 Author: Hansjoerg Plieninger, Daniel W. Heck
 Maintainer: Hansjoerg Plieninger <plieninger@uni-mannheim.de>
 Imports: checkmate,
@@ -15,15 +15,22 @@ Imports: checkmate,
     parallel,
     rstan,
     runjags,
-    truncnorm
-Description: Fitting hierarchical MPT models to obtain IRT estimates for
-    different response processes. At the moment, only response style models are
-    implemented (separating bias towards middle category, extreme responding, and
-    acquiesence). Requires the MCMC samplers JAGS and/or Stan.
+    truncnorm,
+    magrittr,
+    ggplot2
+Description: Multinomial processing tree (MPT) models are used to differentiate
+    between different cognitive processes in categorical data. Those can be
+    lifted to hierarchical MPT models to account for person- and/or item effects
+    (Matzke et al., 2015): This is done by reparameterizing each MPT parameter
+    by means of an item response (IRT) model. Boeckenholt (2012) developed a
+    model to disentengle two reponse styles, namely midpoint (MRS) and extreme
+    responding (ERS), and the target trait. This package allows to fit an
+    extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
+    Bayesian hierarchical models requiring JAGS or Stan.
+Depends: R (>= 3.0.0)
 License: GPL-2
 RoxygenNote: 5.0.1
 Suggests: dplyr,
-    ggplot2,
     mail,
     reshape2,
     tidyr

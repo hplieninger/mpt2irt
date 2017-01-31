@@ -115,8 +115,8 @@ plot_expected <- function(model, type, X, revItem, traitItem=rep(1, ncol(X))){
   J <- ncol(X)
   S <- ifelse(as.character(type) == "ext", 4, 3)
   
-  est <- plot_irtree(fit = model, S = S, N = N, J = J, revItem = revItem,
-                 traitItem = traitItem, trait= NULL, return_data = T)
+  est <- plot_irtree(fit = model, S = S, J = J, revItem = revItem,
+                 traitItem = traitItem, return_data = T)
   means <- matrix(est$Mean,J, S)
   
   predict <- function(par, type){

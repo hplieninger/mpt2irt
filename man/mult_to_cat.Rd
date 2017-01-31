@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_data.R
 \name{mult_to_cat}
 \alias{mult_to_cat}
-\title{Convert to Categorical Data}
+\title{Convert to categorical data.}
 \usage{
 mult_to_cat(X)
 }

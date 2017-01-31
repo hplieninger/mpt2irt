@@ -2,35 +2,56 @@
 % Please edit documentation in R/plots.R
 \name{plot_irtree}
 \alias{plot_irtree}
-\title{Plot Responses due to Response Styles}
+\title{Plot item parameters of an mpt2irt model.}
 \usage{
-plot_irtree(fit, S = 4, N, J, revItem = rep(0, J), traitItem = rep(1, J),
-  trait = "sample", return_data = FALSE, tt_names = NULL,
-  measure = c("Median", "Mean"), rs_names = NULL, fitMethod = NULL,
-  item_order = 1:J)
+plot_irtree(fit, S = 4, J = NULL, revItem = rep(0, J),
+  traitItem = rep(1, J), return_data = FALSE, tt_names = NULL,
+  measure = c("Median", "Mean"), rs_names = NULL, fitMethod = NULL)
 }
 \arguments{
 \item{fit}{a fitted object from \link{fit_irtree} (either Boeckenholt 2012 or extended)}
 
-\item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)}
-
-\item{N}{number of participants}
+\item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)
+person) or a numeric value specifying the trait value used to plot response
+styles (e.g., trait=0 for an average person)}
 
 \item{J}{number of items}
 
-\item{revItem}{a vector with 1=reversed / 0=not reversed}
+\item{revItem}{vector of length J specifying reversed items (1=reversed,
+0=not reversed)}
 
-\item{traitItem}{a vector specifying the trait of the item (e.g., with values from 1 to 5 for Big5)}
+\item{traitItem}{vector of length J specifying the underlying traits (e.g.,
+indexed from 1...5). Standard: only a single trait is measured by all
+items. If the Big5 are measures, might be something like
+c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{trait}{either "sample" (using the posterior mean estimates for each person) or a numeric value specifying the trait value used to plot response styles (e.g., trait=0 for an average person)}
+\item{return_data}{Logical indicating whether the data frame used for
+plotting should be returned.}
 
-\item{return_data}{Logical indicating whether the data frame used for plotting should be returned.}
+\item{tt_names}{Optional character vector with the name(s) of the target
+trait(s).}
 
-\item{tt_names}{Optional character vector with the name(s) of the target trait(s).}
+\item{measure}{Character vector that indicates whether the mean (default) or
+the median of the posterior distribution should be plotted.}
 
-\item{measure}{Character vector that indicates whether the mean (default) or the median of the posterior distribution should be plotted.}
+\item{fitMethod}{whether to use JAGS or Stan}
 }
 \description{
-Plot proportion of responses due to RS
+This function takes the output from a fitted model and plots the item
+parameters. More precisely, the probability to pass an item's threshold
+\eqn{($\Phi(0-\beta$)} for an average person with \eqn{$\theta$=0} is depicted as a
+function of the cognitive process involved (i.e., MRS, ERS, ARS, target
+trait) and both \code{traitItem} and \code{revItem}.
+}
+\examples{
+\dontrun{
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = 20, J = J, betas = betas, beta_ARS_extreme = .5)
+
+# fit model
+res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+plot_irtree(res1, J = J, revItem = dat$revItem)
+}
 }
 

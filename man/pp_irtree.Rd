@@ -2,7 +2,7 @@
 % Please edit documentation in R/postpred.R
 \name{pp_irtree}
 \alias{pp_irtree}
-\title{Draw Posterior Predictive Values}
+\title{Draw posterior predictive values.}
 \usage{
 pp_irtree(mcmc.objects, iter = 100, probs = NULL, N = NULL,
   traitItem = NULL, revItem = NULL, fitModel = NULL)
@@ -52,5 +52,20 @@ the responses are aggregated across persons resulting in a frequency table
 posterior predictive distribution for every category for every item. This
 distribution is summarized with the quantiles given in \code{probs} and a
 data frame containing these quantiles for every item is returned.
+}
+\examples{
+\dontrun{
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = 20, J = J, betas = betas, beta_ARS_extreme = .5)
+
+# fit model
+res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+res2 <- summarize_irtree_fit(res1)
+
+# posterior predictives for 512 hypothetical persons
+res3 <- pp_irtree(res2$mcmc, iter = 10, N = 512, traitItem = dat$traitItem,
+                  revItem = dat$revItem, fitModel = res2$fitModel)
+}
 }
 

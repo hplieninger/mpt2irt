@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plot_singlefit}
 \alias{plot_singlefit}
-\title{Plot True and Estimated Parameters}
+\title{Plot true and estimated parameters.}
 \usage{
 plot_singlefit(N, J, S, model, jags.samp, stan.samp, true.par,
   traitItem = rep(1, J), revItem = rep(1, J))

@@ -1,22 +1,52 @@
-#' Summarize and Tidy up a Fitted Model
+#' Summarize and tidy up a fitted model.
 #' 
 #' Function takes a fitted model returned from \code{\link{fit_irtree}} and
 #' returns a tidy summary of the fitted parameters.
 #' 
+#' @param N number of persons
 #' @param fit a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{summarize_irtree_fit}}.
 #' @param plot Logical. Whether a plot should be produced using \code{\link{plot_irtree}} and returned.
 #' @param ... Further arguments passed to \code{\link{plot_irtree}}.
 #' @inheritParams fit_irtree
 #' @inheritParams plot_irtree
+#' @return The function returns a list for each of the core parameters (e.g., theta, beta), which are each summarized with the posterior mean, median and 95% CI.
+#' @examples
+#' \dontrun{
+#' # generate data
+#' N <- 20
+#' J <- 10
+#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+#' dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+#' 
+#' # fit model
+#' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+#' res2 <- summarize_irtree_fit(res1)
+#' res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
+#'                           traitItem = dat$traitItem, fitModel = res1$fitModel)
+#' str(res3)
+#' res3$plot
+#' cor(res3$theta$Median, dat$theta)
+#' cor(res3$beta$Median, dat$betas)
+#' }
 #' @export
-tidyup_irtree_fit <- function(fit, S = NULL, N = NULL, J = NULL, revItem = NULL, traitItem = NULL,
-                          fitMethod = NULL, fitModel = NULL,
-                          measure = c("Median", "Mean"),
-                          tt_names = NULL, 
-                          # rs_names = c("m", "e", "a", "t"), trait = NULL,
-                          plot = TRUE, ...){
+tidyup_irtree_fit <- function(fit,
+                              S = NULL,
+                              N = NULL,
+                              J = NULL,
+                              revItem = NULL,
+                              traitItem = rep(1, ncol(X)),
+                              fitModel = c("ext", "2012", "pcm"),
+                              fitMethod = c("stan", "jags"), 
+                              measure = c("Median", "Mean"),
+                              tt_names = NULL, 
+                              # rs_names = c("m", "e", "a", "t"), trait = NULL,
+                              plot = TRUE,
+                              ...){
+    fitModel <- match.arg(fitModel)
+    fitMethod <- match.arg(fitMethod)
     measure <- match.arg(measure)
     
+    checkmate::assert_int(S, lower = 1, null.ok = TRUE)
     checkmate::assert_numeric(N, lower = 1, upper = Inf, finite = TRUE,
                               any.missing = FALSE, len = 1,
                               null.ok = FALSE)
@@ -26,12 +56,6 @@ tidyup_irtree_fit <- function(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
     checkmate::assert_numeric(traitItem, lower = 1, upper = Inf, finite = TRUE,
                               any.missing = FALSE, min.len = 1,
                               null.ok = FALSE)
-    checkmate::assert_string(fitModel, na.ok = FALSE, min.chars = 1, 
-                             null.ok = FALSE)
-    # fitMethod <- NULL
-    # # fitMethod <- "stan"
-    # fitModel <- "2012"
-    # S <- NULL
     
     if (!("V" %in% names(fit))) {
         fit <- list("samples" = fit)
@@ -211,18 +235,18 @@ tidyup_irtree_fit <- function(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
     }
     
     if (plot == TRUE) {
-        return_list$plot <- invisible(plot_irtree(fit, S = S, N = N, J = J, revItem = revItem,
-                                              traitItem = traitItem,
-                                              # trait = trait, rs_names = rs_names,
-                                              return_data = FALSE, tt_names = tt_names,
-                                              measure = measure, fitMethod = fitMethod,
-                                              ...))
+        return_list$plot <- invisible(plot_irtree(fit, S = S, J = J, revItem = revItem,
+                                                  traitItem = traitItem,
+                                                  # trait = trait, rs_names = rs_names,
+                                                  return_data = FALSE, tt_names = tt_names,
+                                                  measure = measure, fitMethod = fitMethod,
+                                                  ...))
     }
     
     return(return_list)
 }
 
-#' Calculate Summary for a Fitted Model
+#' Calculate summary for a fitted model.
 #' 
 #' Function takes a fitted model returned from \code{\link{fit_irtree}} and
 #' calculates summaries for all parameters using coda's
@@ -238,8 +262,25 @@ tidyup_irtree_fit <- function(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
 #' @return Returns a list containing the input \code{fit} as well as an MCMC list and \code{summary}.
 #' @inheritParams fit_irtree
 #' @importFrom magrittr %>% 
+#' @examples
+#' \dontrun{
+#' # generate data
+#' N <- 20
+#' J <- 10
+#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+#' dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+#' 
+#' # fit model
+#' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+#' res2 <- summarize_irtree_fit(res1)
+#' head(res2$summary$statistics)
+#' head(res2$summary$quantiles)
+#' }
 #' @export
-summarize_irtree_fit <- function(fit, fitMethod = NULL, interact = FALSE, ...) {
+summarize_irtree_fit <- function(fit,
+                                 fitMethod = NULL,
+                                 interact = FALSE,
+                                 ...) {
     
     if (interact == TRUE & object.size(fit) > 1000000000) {
         proceed <- switch(menu(c("Yes, proceed", "No, thank you."),

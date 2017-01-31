@@ -4,8 +4,8 @@
 \alias{generate_irtree_2012}
 \title{Generate data for Boeckenholt Model.}
 \usage{
-generate_irtree_2012(N, J, betas, traitItem = rep(1, J), theta.vcov = NULL,
-  prop.rev = 0.5, cat = TRUE)
+generate_irtree_2012(N = NULL, J = NULL, betas = NULL,
+  traitItem = rep(1, J), theta.vcov = NULL, prop.rev = 0.5, cat = TRUE)
 }
 \arguments{
 \item{N}{number of persons}

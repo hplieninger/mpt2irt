@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plot_Geweke}
 \alias{plot_Geweke}
-\title{Plot Geweke Statistic}
+\title{Plot Geweke statistic.}
 \usage{
 plot_Geweke(fit, parameter = "beta", D = 1, frac1 = 0.1, frac2 = 0.5,
   plot = TRUE, ...)
@@ -26,7 +26,7 @@ processes (e.g., \code{D = 4}) for a 1/2/3/ect-dimensional "ext" model or
 \item{plot}{Logical. Either return a histogram or the results.}
 }
 \description{
-Plot a Histogram of the Geweke convergence diagnostic.
+Plot a histogram of the Geweke convergence diagnostic.
 }
 \seealso{
 \code{\link{geweke.diag}}

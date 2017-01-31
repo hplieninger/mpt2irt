@@ -22,7 +22,7 @@
 #' (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
 #' 
 #' @param X an N x J matrix of observed responses for categories 1...5 (use
-#'   \code{\link{mult2cat}} to transform a multinomial frequency matrix with 1s/0s to
+#'   \code{\link{mult_to_cat}} to transform a multinomial frequency matrix with 1s/0s to
 #'   responses from 1...5)
 #' @param revItem vector of length J specifying reversed items (1=reversed,
 #'   0=not reversed)
@@ -51,6 +51,7 @@
 #' @param n.chains number of MCMC chains (and number of CPUs used)
 #' @param thin thinning of MCMC samples
 # @param mail email address to which a notification is sent when the simulation is finished (no dash "-" allowed!)
+#' @param return_defaults Logical. Whether to return input specifications or not.
 #' @param add2varlist Additional variables to monitor (e.g., \code{c("deviance",
 #'   "pd", "popt", "dic")} for JAGS)
 #' @param N2 Numeric. Number of persons for whom to draw posterior predictives.
@@ -60,6 +61,7 @@
 #' @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 # @details  Note that the progress of Stan is shown in a text file in the
 #'   working directory ("_Stanprogress.txt")
+#' @inheritParams runjags:::run.jags
 #' @return Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
 #' @examples 
 #' \dontrun{
@@ -69,10 +71,11 @@
 #' dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 #' 
 #' # fit model
-#' res <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
-#' res2 <- summarize_irtree_fit(res)
+#' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+#' res2 <- summarize_irtree_fit(res1)
 #' res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-#'                           traitItem = dat$traitItem, fitModel = res$fitModel)
+#'                           traitItem = dat$traitItem, fitModel = res1$fitModel)
+#' str(res3)
 #' res3$plot
 #' }
 # import runjags

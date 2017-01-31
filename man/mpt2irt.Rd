@@ -4,17 +4,42 @@
 \name{mpt2irt}
 \alias{mpt2irt}
 \alias{mpt2irt-package}
-\title{Using MPT models to Get IRT Estimates}
+\title{mpt2irt: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles}
 \description{
-Combination of Multinomial Processing Tree (MPT) Models with Item Response Theory (IRT) to obtain indivdual estimates for different processes. At the moment, standard models for response styles (choosing middle category, extreme responding, acquiesence; see Boeckenholt, 2012) are implemented in JAGS and Stan.
+Multinomial processing tree (MPT) models are used to differentiate
+between different cognitive processes in categorical data. Those can be
+lifted to hierarchical MPT models to account for person- and/or item effects
+(Matzke et al., 2015): This is done by reparameterizing each MPT parameter
+by means of an item response (IRT) model. Boeckenholt (2012) developed a
+model to disentengle two reponse styles, namely midpoint (MRS) and extreme
+responding (ERS), and the target trait. This package allows to fit an
+extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
+Bayesian hierarchical models requiring JAGS or Stan.
 }
 \details{
-Requires JAGS (\url{http://mcmc-jags.sourceforge.net}) and/or Stan (\url{http://mc-stan.org}) to sample from the posterior using Markov Chain Monte Carlo (MCMC).
+The package requires installation of JAGS (\url{http://mcmc-jags.sourceforge.net}) and/or Stan (\url{http://mc-stan.org}) to sample from the posterior.
+}
+\examples{
+\dontrun{
+N <- 20
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+
+# fit model
+res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+res2 <- summarize_irtree_fit(res1)
+res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
+                          traitItem = dat$traitItem, fitModel = res$fitModel)
+res3$plot
+}
 }
 \author{
-Daniel W. Heck & Hansjoerg Plieninger
+Hansjoerg Plieninger & Daniel W. Heck
 }
 \references{
-Boeckenholt (2012). Modeling Multiple Response Processes in Judgment and Choice. Psychological Methods, 17, 665-678.
+Boeckenholt, U. (2012). Modeling multiple response processes in judgment and choice. Psychological Methods, 17, 665-678. doi:10.1037/a0028111
+
+Matzke, D., Dolan, C. V., Batchelder, W. H., & Wagenmakers, E.-J. (2015). Bayesian estimation of multinomial processing tree models with heterogeneity in participants and items. Psychometrika, 80, 205-235. doi:10.1007/s11336-013-9374-9
 }
 

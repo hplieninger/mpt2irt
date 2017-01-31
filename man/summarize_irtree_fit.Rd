@@ -2,7 +2,7 @@
 % Please edit documentation in R/summarize_fit.R
 \name{summarize_irtree_fit}
 \alias{summarize_irtree_fit}
-\title{Calculate Summary for a Fitted Model}
+\title{Calculate summary for a fitted model.}
 \usage{
 summarize_irtree_fit(fit, fitMethod = NULL, interact = FALSE, ...)
 }
@@ -27,5 +27,20 @@ calculates summaries for all parameters using coda's
 The difference between the present function and directly calling coda's
 \code{\link[coda]{summary}} is that, herein, the correlations of the thetas
 are summarized in addition to the covariances.
+}
+\examples{
+\dontrun{
+# generate data
+N <- 20
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+
+# fit model
+res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+res2 <- summarize_irtree_fit(res1)
+head(res2$summary$statistics)
+head(res2$summary$quantiles)
+}
 }
 

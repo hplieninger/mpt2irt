@@ -1,4 +1,4 @@
-#' Plot True and Estimated Parameters
+#' Plot true and estimated parameters.
 #'
 #' Plot estimates from a single fit using jags and stan (or estimates and true values). Only two object of jags.samp/stan.samp/true.par are allowed.
 #' 
@@ -119,25 +119,62 @@ plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp,
 }
 
 
-#' Plot Responses due to Response Styles
+#' Plot item parameters of an mpt2irt model.
 #' 
-#' Plot proportion of responses due to RS
+#' This function takes the output from a fitted model and plots the item
+#' parameters. More precisely, the probability to pass an item's threshold
+#' \eqn{($\Phi(0-\beta$)} for an average person with \eqn{$\theta$=0} is depicted as a
+#' function of the cognitive process involved (i.e., MRS, ERS, ARS, target
+#' trait) and both \code{traitItem} and \code{revItem}.
+#' 
 #' @param fit a fitted object from \link{fit_irtree} (either Boeckenholt 2012 or extended)
 #' @param S number of distinct MPT-parameters (2012: 3; extended: 4)
-#' @param N number of participants
-#' @param J number of items
-#' @param revItem a vector with 1=reversed / 0=not reversed
-#' @param traitItem a vector specifying the trait of the item (e.g., with values from 1 to 5 for Big5)
-#' @param trait either "sample" (using the posterior mean estimates for each person) or a numeric value specifying the trait value used to plot response styles (e.g., trait=0 for an average person)
-#' @param return_data Logical indicating whether the data frame used for plotting should be returned.
-#' @param tt_names Optional character vector with the name(s) of the target trait(s).
-#' @param measure Character vector that indicates whether the mean (default) or the median of the posterior distribution should be plotted.
+# @param N number of participants
+# @param J number of items
+# @param revItem a vector with 1=reversed / 0=not reversed
+# @param traitItem a vector specifying the trait of the item (e.g., with values from 1 to 5 for Big5)
+# @param trait either "sample" (using the posterior mean estimates for each
+#'   person) or a numeric value specifying the trait value used to plot response
+#'   styles (e.g., trait=0 for an average person)
+#' @param return_data Logical indicating whether the data frame used for
+#'   plotting should be returned.
+#' @param tt_names Optional character vector with the name(s) of the target
+#'   trait(s).
+#' @param measure Character vector that indicates whether the mean (default) or
+#'   the median of the posterior distribution should be plotted.
+#' @inheritParams fit_irtree
+#' @inheritParams generate_irtree_ext
 #' @import ggplot2
+#' @examples 
+#' \dontrun{
+#' J <- 10
+#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+#' dat <- generate_irtree_ext(N = 20, J = J, betas = betas, beta_ARS_extreme = .5)
+#' 
+#' # fit model
+#' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+#' plot_irtree(res1, J = J, revItem = dat$revItem)
+#' }
 #' @export
-plot_irtree <- function(fit, S = 4, N, J, revItem = rep(0, J), traitItem = rep(1, J),
-                    trait = "sample", return_data = FALSE, tt_names = NULL,
-                    measure = c("Median", "Mean"), rs_names = NULL,
-                    fitMethod = NULL, item_order = 1:J){
+plot_irtree <- function(fit,
+                        S = 4,
+                        J = NULL,
+                        revItem = rep(0, J),
+                        traitItem = rep(1, J),
+                        # trait = "sample",
+                        return_data = FALSE,
+                        tt_names = NULL,
+                        measure = c("Median", "Mean"),
+                        rs_names = NULL,
+                        fitMethod = NULL){
+    checkmate::qassert(S, "X1[1,]")
+    checkmate::qassert(J, "X1[1,]")
+    checkmate::qassert(revItem, "X+[0,1]")
+    checkmate::qassert(traitItem, "X+[1,]")
+    checkmate::assert_character(tt_names, len = length(unique(traitItem)),
+                                null.ok = TRUE)
+    checkmate::assert_character(rs_names, len = S, null.ok = TRUE)
+    
     if (is.null(rs_names)) {
         if (S == 3) {
             rs_names <- c("m", "e", "t")
@@ -183,14 +220,14 @@ plot_irtree <- function(fit, S = 4, N, J, revItem = rep(0, J), traitItem = rep(1
     
     ss <- ss[grep("beta\\[[[:digit:]]+\\,[[:digit:]]]", ss$id), ]
     names(ss)[names(ss) %in% c("2.5%", "50%", "97.5%")] <- c("q025", "Median", "q975")
-    ss[-1] <- apply(ss[-1], 2, pnorm)
+    ss[-1] <- apply(ss[-1], 2, function(x) pnorm(-x))
     ss$Type <- sapply(strsplit(as.character(ss$id), "[,]"), function(x) as.numeric(substr(x[2], 1, 1)))
     ss$Type <- factor(ss$Type, labels = rs_names)
     ss$Item <- factor(sapply(sapply(strsplit(as.character(ss$id), "\\["),
                                     function(x) strsplit(x[2], ",")),
                              function(x) as.numeric(x[1])))
     ss <- ss[order(ss$Item), ]
-    ss$Item <- factor(rep(item_order, each = S))
+    # ss$Item <- factor(rep(item_order, each = S))
     # if (missing(revItem) | is.null(revItem))
     #     revItem <- rep(1,J)
     # if (missing(traitItem) | is.null(traitItem))
@@ -247,9 +284,8 @@ plot_irtree <- function(fit, S = 4, N, J, revItem = rep(0, J), traitItem = rep(1
         facet_grid(Type ~ traitItem, scales = "free_x") +
         geom_errorbar(aes(ymin = q025, ymax = q975)) + 
         ylim(0, 1) +
-        ylab(measure) +
-        ggtitle(paste0("Estimated Item Parameters (",
-                     measure, ", 95% CI)"))
+        labs(y = expression(Phi(-beta)),
+             title = paste0("Estimated Item Parameters (", measure, ", 95% CI)"))
     # plot(gg)
   
   if (return_data == TRUE) {
@@ -259,9 +295,9 @@ plot_irtree <- function(fit, S = 4, N, J, revItem = rep(0, J), traitItem = rep(1
   }
 }
 
-#' Plot Gelman-Rubin Statistic
+#' Plot Gelman-Rubin statistic.
 #'
-#' Plot a Histogram of the Gelman and Rubin's convergence diagnostic.
+#' Plot a histogram of the Gelman and Rubin's convergence diagnostic.
 #' 
 #' @param parameter Character. The group of parameters for which the statistic is
 #'   to be calculated. Using the empty vector (\code{""}) uses all parameters in
@@ -308,9 +344,9 @@ plot_GRS <- function(fit, parameter = "beta", estimate = "point", plot = TRUE,
 }
 
 
-#' Plot Geweke Statistic
+#' Plot Geweke statistic.
 #'
-#' Plot a Histogram of the Geweke convergence diagnostic.
+#' Plot a histogram of the Geweke convergence diagnostic.
 #' 
 #' @param parameter Character. The group of parameters for which the stistic is
 #'   to be calculated. Using the empty vector (\code{""}) uses all parameters in

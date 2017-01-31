@@ -1,4 +1,4 @@
-#' Draw Posterior Predictive Values
+#' Draw posterior predictive values.
 #' 
 #' Function takes an MCMC list and draws posterior predictive values.
 #' 
@@ -27,6 +27,20 @@
 #' @inheritParams fit_irtree
 #' @inheritParams runjags::combine.mcmc
 #' @importFrom magrittr %>%
+#' @examples 
+#' \dontrun{
+#' J <- 10
+#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+#' dat <- generate_irtree_ext(N = 20, J = J, betas = betas, beta_ARS_extreme = .5)
+#' 
+#' # fit model
+#' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+#' res2 <- summarize_irtree_fit(res1)
+#' 
+#' # posterior predictives for 512 hypothetical persons
+#' res3 <- pp_irtree(res2$mcmc, iter = 10, N = 512, traitItem = dat$traitItem,
+#'                   revItem = dat$revItem, fitModel = res2$fitModel)
+#' }
 #' @export
 pp_irtree <- function(mcmc.objects,
                      iter = 100,
@@ -61,8 +75,6 @@ pp_irtree <- function(mcmc.objects,
         names(probs) <- paste0("q", probs)
     }
     
-    # code --------------------------------------------------------------------
-
     J <- length(traitItem)
     M <- mcmc.objects %>% extract2(1) %>% nrow
     chains <- mcmc.objects %>% length

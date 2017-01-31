@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plot_GRS}
 \alias{plot_GRS}
-\title{Plot Gelman-Rubin Statistic}
+\title{Plot Gelman-Rubin statistic.}
 \usage{
 plot_GRS(fit, parameter = "beta", estimate = "point", plot = TRUE,
   return.odd = TRUE, ...)
@@ -23,7 +23,7 @@ the point estimate or the upper limit of the 95\% CI is to be used.}
 estimate > 1.05 should be returned.}
 }
 \description{
-Plot a Histogram of the Gelman and Rubin's convergence diagnostic.
+Plot a histogram of the Gelman and Rubin's convergence diagnostic.
 }
 \seealso{
 \code{\link{gelman.diag}}

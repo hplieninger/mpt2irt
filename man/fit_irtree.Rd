@@ -12,7 +12,7 @@ fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
 }
 \arguments{
 \item{X}{an N x J matrix of observed responses for categories 1...5 (use
-\code{\link{mult2cat}} to transform a multinomial frequency matrix with 1s/0s to
+\code{\link{mult_to_cat}} to transform a multinomial frequency matrix with 1s/0s to
 responses from 1...5)}
 
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
@@ -51,8 +51,14 @@ for burnin)}
 
 \item{thin}{thinning of MCMC samples}
 
+\item{method}{the method with which to call JAGS; probably a character vector specifying one of 'rjags', 'simple', 'interruptible', 'parallel', 'rjparallel', 'background', 'bgparallel' or 'snow'. The 'rjags' and 'rjparallel' methods run JAGS using the rjags package, whereas other options do not require the rjags package and call JAGS as an external executable.  The advantage of the 'rjags' method is that the model will not need to be recompiled between successive calls to extend.jags, all other methods require a re-compilation (and adaptation if necessary) step at every call to extend.jags.  Note that the 'rjparallel' and 'snow' methods may leave behind zombie JAGS processes if the user interrupts the R session used to start the simulations - for this reason the 'parallel' method is recommended for interactive use with parallel chains. The 'background' and 'bgparallel' return a filename for the started simulation, which can be read using \code{\link{results.jags}}.  The 'parallel' and 'interruptible' methods for Windows require XP Professional, Vista or later (or any Unix-alike).  For more information refer to the userguide vignette.}
+
+\item{return_defaults}{Logical. Whether to return input specifications or not.}
+
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
+
+\item{summarise}{should summary statistics be automatically calculated for the output chains?  Default TRUE (but see also ?runjags.options -> force.summary).}
 
 \item{N2}{Numeric. Number of persons for whom to draw posterior predictives.
 Specify equal to \code{nrow(X)} in order to draw values for all persons.
@@ -96,10 +102,11 @@ betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
 dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 
 # fit model
-res <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
-res2 <- summarize_irtree_fit(res)
+res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+res2 <- summarize_irtree_fit(res1)
 res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-                          traitItem = dat$traitItem, fitModel = res$fitModel)
+                          traitItem = dat$traitItem, fitModel = res1$fitModel)
+str(res3)
 res3$plot
 }
 }

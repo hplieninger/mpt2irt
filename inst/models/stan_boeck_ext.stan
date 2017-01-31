@@ -3,7 +3,7 @@
 
 # 1,...j,...,J: number of items
 # 1,...i,...,N: number of participants
-# S: number of parameters (extended Böckenholt: 4: middle/trait/extremity/acquies)
+# S: number of parameters (extended Boeckenholt: 4: middle/trait/extremity/acquies)
 # X: N(person) x J(item) x C(categories) array of observed frequencies
 # X: N(person) x J(item) matrix with observed response category
 

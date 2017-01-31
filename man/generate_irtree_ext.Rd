@@ -4,9 +4,9 @@
 \alias{generate_irtree_ext}
 \title{Generate data for Acquiescence Model.}
 \usage{
-generate_irtree_ext(N, J, betas, traitItem = rep(1, J), theta.vcov = NULL,
-  prop.rev = 0.5, genModel = "ext", beta_ARS_extreme = NULL, cat = TRUE,
-  theta = NULL)
+generate_irtree_ext(N = NULL, J = NULL, betas = NULL, traitItem = rep(1,
+  J), theta.vcov = NULL, prop.rev = 0.5, genModel = "ext",
+  beta_ARS_extreme = NULL, cat = TRUE, theta = NULL)
 }
 \arguments{
 \item{N}{number of persons}

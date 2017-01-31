@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_data.R
 \name{cat_to_mult}
 \alias{cat_to_mult}
-\title{Convert to Multinomial Data}
+\title{Convert to multinomial data.}
 \usage{
 cat_to_mult(X, C = 5)
 }

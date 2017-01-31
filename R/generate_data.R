@@ -24,10 +24,24 @@
 #' dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 #' @export
 # @import MASS
-generate_irtree_ext <- function(N, J, betas, traitItem = rep(1,J), theta.vcov = NULL, 
-                          prop.rev = .5, genModel = "ext", beta_ARS_extreme = NULL,
-                          cat = TRUE, theta = NULL) {
+generate_irtree_ext <- function(N = NULL,
+                                J = NULL,
+                                betas = NULL,
+                                traitItem = rep(1,J),
+                                theta.vcov = NULL, 
+                                prop.rev = .5,
+                                genModel = "ext",
+                                beta_ARS_extreme = NULL,
+                                cat = TRUE,
+                                theta = NULL) {
     
+    checkmate::qassert(N, "X1")
+    checkmate::qassert(J, "X>0[1,]")
+    checkmate::assert_matrix(betas, mode = "double", any.missing = FALSE, 
+                             nrows = J, ncols = 4)
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 len = J)
+    checkmate::qassert(prop.rev, "N1[0,1]")
     checkmate::assert_number(beta_ARS_extreme, finite = TRUE)
     
     # multiple traits
@@ -125,8 +139,21 @@ generate_irtree_ext <- function(N, J, betas, traitItem = rep(1,J), theta.vcov = 
 #' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 0))
 #' dat <- generate_irtree_2012(N = N, J = J, betas = betas)
 #' @export
-generate_irtree_2012 <- function(N, J, betas, traitItem = rep(1, J),
-                                 theta.vcov = NULL, prop.rev = .5, cat = TRUE){
+generate_irtree_2012 <- function(N = NULL,
+                                 J = NULL,
+                                 betas = NULL,
+                                 traitItem = rep(1, J),
+                                 theta.vcov = NULL,
+                                 prop.rev = .5,
+                                 cat = TRUE){
+    
+    checkmate::qassert(N, "X1")
+    checkmate::qassert(J, "X>0[1,]")
+    checkmate::assert_matrix(betas, mode = "double", any.missing = FALSE, 
+                             nrows = J, ncols = 3)
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 len = J)
+    checkmate::qassert(prop.rev, "N1[0,1]")
     
     
     n.trait <- length(unique(traitItem))
@@ -197,7 +224,7 @@ generate_irtree_2012 <- function(N, J, betas, traitItem = rep(1, J),
 #' J <- 10
 #' # use defaults
 #' betapar <- mpt2irt:::gen_betas("ext", J = J, betas = NULL)
-#' dat <- generate_irtree_ext(N = N, J = J, betas = betapar)
+#' dat <- generate_irtree_ext(N = N, J = J, betas = betapar, beta_ARS_extreme = 1)
 #' 
 #' # modify distribution (truncated normal) from which to draw betas, here for MRS
 #' tmp1 <- list("beta.mrs" = list("mean" =  0,
@@ -206,7 +233,13 @@ generate_irtree_2012 <- function(N, J, betas, traitItem = rep(1, J),
 #'                                "b"    =  2))
 #' betapar <- mpt2irt:::gen_betas("ext", J = J, betas = tmp1)
 # @export
-gen_betas <- function(genModel = NULL, J = NULL, betas = NULL) {
+gen_betas <- function(genModel = NULL,
+                      J = NULL,
+                      betas = NULL) {
+    
+    checkmate::assert_list(betas, null.ok = TRUE)
+    checkmate::qassert(J, "X>0[1,]")
+    
     J <- sum(J)
     if (any(!names(betas) %in% c("beta.mrs", "beta.ers", "beta.trait", "beta.ars"))) {
         stop("Argument 'betas' is an optional list with possible entries 'beta.mrs', 'beta.ers', 'beta.trait', and 'beta.ars'. Check definition and spelling of 'betas'.")

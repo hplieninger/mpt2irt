@@ -2,19 +2,19 @@
 % Please edit documentation in R/simulation.R
 \name{recovery_irtree}
 \alias{recovery_irtree}
-\title{Recovery Simulation for Response Styles}
+\title{Recovery simulation of mpt2irt models.}
 \usage{
-recovery_irtree(rrr, N, J, prop.rev = 0.5, genModel, fitModel, fitMethod,
-  theta.vcov, betas = NULL, beta_ARS_extreme = NULL, df = NULL,
-  V = NULL, M = 500, n.chains = 3, thin = 1, warmup = 500,
-  method = "simple", outFormat = NULL, startSmall = FALSE, df_vcov = 50,
-  dir = NULL, keep_mcmc = FALSE, savext_mcmc = FALSE,
+recovery_irtree(rrr = NULL, N = NULL, J = NULL, prop.rev = 0.5,
+  genModel = c("ext", "2012"), fitModel = NULL, fitMethod = c("stan",
+  "jags"), theta.vcov = NULL, betas = NULL, beta_ARS_extreme = NULL,
+  df = NULL, V = NULL, M = 500, n.chains = 3, thin = 1,
+  warmup = 500, method = "simple", outFormat = NULL, startSmall = FALSE,
+  df_vcov = 50, dir = NULL, keep_mcmc = FALSE, savext_mcmc = FALSE,
   add2varlist = c("deviance", "pd", "popt", "dic"), ...)
 }
 \arguments{
-\item{rrr}{Integer. Either a single value handed over by a other function or a sequence (e.g., \code{1:100})}
-
-\item{N}{sample size}
+\item{rrr}{Sequence of integers (e.g., \code{1:100}) of length greater or
+equal to 1 specifying the number of replications to run.}
 
 \item{J}{number of items. Can be a vector for multiple traits (e.g.,
 J=c(10,10,10)).}
@@ -36,12 +36,10 @@ middle, extreme, (acquiescence), trait). standard is diag(3) / diag(4). Can be a
 \code{"beta.ers"}, \code{"beta.trait"}, and/or \code{"beta.ars"}. Each of
 those may have arguments passed to \code{\link[truncnorm]{rtruncnorm}}.}
 
-\item{df}{degrees of freedom for wishart hyperprior on trait covariance
-matrix. standard ist the number of trait parameters plus one. should be a
-vector of length two if two models are fitted.}
+\item{df}{degrees of freedom for wishart prior on covariance of traits
+(standard/minimum: number of processes + 1)}
 
-\item{V}{prior matrix for theta covariance. standard is diag(S). if two
-models are fitted, should be a list with two matrices of the correct size}
+\item{V}{prior for wishart distribution (standard: diagonal matrix)}
 
 \item{M}{number of MCMC samples (after warmup)}
 
@@ -52,6 +50,8 @@ models are fitted, should be a list with two matrices of the correct size}
 \item{warmup}{number of samples for warmup (in JAGS: 3/4 for adaption, 1/4
 for burnin)}
 
+\item{method}{the method with which to call JAGS; probably a character vector specifying one of 'rjags', 'simple', 'interruptible', 'parallel', 'rjparallel', 'background', 'bgparallel' or 'snow'. The 'rjags' and 'rjparallel' methods run JAGS using the rjags package, whereas other options do not require the rjags package and call JAGS as an external executable.  The advantage of the 'rjags' method is that the model will not need to be recompiled between successive calls to extend.jags, all other methods require a re-compilation (and adaptation if necessary) step at every call to extend.jags.  Note that the 'rjparallel' and 'snow' methods may leave behind zombie JAGS processes if the user interrupts the R session used to start the simulations - for this reason the 'parallel' method is recommended for interactive use with parallel chains. The 'background' and 'bgparallel' return a filename for the started simulation, which can be read using \code{\link{results.jags}}.  The 'parallel' and 'interruptible' methods for Windows require XP Professional, Vista or later (or any Unix-alike).  For more information refer to the userguide vignette.}
+
 \item{outFormat}{either "mcmc.list" (can be analyzed with coda package) or
 "stan" or "runjags"}
 
@@ -61,33 +61,50 @@ priors (startSmall=T; beta and theta closer to 0; might solve problems with
 slow convergence of some chains for extreme starting values).}
 
 \item{df_vcov}{Numeric. Degrees of freedom for wishart distribution from
-which the variance-covariance matrix for generating the data is drawn.
-Defaults to 10.}
+which the variance-covariance matrix for generating the data is drawn.}
+
+\item{dir}{Path to directory where results should be stored,}
+
+\item{keep_mcmc}{Logical indicating wheter to retain, besides a summary of the parameters, the raw mcmc samples.}
+
+\item{savext_mcmc}{Logical indicating wheter to save the raw mcmc samples in an external RData file.}
 
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
 
 \item{...}{further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 working directory ("_Stanprogress.txt")}
-
-\item{nCPU}{number of CPUs for parallel run of MCMC sampler}
-
-\item{path}{where to save progress report (e.g., path="C:/"). disabled by using path=""}
-
-\item{saveTemp}{save temporary results to same location as progress report}
 }
 \value{
-a list of class "boeck.recov" containing true and estimated parameters
+Function does not directly return anything but saves an external
+  RData file to \code{dir}. This object is a list containing the generated
+  parameters in \code{sim-results$param.sum$gen}, fitted parameters and other model fit
+  information in \code{sim-results$param.sum$foo}, as well as a summary of the setup.
 }
 \description{
-Repeatedly generates and fits data and returns a list of the true and fitted estimates. At the moment, only unidimensional traits are supported (i.e., no response scales like the Big 5)
+This function allows to run a simulation study of mpt2irt models. Data are
+generated either from the Boeckenholt Model (\code{genModel = "2012"}) or
+from the Acquiescence Model (\code{genModel = "ext"}). Subsequently, one or
+both of these models are fit to the generated data using eihter JAGS or Stan.
+The results are saved in an RData file in \code{dir}.
+}
+\details{
+Note that a text file "progress.txt" is written (and updated) to \code{dir} informing you about the progress of the simulation.
 }
 \examples{
 \dontrun{
- sim <- recovery_irtree(N=30, J=6, R=2, genModel="2012", fitModel=c("2012","ext"), 
-                   fitMethod="jags", nCPU=4, RSmin=0, RSmax=1, prop.rev=.5)
- summary(sim, whichFit=1, plot=T)
- sim$dic
+recovery_irtree(rrr = 1:2, N = 20, J = 10, genModel = "ext", fitModel = "ext",
+                fitMethod = "stan", M = 200, n.chains = 2, warmup = 200,
+                dir = "~/")
+                
+# run multiple simulations in parallel using the 'parallel' package
+no_cores <- parallel::detectCores() - 1
+cl <- parallel::makeCluster(no_cores)
+parallel::clusterApplyLB(cl, x = 11:13, fun = recovery_irtree, cores = 1,
+                         N = 20, J = 10, genModel = "ext", fitModel = "ext",
+                         fitMethod = "stan", M = 200, n.chains = 2, warmup = 200,
+                         dir = "~/")
+parallel::stopCluster(cl = cl)
 }
 }
 

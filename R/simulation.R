@@ -1,13 +1,17 @@
-#' Recovery Simulation for Response Styles
+#' Recovery simulation of mpt2irt models.
 #' 
-#' Repeatedly generates and fits data and returns a list of the true and fitted estimates. At the moment, only unidimensional traits are supported (i.e., no response scales like the Big 5)
+#' This function allows to run a simulation study of mpt2irt models. Data are
+#' generated either from the Boeckenholt Model (\code{genModel = "2012"}) or
+#' from the Acquiescence Model (\code{genModel = "ext"}). Subsequently, one or
+#' both of these models are fit to the generated data using eihter JAGS or Stan.
+#' The results are saved in an RData file in \code{dir}.
 #' 
-#' @param N sample size
 #' @param J number of items. Can be a vector for multiple traits (e.g.,
 #'   J=c(10,10,10)).
 #' @param prop.rev number of reversed items. Can be a vector for multiple
 #'   traits(e.g., prop.rev=c(5,3,5)/10)
-#' @param rrr Integer. Either a single value handed over by a other function or a sequence (e.g., \code{1:100})
+#' @param rrr Sequence of integers (e.g., \code{1:100}) of length greater or
+#'   equal to 1 specifying the number of replications to run.
 #' @param genModel Character. The data generating model (either "2012" or "ext").
 #' @param fitModel Character. The model for data analysis ("2012", "ext", or both as vector
 #'   c("2012", "ext")).
@@ -25,24 +29,25 @@
 #'   those may have arguments passed to \code{\link[truncnorm]{rtruncnorm}}.
 #' @param df_vcov Numeric. Degrees of freedom for wishart distribution from
 #'   which the variance-covariance matrix for generating the data is drawn.
-#'   Defaults to 10.
-#' @param df degrees of freedom for wishart hyperprior on trait covariance
-#'   matrix. standard ist the number of trait parameters plus one. should be a
-#'   vector of length two if two models are fitted.
-#' @param V prior matrix for theta covariance. standard is diag(S). if two
-#'   models are fitted, should be a list with two matrices of the correct size
+#' @param dir Path to directory where results should be stored,
+#' @param keep_mcmc Logical indicating wheter to retain, besides a summary of the parameters, the raw mcmc samples.
+#' @param savext_mcmc Logical indicating wheter to save the raw mcmc samples in an external RData file.
 # @param M number of MCMC samples (adaptation + burnin = M/2)
 # @param n.chains number of chains
 # @param thin thinning of MCMC samples
-#' @param nCPU number of CPUs for parallel run of MCMC sampler
 # @param printProgress whether to print the progress in a text file (either at the location defined by \code{path} or at the working directory)
-#' @param path where to save progress report (e.g., path="C:/"). disabled by using path=""
-#' @param saveTemp save temporary results to same location as progress report
+# @param path where to save progress report (e.g., path="C:/"). disabled by using path=""
+# @param saveTemp save temporary results to same location as progress report
 # @param rng_seed random number seed
 # @param mail an email address used when the simulation is finished (no dash "-" allowed!)
-# @param ... further arguments passed to stan() or coda.samples() for JAGS
+# @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 #' @inheritParams fit_irtree
-#' @return a list of class "boeck.recov" containing true and estimated parameters
+#' @inheritParams runjags:::run.jags
+#' @return Function does not directly return anything but saves an external
+#'   RData file to \code{dir}. This object is a list containing the generated
+#'   parameters in \code{sim-results$param.sum$gen}, fitted parameters and other model fit
+#'   information in \code{sim-results$param.sum$foo}, as well as a summary of the setup.
+#' @details Note that a text file "progress.txt" is written (and updated) to \code{dir} informing you about the progress of the simulation.
 # @importFrom coda
 # @import doParallel
 # @import runjags
@@ -50,28 +55,64 @@
 # @import foreach
 #' @examples
 #' \dontrun{
-#'  sim <- recovery_irtree(N=30, J=6, R=2, genModel="2012", fitModel=c("2012","ext"), 
-#'                    fitMethod="jags", nCPU=4, RSmin=0, RSmax=1, prop.rev=.5)
-#'  summary(sim, whichFit=1, plot=T)
-#'  sim$dic
+#' recovery_irtree(rrr = 1:2, N = 20, J = 10, genModel = "ext", fitModel = "ext",
+#'                 fitMethod = "stan", M = 200, n.chains = 2, warmup = 200,
+#'                 dir = "~/")
+#'                 
+#' # run multiple simulations in parallel using the 'parallel' package
+#' no_cores <- parallel::detectCores() - 1
+#' cl <- parallel::makeCluster(no_cores)
+#' parallel::clusterApplyLB(cl, x = 11:13, fun = recovery_irtree, cores = 1,
+#'                          N = 20, J = 10, genModel = "ext", fitModel = "ext",
+#'                          fitMethod = "stan", M = 200, n.chains = 2, warmup = 200,
+#'                          dir = "~/")
+#' parallel::stopCluster(cl = cl)
 #'}
 #' @export
-recovery_irtree <- function(rrr, N, J, prop.rev = .5, genModel, fitModel, fitMethod, 
-                           theta.vcov, betas = NULL, beta_ARS_extreme = NULL, df = NULL, V = NULL,
-                           M = 500, n.chains = 3, thin = 1, warmup = 500,
-                           method = "simple", outFormat = NULL, startSmall = FALSE,
-                           df_vcov = 50, dir = NULL, keep_mcmc = FALSE, savext_mcmc = FALSE,
-                           add2varlist = c("deviance", "pd", "popt", "dic"), ...){
+recovery_irtree <- function(rrr = NULL,
+                            N = NULL,
+                            J = NULL,
+                            prop.rev = .5,
+                            genModel = c("ext", "2012"),
+                            fitModel = NULL,
+                            fitMethod = c("stan", "jags"), 
+                            theta.vcov = NULL,
+                            betas = NULL,
+                            beta_ARS_extreme = NULL,
+                            df = NULL,
+                            V = NULL,
+                            M = 500,
+                            n.chains = 3,
+                            thin = 1,
+                            warmup = 500,
+                            method = "simple",
+                            outFormat = NULL,
+                            startSmall = FALSE,
+                            df_vcov = 50,
+                            dir = NULL,
+                            keep_mcmc = FALSE,
+                            savext_mcmc = FALSE,
+                            add2varlist = c("deviance", "pd", "popt", "dic"),
+                            ...) {
     
     # It is assumed that parameters such as df and V are the same for all models
     # in fitModel. There's no problem in changing this, only remember to change
     # the output, e.g., for V from length 1 to length(fitModel).
     
+    checkmate::qassert(rrr, "X>0[1,]")
+    checkmate::qassert(N, "X1")
+    checkmate::qassert(J, "X>0[1,]")
+    # checkmate::qassert(prop.rev, "X1[0,1]")
+    genModel <- match.arg(genModel)
+    checkmate::qassert(fitModel, "S>0")
+    fitMethod <- match.arg(fitMethod)
+    # checkmate::assert_list(betas, null.ok = TRUE)
+    # checkmate::assert_number(beta_ARS_extreme, finite = TRUE, null.ok = TRUE)
+    checkmate::qassert(df_vcov, "N1[1,]")
+    
     ### INPUT WRANGLING --------------------------------------------------------
     
     #### multiple traits
-    if(any(round(J) != J  |  J<1))
-        warning("Check definition of J!")
     n.trait <- length(J)
     traitItem <- rep(1:n.trait, J)
     if(length(prop.rev) == 1)
@@ -84,7 +125,6 @@ recovery_irtree <- function(rrr, N, J, prop.rev = .5, genModel, fitModel, fitMet
     J <- sum(J)
     
     genModel <- as.character(genModel)
-    fitModel <- as.character(fitModel)
     numRS.gen <- ifelse(genModel == "2012", 2, 3)
     S.gen <- numRS.gen + n.trait
     numRS.fit <- sapply(fitModel, function(x) ifelse(x == "2012", 2, 3))
@@ -356,7 +396,7 @@ recovery_irtree <- function(rrr, N, J, prop.rev = .5, genModel, fitModel, fitMet
             }
             on.exit(warning(paste0("Data saved in: ", dirx)))
         }
-        save_file <- paste0("sim-results-", sprintf("%04d", rrr[qqq]), "-", substr(Sys.time(), 1, 10), ".Rda")
+        save_file <- paste0("sim-results-", sprintf("%04d", rrr[qqq]), "-", substr(Sys.time(), 1, 10), ".RData")
         save_file <- gsub(" CET", "", save_file)
         save_file <- gsub(" ", "-", save_file)
         save_file <- gsub(":", "-", save_file)
@@ -367,7 +407,7 @@ recovery_irtree <- function(rrr, N, J, prop.rev = .5, genModel, fitModel, fitMet
         do.call(save, list(returnName, file = paste0(ifelse(dir.exists(dir), dir, dirx), "/", save_file)))
         
         if (savext_mcmc == TRUE) {
-            save_file_mcmc <- paste0("mcmc-", sprintf("%04d", rrr[qqq]), ".Rda")
+            save_file_mcmc <- paste0("mcmc-", sprintf("%04d", rrr[qqq]), ".RData")
             return_name_mcmc <- paste0("mcmc_", sprintf("%04d", rrr[qqq]))
             assign(return_name_mcmc, returnlist_mcmc)
             if (!dir.exists(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))) {

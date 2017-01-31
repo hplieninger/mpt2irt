@@ -2,7 +2,7 @@
 
 # 1,...j,...,J: number of items
 # 1,...i,...,N: number of participants
-# S: number of parameters (standard Böckenholt: 3: middle/extremity/trait)
+# S: number of parameters (standard Boeckenholt: 3: middle/extremity/trait)
 # X: N(person) x J(item) x C(categories) array of observed frequencies
 # X: N(person) x J(item) matrix with observed response category
 # revItem: vector of length J indicating reversed items (1=reversed)

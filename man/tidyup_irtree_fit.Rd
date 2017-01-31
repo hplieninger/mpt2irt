@@ -2,18 +2,21 @@
 % Please edit documentation in R/summarize_fit.R
 \name{tidyup_irtree_fit}
 \alias{tidyup_irtree_fit}
-\title{Summarize and Tidy up a Fitted Model}
+\title{Summarize and tidy up a fitted model.}
 \usage{
 tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
-  traitItem = NULL, fitMethod = NULL, fitModel = NULL,
-  measure = c("Median", "Mean"), tt_names = NULL, plot = TRUE, ...)
+  traitItem = rep(1, ncol(X)), fitModel = c("ext", "2012", "pcm"),
+  fitMethod = c("stan", "jags"), measure = c("Median", "Mean"),
+  tt_names = NULL, plot = TRUE, ...)
 }
 \arguments{
 \item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{summarize_irtree_fit}}.}
 
-\item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)}
+\item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)
+person) or a numeric value specifying the trait value used to plot response
+styles (e.g., trait=0 for an average person)}
 
-\item{N}{number of participants}
+\item{N}{number of persons}
 
 \item{J}{number of items}
 
@@ -25,22 +28,46 @@ indexed from 1...5). Standard: only a single trait is measured by all
 items. If the Big5 are measures, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{fitMethod}{whether to use JAGS or Stan}
-
 \item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
 acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
 credit model).}
 
-\item{measure}{Character vector that indicates whether the mean (default) or the median of the posterior distribution should be plotted.}
+\item{fitMethod}{whether to use JAGS or Stan}
 
-\item{tt_names}{Optional character vector with the name(s) of the target trait(s).}
+\item{measure}{Character vector that indicates whether the mean (default) or
+the median of the posterior distribution should be plotted.}
+
+\item{tt_names}{Optional character vector with the name(s) of the target
+trait(s).}
 
 \item{plot}{Logical. Whether a plot should be produced using \code{\link{plot_irtree}} and returned.}
 
 \item{...}{Further arguments passed to \code{\link{plot_irtree}}.}
 }
+\value{
+The function returns a list for each of the core parameters (e.g., theta, beta), which are each summarized with the posterior mean, median and 95% CI.
+}
 \description{
 Function takes a fitted model returned from \code{\link{fit_irtree}} and
 returns a tidy summary of the fitted parameters.
+}
+\examples{
+\dontrun{
+# generate data
+N <- 20
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+
+# fit model
+res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+res2 <- summarize_irtree_fit(res1)
+res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
+                          traitItem = dat$traitItem, fitModel = res1$fitModel)
+str(res3)
+res3$plot
+cor(res3$theta$Median, dat$theta)
+cor(res3$beta$Median, dat$betas)
+}
 }
 
