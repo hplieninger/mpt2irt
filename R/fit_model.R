@@ -1,21 +1,25 @@
-#' Analyze with Boeckenholt Model for Response Styles
+#' Fit an mpt2irt model.
 #' 
-#' Using either the standard 2012 model (only response styles towards middle + extreme responding) or the extended version (additionally, aquiescence).
+#' This function fits an mpt2irt model. Either the so-called Boeckenholt Model
+#' can be fit (\code{fitModel = "2012"}) that assumes the three processes MRS,
+#' ERS, and target trait; or the so-called Acquiescence Model can be fit that
+#' additionally takes ARS into account (\code{fitModel = "ext"}).
 #' 
-#' The estimated parameters are ordered as follows:
+#' The estimated parameters are arranged as follows:
 #' \itemize{
-#' \item Model "2012": S=2+number of traits
+#' \item Model "2012" (S = 2 + number of traits):
 #' \itemize{
-#'  \item theta[i,1:S] = c(middle, extreme, trait(s))
-#'  \item betas[j,1:3] = c(middle, extreme, trait) (which trait depends on traitItem!)
+#'  \item theta[i, 1:S] = c(middle, extreme, trait(s))
+#'  \item beta[j, 1:3] = c(middle, extreme, trait) (which trait depends on \code{traitItem}!)
 #'  }
-#' \item Model "ext": S=3+number of traits
+#' \item Model "ext" (S = 3 + number of traits):
 #' \itemize{
-#'  \item theta[i,1:S] = c(middle, extreme, acquiesence, trait(s))
-#'  \item betas[j,1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on traitItem!)
+#'  \item theta[i, 1:S] = c(middle, extreme, acquiesence, trait(s))
+#'  \item beta[j, 1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on \code{traitItem}!)
 #'  }
 #' }
-#' If more than a single trait is measured, theta has more columns accordingly (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
+#' If more than a single trait is measured, theta has more columns accordingly
+#' (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
 #' 
 #' @param X an N x J matrix of observed responses for categories 1...5 (use
 #'   \code{\link{mult2cat}} to transform a multinomial frequency matrix with 1s/0s to
@@ -30,9 +34,9 @@
 #'   (standard/minimum: number of processes + 1)
 # param items either "fixed" or "random" (with hierarchical normal-wishart structure estimated from the data)
 #' @param V prior for wishart distribution (standard: diagonal matrix)
-#' @param fitModel Character. Either \code{"2012"} (without acquiescence) or \code{"ext"}
-#'   (assumes that in case of ARS, the probability of choosing the extreme
-#'   category 5 is determined by ERS) or \code{"pcm"} (partial credit model).
+#' @param fitModel Character. Either \code{"2012"} (Boeckenholt Model without
+#'   acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
+#'   credit model).
 #  or \code{"ext2"} (separate probability of choosing category 5 in case of ARS; requires at least two trait scales) or \code{"ext3"} (separate person-estimates theta[i,S] for latent tendency to choose cat.4/5 in case of ARS).
 #' @param fitMethod whether to use JAGS or Stan
 #' @param outFormat either "mcmc.list" (can be analyzed with coda package) or
@@ -54,7 +58,7 @@
 #'   This is mainly implemented for efficiency reasons in order to avoid
 #'   massivly drawing samples which the user is not interested in.
 #' @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
-#' @details  Note that the progress of Stan is shown in a text file in the
+# @details  Note that the progress of Stan is shown in a text file in the
 #'   working directory ("_Stanprogress.txt")
 #' @examples 
 #' \dontrun{
