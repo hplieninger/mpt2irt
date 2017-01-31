@@ -60,19 +60,20 @@
 #' @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 # @details  Note that the progress of Stan is shown in a text file in the
 #'   working directory ("_Stanprogress.txt")
+#' @return Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
 #' @examples 
 #' \dontrun{
-# N <- 20
-# J <- 10
-# betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
-# dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
-# 
-# # fit model
-# res <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
-# res2 <- summarize_irtree_fit(res)
-# res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-#                           traitItem = dat$traitItem, fitModel = res$fitModel)
-# res3$plot
+#' N <- 20
+#' J <- 10
+#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+#' dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+#' 
+#' # fit model
+#' res <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+#' res2 <- summarize_irtree_fit(res)
+#' res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
+#'                           traitItem = dat$traitItem, fitModel = res$fitModel)
+#' res3$plot
 #' }
 # import runjags
 # @importFrom rstan stan sampling As.mcmc.list
