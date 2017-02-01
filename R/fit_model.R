@@ -133,7 +133,7 @@ fit_irtree <- function(X,
     if(max(traitItem) != n.trait){
         stop("Check definition of traitItem")
     }
-    if(sum(revItem) > 0 & !any(cor(X) < 0)){
+    if(length(unique(revItem)) > 1 & !any(cor(X) < 0)){
         stop("All items have positive bivariate correlations;",
              "however, data should be provided in 'input'-format such that",
              "reverse-coded and regular items correlate negatively.")

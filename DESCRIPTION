@@ -13,11 +13,13 @@ Imports: checkmate,
     MASS,
     MBESS,
     parallel,
-    rstan,
+    rstan (>= 2.14.1),
+    rstantools (>= 1.1.0),
     runjags,
     truncnorm,
     magrittr,
     ggplot2
+Depends: R (>= 3.0.2), Rcpp (>= 0.12.9), methods (>= 3.3.2)
 Description: Multinomial processing tree (MPT) models are used to differentiate
     between different cognitive processes in categorical data. Those can be
     lifted to hierarchical MPT models to account for person- and/or item effects
@@ -27,11 +29,12 @@ Description: Multinomial processing tree (MPT) models are used to differentiate
     responding (ERS), and the target trait. This package allows to fit an
     extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
     Bayesian hierarchical models requiring JAGS or Stan.
-Depends: R (>= 3.0.0)
 SystemRequirements: JAGS and/or Stan
 License: GPL-2
 RoxygenNote: 5.0.1
 Suggests: dplyr,
     mail,
     reshape2,
-    tidyr
+    tidyr,
+    testthat
+LinkingTo: StanHeaders (>= 2.14.0.1), rstan (>= 2.14.1), BH (>= 1.62.0.1), Rcpp (>= 0.12.9), RcppEigen (>= 0.3.2.9.0)

@@ -35,7 +35,7 @@ generate_irtree_ext <- function(N = NULL,
                                 cat = TRUE,
                                 theta = NULL) {
     
-    checkmate::qassert(N, "X1")
+    checkmate::qassert(N, "X1[2,]")
     checkmate::qassert(J, "X>0[1,]")
     checkmate::assert_matrix(betas, mode = "double", any.missing = FALSE, 
                              nrows = J, ncols = 4)
@@ -147,7 +147,7 @@ generate_irtree_2012 <- function(N = NULL,
                                  prop.rev = .5,
                                  cat = TRUE){
     
-    checkmate::qassert(N, "X1")
+    checkmate::qassert(N, "X1[2,]")
     checkmate::qassert(J, "X>0[1,]")
     checkmate::assert_matrix(betas, mode = "double", any.missing = FALSE, 
                              nrows = J, ncols = 3)
