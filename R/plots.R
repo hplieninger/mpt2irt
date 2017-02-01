@@ -212,7 +212,7 @@ plot_irtree <- function(fit,
             }
         }
         if(class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
-        fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
+        fit$summary <- coda::summary.mcmc.list(fit$mcmc)
     }
     
     ss <- merge(data.frame("id" = rownames(fit$summary$statistics), "Mean" = fit$summary$statistics[, "Mean"]),

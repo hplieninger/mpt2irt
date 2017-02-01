@@ -42,7 +42,7 @@
 # @param mail an email address used when the simulation is finished (no dash "-" allowed!)
 # @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 #' @inheritParams fit_irtree
-#' @inheritParams runjags:::run.jags
+#' @inheritParams runjags::run.jags
 #' @return Function does not directly return anything but saves an external
 #'   RData file to \code{dir}. This object is a list containing the generated
 #'   parameters in \code{sim-results$param.sum$gen}, fitted parameters and other model fit
@@ -320,7 +320,7 @@ recovery_irtree <- function(rrr = NULL,
                 returnlist$param.sum[[fitModel[sss]]] <- fit.stan
                 returnlist$param.sum[[fitModel[sss]]]$mcmc <- rstan::As.mcmc.list(fit.stan$samples)
                 returnlist$param.sum[[fitModel[sss]]]$summary <-
-                    coda:::summary.mcmc.list(returnlist$param.sum[[fitModel[sss]]]$mcmc)
+                    coda::summary.mcmc.list(returnlist$param.sum[[fitModel[sss]]]$mcmc)
                 returnlist$df <- fit.stan$df
                 returnlist$V <- fit.stan$V
                 returnlist$session <- sessionInfo()

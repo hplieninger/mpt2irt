@@ -61,7 +61,7 @@
 #' @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 # @details  Note that the progress of Stan is shown in a text file in the
 #'   working directory ("_Stanprogress.txt")
-#' @inheritParams runjags:::run.jags
+#' @inheritParams runjags::run.jags
 #' @import rstan
 #' @return Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
 #' @examples 
@@ -221,14 +221,14 @@ fit_irtree <- function(X,
     
     if(fitMethod == "jags"){
         ##################### fit JAGS ###############################################
-        boeck.jags <- runjags:::run.jags(model=paste0(.libPaths()[1],"/mpt2irt/models/jags_boeck_",
-                                                      fitModel, ".txt"), 
-                                         monitor = varlist, 
-                                         data = datalist, inits = inits,
-                                         n.chains = n.chains, sample = M, 
-                                         burnin = ceiling(warmup*4/5), adapt = ceiling(warmup/5),
-                                         thin = thin, method = method, 
-                                         summarise = summarise, modules = c("glm", "dic"), ...)
+        boeck.jags <- runjags::run.jags(model=paste0(.libPaths()[1],"/mpt2irt/models/jags_boeck_",
+                                                     fitModel, ".txt"), 
+                                        monitor = varlist, 
+                                        data = datalist, inits = inits,
+                                        n.chains = n.chains, sample = M, 
+                                        burnin = ceiling(warmup*4/5), adapt = ceiling(warmup/5),
+                                        thin = thin, method = method, 
+                                        summarise = summarise, modules = c("glm", "dic"), ...)
         if (is.null(outFormat)) {
             boeck.samp <- boeck.jags
         } else if (outFormat == "mcmc.list") {
