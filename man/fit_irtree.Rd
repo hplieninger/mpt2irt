@@ -110,4 +110,3 @@ str(res3)
 res3$plot
 }
 }
-

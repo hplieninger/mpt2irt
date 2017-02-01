@@ -49,4 +49,3 @@ res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
 boeck_predict(res3)
 }
 }
-

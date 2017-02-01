@@ -40,4 +40,3 @@ jacobian_irtree(N=6, J=8, revItem=rep(1,8), type="ext", rep=5)
 jacobian_irtree(N=6, J=8, revItem=rep(0:1,4), 
                traitItem=rep(1:2,each=4), type="ext3", rep=5)
 }
-

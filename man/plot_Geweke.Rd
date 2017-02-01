@@ -31,4 +31,3 @@ Plot a histogram of the Geweke convergence diagnostic.
 \seealso{
 \code{\link{geweke.diag}}
 }
-

@@ -15,4 +15,3 @@ a N x J x C  matrix with response frequencies of 0 and 1
 \description{
 categorical  (responses 1...5) to multinomial (1/0 frequencies) data
 }
-

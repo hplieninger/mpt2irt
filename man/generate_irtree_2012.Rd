@@ -38,4 +38,3 @@ J <- 10
 betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 0))
 dat <- generate_irtree_2012(N = N, J = J, betas = betas)
 }
-

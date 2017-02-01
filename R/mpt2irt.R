@@ -17,6 +17,16 @@
 #' @author Hansjoerg Plieninger & Daniel W. Heck
 #' @references Boeckenholt, U. (2012). Modeling multiple response processes in judgment and choice. Psychological Methods, 17, 665-678. doi:10.1037/a0028111
 #' @references Matzke, D., Dolan, C. V., Batchelder, W. H., & Wagenmakers, E.-J. (2015). Bayesian estimation of multinomial processing tree models with heterogeneity in participants and items. Psychometrika, 80, 205-235. doi:10.1007/s11336-013-9374-9
+#' @useDynLib mpt2irt, .registration = TRUE 
+#' 
+#' @import methods
+#' @importFrom rstan optimizing sampling vb constrain_pars extract
+#'   extract_sparse_parts get_posterior_mean stanc
+#' @import stats
+#' @import Rcpp
+#' @import bayesplot
+#' @import rstantools
+#' 
 #' @examples 
 #' \dontrun{
 #' N <- 20

@@ -43,4 +43,3 @@ head(res2$summary$statistics)
 head(res2$summary$quantiles)
 }
 }
-

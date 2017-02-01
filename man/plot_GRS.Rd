@@ -28,4 +28,3 @@ Plot a histogram of the Gelman and Rubin's convergence diagnostic.
 \seealso{
 \code{\link{gelman.diag}}
 }
-

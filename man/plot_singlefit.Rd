@@ -54,4 +54,3 @@ plot_singlefit(N, J, 2+n.trait, "2012", jags.samp=fit, stan=fit2,
                revItem=gen$revItem,traitItem=gen$traitItem)
 }
 }
-

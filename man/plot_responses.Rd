@@ -36,4 +36,3 @@ betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
 dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 plot_responses(dat$X, revItem = dat$revItem, traitItem = dat$traitItem)
 }
-

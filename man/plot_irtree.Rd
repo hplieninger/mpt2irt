@@ -54,4 +54,3 @@ res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
 plot_irtree(res1, J = J, revItem = dat$revItem)
 }
 }
-

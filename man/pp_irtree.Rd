@@ -68,4 +68,3 @@ res3 <- pp_irtree(res2$mcmc, iter = 10, N = 512, traitItem = dat$traitItem,
                   revItem = dat$revItem, fitModel = res2$fitModel)
 }
 }
-

@@ -39,4 +39,3 @@ betapar <- mpt2irt:::gen_betas("ext", J = J, betas = tmp1)
 \seealso{
 \code{\link[truncnorm]{rtruncnorm}}
 }
-

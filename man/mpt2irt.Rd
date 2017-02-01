@@ -34,12 +34,11 @@ res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
 res3$plot
 }
 }
-\author{
-Hansjoerg Plieninger & Daniel W. Heck
-}
 \references{
 Boeckenholt, U. (2012). Modeling multiple response processes in judgment and choice. Psychological Methods, 17, 665-678. doi:10.1037/a0028111
 
 Matzke, D., Dolan, C. V., Batchelder, W. H., & Wagenmakers, E.-J. (2015). Bayesian estimation of multinomial processing tree models with heterogeneity in participants and items. Psychometrika, 80, 205-235. doi:10.1007/s11336-013-9374-9
 }
-
+\author{
+Hansjoerg Plieninger & Daniel W. Heck
+}

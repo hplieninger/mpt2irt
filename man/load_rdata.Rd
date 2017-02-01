@@ -19,4 +19,3 @@ name of choice.
 \references{
 \url{http://stackoverflow.com/a/5577647}
 }
-

@@ -70,4 +70,3 @@ cor(res3$theta$Median, dat$theta)
 cor(res3$beta$Median, dat$betas)
 }
 }
-

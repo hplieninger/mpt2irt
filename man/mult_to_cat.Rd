@@ -15,4 +15,3 @@ N x J   matrix with responses 1...5
 \description{
 multinomial (1/0 frequencies) to categorical data (responses 1...5)
 }
-
