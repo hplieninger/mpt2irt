@@ -2,15 +2,19 @@
 % Please edit documentation in R/helper_functions.R
 \name{load_rdata}
 \alias{load_rdata}
-\title{Load RData File}
+\title{Load RData file}
 \usage{
 load_rdata(file = NULL)
 }
 \arguments{
 \item{file}{An RData file saved via \code{\link[base]{save}}.}
 }
+\value{
+The object save in \code{file}.
+}
 \description{
-Load a single \code{R} object stored in an RData file and give the object a name of choice.
+Load a single \code{R} object stored in an RData file and give the object a
+name of choice.
 }
 \references{
 \url{http://stackoverflow.com/a/5577647}

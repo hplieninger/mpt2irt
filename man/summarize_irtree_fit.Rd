@@ -13,7 +13,7 @@ summarize_irtree_fit(fit, fitMethod = NULL, interact = FALSE, ...)
 
 \item{interact}{logical. If set to \code{TRUE}, the function may be prompt for input.}
 
-\item{...}{Further arguments passed to \code{\link[coda]{summary}}.}
+\item{...}{Further arguments passed to \code{\link[coda]{summary.mcmc.list}}.}
 }
 \value{
 Returns a list containing the input \code{fit} as well as an MCMC list and \code{summary}.

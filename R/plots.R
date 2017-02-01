@@ -274,7 +274,7 @@ plot_irtree <- function(fit,
     # }
   
     # library("ggplot2")
-    requireNamespace("ggplot2")
+    # loadNamespace("ggplot2")
     
     gg <- ggplot(aes(x = Item, y = get(measure), col = revItem), data = ss) + 
         # ggplot(aes(x=Item, y=Mean, col=revItem), data=ss) + 

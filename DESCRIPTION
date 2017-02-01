@@ -28,6 +28,7 @@ Description: Multinomial processing tree (MPT) models are used to differentiate
     extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
     Bayesian hierarchical models requiring JAGS or Stan.
 Depends: R (>= 3.0.0)
+SystemRequirements: JAGS and/or Stan
 License: GPL-2
 RoxygenNote: 5.0.1
 Suggests: dplyr,

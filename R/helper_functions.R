@@ -1,8 +1,10 @@
-#' Load RData File
+#' Load RData file
 #' 
-#' Load a single \code{R} object stored in an RData file and give the object a name of choice.
+#' Load a single \code{R} object stored in an RData file and give the object a
+#' name of choice.
 #' 
 #' @param file An RData file saved via \code{\link[base]{save}}.
+#' @return The object save in \code{file}.
 #' @references \url{http://stackoverflow.com/a/5577647}
 #' @export
 load_rdata <- function(file = NULL) {

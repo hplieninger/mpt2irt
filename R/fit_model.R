@@ -62,6 +62,7 @@
 # @details  Note that the progress of Stan is shown in a text file in the
 #'   working directory ("_Stanprogress.txt")
 #' @inheritParams runjags:::run.jags
+#' @import rstan
 #' @return Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
 #' @examples 
 #' \dontrun{
@@ -243,7 +244,8 @@ fit_irtree <- function(X,
     } else {
         ##################### fit Stan ###############################################
         
-        require("rstan")
+        # library("rstan")
+        # loadNamespace("rstan")
         
         # if (!is.null(model2) & model2 == "HH") {
         #     # fitting "model" requires changing S2 to S2+1 (see above)

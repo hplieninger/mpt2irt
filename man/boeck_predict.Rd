@@ -2,16 +2,51 @@
 % Please edit documentation in R/plots2.R
 \name{boeck_predict}
 \alias{boeck_predict}
-\title{Plot Observed Frequencies and Model Predictions}
+\title{Model predicted response distribution.}
 \usage{
 boeck_predict(fit_sum = NULL, theta = matrix(0, N, S2), betas = NULL,
-  beta_ARS_extreme = NULL, S = NULL, N = 1, J = NULL, revItem = NULL,
-  traitItem = NULL, fitModel = NULL, item_order = 1:J)
+  beta_ARS_extreme = NULL, measure = c("Median", "Mean"), S = NULL,
+  N = 1, J = NULL, revItem = NULL, traitItem = NULL, fitModel = NULL)
 }
 \arguments{
-\item{fitModel}{either "ext" or "2012"}
+\item{fit_sum}{List. A summary of theta and beta parameters as returned from \code{\link{tidyup_irtree_fit}}.}
+
+\item{theta}{Matrix. A matrix of person parameters for which the predictions should be made.}
+
+\item{revItem}{vector of length J specifying reversed items (1=reversed,
+0=not reversed)}
+
+\item{traitItem}{vector of length J specifying the underlying traits (e.g.,
+indexed from 1...5). Standard: only a single trait is measured by all
+items. If the Big5 are measures, might be something like
+c(1,1,1,2,2,2,...,5,5,5,5)}
+
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
+acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
+credit model).}
+}
+\value{
+Function returns a data frame in long format with predicted response probability for each person-item combination.
 }
 \description{
-plot expected distribution of frequencies
+Calculate the predicted response distribution given the posterior median/mean of the item parameters and a matrix \code{theta} of person parameters.
+}
+\examples{
+\dontrun{
+# generate data
+N <- 20
+J <- 10
+betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+
+# fit model
+res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200, warmup = 200)
+res2 <- summarize_irtree_fit(res1)
+res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
+                          traitItem = dat$traitItem, fitModel = res1$fitModel)
+
+# expected frequencies
+boeck_predict(res3)
+}
 }
 

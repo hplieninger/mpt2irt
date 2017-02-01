@@ -258,7 +258,7 @@ tidyup_irtree_fit <- function(fit,
 #' 
 #' @param fit a fitted object from \code{\link{fit_irtree}}.
 #' @param interact logical. If set to \code{TRUE}, the function may be prompt for input.
-#' @param ... Further arguments passed to \code{\link[coda]{summary}}.
+#' @param ... Further arguments passed to \code{\link[coda]{summary.mcmc.list}}.
 #' @return Returns a list containing the input \code{fit} as well as an MCMC list and \code{summary}.
 #' @inheritParams fit_irtree
 #' @importFrom magrittr %>% 
