@@ -1,25 +1,10 @@
 Package: mpt2irt
 Type: Package
 Title: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles
-Version: 0.1
+Version: 0.1.0
 Date: 2017-01-31
-Author: Hansjoerg Plieninger, Daniel W. Heck
-Maintainer: Hansjoerg Plieninger <plieninger@uni-mannheim.de>
-Imports: checkmate,
-    coda,
-    doParallel,
-    foreach,
-    mail,
-    MASS,
-    MBESS,
-    parallel,
-    rstan (>= 2.14.1),
-    rstantools (>= 1.1.0),
-    runjags,
-    truncnorm,
-    magrittr,
-    ggplot2
-Depends: R (>= 3.0.2), Rcpp (>= 0.12.9), methods (>= 3.3.2)
+Authors@R: c(person("Hansjoerg", "Plieninger", email = "plieninger@uni-mannheim.de", role = "cre"),
+             person("Daniel", "Heck", email = "heck@uni-mannheim.de", role = "aut"))
 Description: Multinomial processing tree (MPT) models are used to differentiate
     between different cognitive processes in categorical data. Those can be
     lifted to hierarchical MPT models to account for person- and/or item effects
@@ -29,12 +14,35 @@ Description: Multinomial processing tree (MPT) models are used to differentiate
     responding (ERS), and the target trait. This package allows to fit an
     extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
     Bayesian hierarchical models requiring JAGS or Stan.
-SystemRequirements: JAGS and/or Stan
-License: GPL-2
-RoxygenNote: 5.0.1
-Suggests: dplyr,
-    mail,
+License: GPL (>=3)
+Depends:
+    R (>= 3.0.2),
+    Rcpp (>= 0.12.0),
+    methods
+Imports:
+    ggplot2 (>= 2.2.1),
+    rstan (>= 2.14.1),
+    rstantools (>= 1.1.0),
+	checkmate,
+    coda,
+    doParallel,
+    foreach,
+    MASS,
+    MBESS,
+    parallel,
+    runjags,
+    truncnorm,
+    magrittr
+Suggests:
+    dplyr,
     reshape2,
     tidyr,
-    testthat
-LinkingTo: StanHeaders (>= 2.14.0.1), rstan (>= 2.14.1), BH (>= 1.62.0.1), Rcpp (>= 0.12.9), RcppEigen (>= 0.3.2.9.0)
+    knitr (>= 1.15.1),
+    rmarkdown,
+    roxygen2,
+    testthat (>= 1.0.2)
+LinkingTo: StanHeaders (>= 2.14.0), rstan (>= 2.14.1), BH (>= 1.62.0), Rcpp (>=
+    0.12.0), RcppEigen
+LazyData: true
+NeedsCompilation: yes
+RoxygenNote: 6.0.0.9000
