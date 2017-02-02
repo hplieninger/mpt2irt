@@ -19,17 +19,17 @@
   for (m in modules) loadModule(m, what = TRUE)
 }
 
-.onAttach <- function(...) {
-    mpt2irtLib <- dirname(system.file(package = "mpt2irt"))
-    pkgdesc <- suppressWarnings(utils::packageDescription("mpt2irt", lib.loc = mpt2irtLib))
-    if (length(pkgdesc) > 1) {
-        # builddate <- gsub(';.*$', '', pkgdesc$Built)
-        packageStartupMessage(paste("mpt2irt (Version ", pkgdesc$Version,
-                                    # ", packaged: ", builddate,
-                                    ")", sep = ""))
-    }
-    # packageStartupMessage("- Do not expect the default priors to remain the same in future mpt2irt versions.")
-    # packageStartupMessage("Thus, R scripts should specify priors explicitly, even if they are just the defaults.")
-    # packageStartupMessage("- For execution on a local, multicore CPU with excess RAM we recommend calling")
-    # packageStartupMessage("options(mc.cores = parallel::detectCores())")
-}
+# .onAttach <- function(...) {
+#     mpt2irtLib <- dirname(system.file(package = "mpt2irt"))
+#     pkgdesc <- suppressWarnings(utils::packageDescription("mpt2irt", lib.loc = mpt2irtLib))
+#     if (length(pkgdesc) > 1) {
+#         # builddate <- gsub(';.*$', '', pkgdesc$Built)
+#         packageStartupMessage(paste("mpt2irt (Version ", pkgdesc$Version,
+#                                     # ", packaged: ", builddate,
+#                                     ")", sep = ""))
+#     }
+#     # packageStartupMessage("- Do not expect the default priors to remain the same in future mpt2irt versions.")
+#     # packageStartupMessage("Thus, R scripts should specify priors explicitly, even if they are just the defaults.")
+#     # packageStartupMessage("- For execution on a local, multicore CPU with excess RAM we recommend calling")
+#     # packageStartupMessage("options(mc.cores = parallel::detectCores())")
+# }
