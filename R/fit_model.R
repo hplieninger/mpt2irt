@@ -252,19 +252,23 @@ fit_irtree <- function(X,
         #     stanExe <- boeck_stan_ext_HH
         # } else
         if (fitModel == "ext"){
-            stanExe <- boeck_stan_ext
+            stanExe <- stanmodels$stan_boeck_ext
         } else if (fitModel == "pcm"){
-            stanExe <- boeck_stan_pcm
+            stanExe <- stanmodels$stan_pcm
         } else if (fitModel == "ext2"){
-            stanExe <- boeck_stan_ext2
+            # stanExe <- boeck_stan_ext2
+            error("Model 'ext2' currently not implemented")
         } else if (fitModel == "ext3"){
-            stanExe <- boeck_stan_ext3
+            # stanExe <- boeck_stan_ext3
+            error("Model 'ext3' currently not implemented")
         } else if (fitModel == "ext4"){
-            stanExe <- boeck_stan_ext4
+            # stanExe <- boeck_stan_ext4
+            error("Model 'ext4' currently not implemented")
         } else if (fitModel == "ext5"){
-            stanExe <- boeck_stan_ext5
+            # stanExe <- boeck_stan_ext5
+            error("Model 'ext5' currently not implemented")
         } else {
-            stanExe <- boeck_stan_2012
+            stanExe <- stanmodels$stan_boeck_2012
         }
         if (is.null(cores)) cores <- min(n.chains, parallel::detectCores() - 1)
         boeck.samp <- rstan::sampling(stanExe,
