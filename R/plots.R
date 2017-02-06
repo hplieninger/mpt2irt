@@ -6,7 +6,7 @@
 #' @param J number of items
 #' @param S number of latent processes to be measured
 #' @param model either "2012" or "ext"
-#' @param number of theta parameters to plot (either 3 or 4)
+# @param number of theta parameters to plot (either 3 or 4)
 #' @param jags.samp a fitted mcmc.list from JAGS
 #' @param stan.samp a fitted Stan array
 #' @param true.par a list with true values for beta and theta
@@ -142,6 +142,7 @@ plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp,
 #'   trait(s).
 #' @param measure Character vector that indicates whether the mean (default) or
 #'   the median of the posterior distribution should be plotted.
+#' @param rs_names Character vector. Names of the MPT parameters used for plotting, defaults to something like \code{c("m", "e", "a", "t")}.
 #' @inheritParams fit_irtree
 #' @inheritParams generate_irtree_ext
 #' @import ggplot2
@@ -307,6 +308,7 @@ plot_irtree <- function(fit,
 #' @param plot Logical. Either return a histogram or the results.
 #' @param return.odd Logical. Whether the output for (odd) parameters with a point
 #'   estimate > 1.05 should be returned.
+#' @param ... Optional arguments passed to \code{\link[graphics]{hist}}.
 #' @inheritParams plot_irtree
 #' @seealso \code{\link{gelman.diag}}
 # @importFrom coda gelman.diag
@@ -356,6 +358,7 @@ plot_GRS <- function(fit, parameter = "beta", estimate = "point", plot = TRUE,
 #'   processes (e.g., \code{D = 4}) for a 1/2/3/ect-dimensional "ext" model or
 #'   \code{D=3} for a 1/2/ect-dimensional "Boeckenholt2012" model)
 #' @param plot Logical. Either return a histogram or the results.
+#' @param ... Optional arguments passed to \code{\link[graphics]{hist}}.
 #' @inheritParams plot_irtree
 #' @inheritParams coda::geweke.diag
 #' @seealso \code{\link{geweke.diag}}

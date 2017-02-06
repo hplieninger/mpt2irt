@@ -58,6 +58,11 @@ for burnin)}
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
 
+\item{cores}{Number of cores to use when executing the chains in parallel,
+    which defaults to 1 but we recommend setting the \code{mc.cores} option 
+    to be as many processors as the hardware and RAM allow (up to the 
+    number of chains).}
+
 \item{summarise}{should summary statistics be automatically calculated for the output chains?  Default TRUE (but see also ?runjags.options -> force.summary).}
 
 \item{N2}{Numeric. Number of persons for whom to draw posterior predictives.

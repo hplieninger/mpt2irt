@@ -32,6 +32,10 @@
 #' @param dir Path to directory where results should be stored,
 #' @param keep_mcmc Logical indicating wheter to retain, besides a summary of the parameters, the raw mcmc samples.
 #' @param savext_mcmc Logical indicating wheter to save the raw mcmc samples in an external RData file.
+#' @param beta_ARS_extreme Numeric. Only for \code{genModel="ext"}: probability
+#'   (on probit scale) of choosing category 5 (vs.4) in case of ARS. Defaults to
+#'   \code{rtruncnorm(mean = qnorm(.7), sd = sqrt(.1), a = qnorm(.5), b =
+#'   qnorm(.9))}.
 # @param M number of MCMC samples (adaptation + burnin = M/2)
 # @param n.chains number of chains
 # @param thin thinning of MCMC samples
@@ -42,6 +46,7 @@
 # @param mail an email address used when the simulation is finished (no dash "-" allowed!)
 # @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 #' @inheritParams fit_irtree
+#' @inheritParams generate_irtree_ext
 #' @inheritParams runjags::run.jags
 #' @return Function does not directly return anything but saves an external
 #'   RData file to \code{dir}. This object is a list containing the generated

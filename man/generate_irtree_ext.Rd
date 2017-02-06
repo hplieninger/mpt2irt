@@ -32,6 +32,8 @@ probit scale) of choosing category 5 (vs.4) in case of ARS}
 
 \item{cat}{whether to return categorical data (response categories 1...5) or
 multinomial data (frequencies of 0 and 1)}
+
+\item{theta}{Numeric. Optional matrix with \code{N} rows containing the true person parameters theta.}
 }
 \value{
 The function returns a list containing the generated matrix of

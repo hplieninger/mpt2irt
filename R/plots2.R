@@ -176,6 +176,8 @@ boeck_predict <- function(fit_sum = NULL,
 #' @param ... Additional arguments passed to \code{\link[graphics]{lines}}.
 #' @inheritParams fit_irtree
 #' @inheritParams boeck_predict
+#' @inheritParams plot_responses
+#' @inheritParams graphics::lines
 #' @inheritParams graphics::plot.default
 #' @examples 
 #' \dontrun{

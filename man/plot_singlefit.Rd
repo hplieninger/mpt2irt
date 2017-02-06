@@ -25,8 +25,6 @@ plot_singlefit(N, J, S, model, jags.samp, stan.samp, true.par,
 \item{traitItem}{if more than a single trait is measured, items measuring different traits are shown in different colors}
 
 \item{revItem}{if specified, reversed items are shown as different points}
-
-\item{number}{of theta parameters to plot (either 3 or 4)}
 }
 \description{
 Plot estimates from a single fit using jags and stan (or estimates and true values). Only two object of jags.samp/stan.samp/true.par are allowed.

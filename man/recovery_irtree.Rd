@@ -16,6 +16,8 @@ recovery_irtree(rrr = NULL, N = NULL, J = NULL, prop.rev = 0.5,
 \item{rrr}{Sequence of integers (e.g., \code{1:100}) of length greater or
 equal to 1 specifying the number of replications to run.}
 
+\item{N}{number of persons}
+
 \item{J}{number of items. Can be a vector for multiple traits (e.g.,
 J=c(10,10,10)).}
 
@@ -35,6 +37,11 @@ middle, extreme, (acquiescence), trait). standard is diag(3) / diag(4). Can be a
 \item{betas}{Optional list. May have entries \code{"beta.mrs"},
 \code{"beta.ers"}, \code{"beta.trait"}, and/or \code{"beta.ars"}. Each of
 those may have arguments passed to \code{\link[truncnorm]{rtruncnorm}}.}
+
+\item{beta_ARS_extreme}{Numeric. Only for \code{genModel="ext"}: probability
+(on probit scale) of choosing category 5 (vs.4) in case of ARS. Defaults to
+\code{rtruncnorm(mean = qnorm(.7), sd = sqrt(.1), a = qnorm(.5), b =
+qnorm(.9))}.}
 
 \item{df}{degrees of freedom for wishart prior on covariance of traits
 (standard/minimum: number of processes + 1)}

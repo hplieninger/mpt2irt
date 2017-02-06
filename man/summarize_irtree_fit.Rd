@@ -21,11 +21,11 @@ Returns a list containing the input \code{fit} as well as an MCMC list and \code
 \description{
 Function takes a fitted model returned from \code{\link{fit_irtree}} and
 calculates summaries for all parameters using coda's
-\code{\link[coda]{summary}}.
+\code{\link[coda]{summary.mcmc.list}}.
 }
 \details{
 The difference between the present function and directly calling coda's
-\code{\link[coda]{summary}} is that, herein, the correlations of the thetas
+\code{\link[coda]{summary.mcmc.list}} is that, herein, the correlations of the thetas
 are summarized in addition to the covariances.
 }
 \examples{

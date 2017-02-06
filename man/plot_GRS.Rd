@@ -21,6 +21,8 @@ the point estimate or the upper limit of the 95\% CI is to be used.}
 
 \item{return.odd}{Logical. Whether the output for (odd) parameters with a point
 estimate > 1.05 should be returned.}
+
+\item{...}{Optional arguments passed to \code{\link[graphics]{hist}}.}
 }
 \description{
 Plot a histogram of the Gelman and Rubin's convergence diagnostic.

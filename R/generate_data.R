@@ -13,6 +13,7 @@
 #'   probit scale) of choosing category 5 (vs.4) in case of ARS
 #' @param cat whether to return categorical data (response categories 1...5) or
 #'   multinomial data (frequencies of 0 and 1)
+#' @param theta Numeric. Optional matrix with \code{N} rows containing the true person parameters theta.
 #' @inheritParams fit_irtree
 #' @return The function returns a list containing the generated matrix of
 #'   responses X, a vector revItem indicating reversed items and true, latent
@@ -337,6 +338,7 @@ mult_to_cat <- function(X){
 #' categorical  (responses 1...5) to multinomial (1/0 frequencies) data
 #' 
 #' @param X a N x J   matrix with responses 1...5
+#' @param C Number of categories.
 #' @return  a N x J x C  matrix with response frequencies of 0 and 1
 #' @export
 cat_to_mult <- function(X, C=5){

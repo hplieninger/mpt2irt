@@ -25,7 +25,10 @@
 #'   extract_sparse_parts get_posterior_mean stanc
 #' @import Rcpp
 #' @import rstantools
-#' @importFrom stats cor cov2cor pnorm qnorm quantile rWishart rmultinom rnorm runif window
+#' @importFrom utils menu object.size sessionInfo setTxtProgressBar txtProgressBar
+#' @importFrom stats cor cov2cor pnorm qnorm quantile rWishart rmultinom rnorm runif setNames window
+#' @importFrom grDevices heat.colors
+#' @importFrom graphics abline barplot hist legend lines par plot
 #' 
 #' @examples 
 #' \dontrun{

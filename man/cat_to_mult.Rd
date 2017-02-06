@@ -8,6 +8,8 @@ cat_to_mult(X, C = 5)
 }
 \arguments{
 \item{X}{a N x J   matrix with responses 1...5}
+
+\item{C}{Number of categories.}
 }
 \value{
 a N x J x C  matrix with response frequencies of 0 and 1

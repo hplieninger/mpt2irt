@@ -24,6 +24,8 @@ processes (e.g., \code{D = 4}) for a 1/2/3/ect-dimensional "ext" model or
 \item{frac2}{fraction to use from end of chain}
 
 \item{plot}{Logical. Either return a histogram or the results.}
+
+\item{...}{Optional arguments passed to \code{\link[graphics]{hist}}.}
 }
 \description{
 Plot a histogram of the Geweke convergence diagnostic.

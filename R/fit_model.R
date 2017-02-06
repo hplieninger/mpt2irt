@@ -62,6 +62,7 @@
 # @details  Note that the progress of Stan is shown in a text file in the
 #'   working directory ("_Stanprogress.txt")
 #' @inheritParams runjags::run.jags
+#' @inheritParams rstan::sampling
 #' @return Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
 #' @examples 
 #' \dontrun{

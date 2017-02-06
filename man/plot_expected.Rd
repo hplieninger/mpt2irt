@@ -23,19 +23,17 @@ indexed from 1...5). Standard: only a single trait is measured by all
 items. If the Big5 are measures, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{type}{1-character string giving the type of plot desired.  The
-    following values are possible, for details, see \code{\link{plot}}:
-    \code{"p"} for points, \code{"l"} for lines,
-    \code{"b"} for both points and lines,
-    \code{"c"} for empty points joined by lines,
-    \code{"o"} for overplotted points and lines,
-    \code{"s"} and \code{"S"} for stair steps and
-    \code{"h"} for histogram-like vertical lines.  Finally,
-    \code{"n"} does not produce any points or lines.}
+\item{points}{how many resposne categories in Likert scale}
+
+\item{type}{character indicating the type of plotting; actually any of
+    the \code{type}s as in \code{\link{plot.default}}.}
 
 \item{col}{Color of the prediction line.}
 
 \item{ylim}{the y limits of the plot.}
+
+\item{measure}{Character vector that indicates whether the mean (default) or
+the median of the posterior distribution should be plotted.}
 
 \item{...}{Additional arguments passed to \code{\link[graphics]{lines}}.}
 }

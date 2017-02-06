@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{load_rdata}
 \alias{load_rdata}
-\title{Load RData file}
+\title{Load RData file.}
 \usage{
 load_rdata(file = NULL)
 }

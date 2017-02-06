@@ -34,12 +34,14 @@ trait(s).}
 \item{measure}{Character vector that indicates whether the mean (default) or
 the median of the posterior distribution should be plotted.}
 
+\item{rs_names}{Character vector. Names of the MPT parameters used for plotting, defaults to something like \code{c("m", "e", "a", "t")}.}
+
 \item{fitMethod}{whether to use JAGS or Stan}
 }
 \description{
 This function takes the output from a fitted model and plots the item
 parameters. More precisely, the probability to pass an item's threshold
-\eqn{($\Phi(0-\beta$)} for an average person with \eqn{$\theta$=0} is depicted as a
+\eqn{\Phi(0-\beta)} for an average person with \eqn{\theta=0} is depicted as a
 function of the cognitive process involved (i.e., MRS, ERS, ARS, target
 trait) and both \code{traitItem} and \code{revItem}.
 }

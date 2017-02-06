@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
 )
 ```
 
+[![Build Status](https://travis-ci.org/hplieninger/mpt2irt/mpt2irt.png?branch=master)](https://travis-ci.org/hplieninger/mpt2irt)
 
 # Overview
 
