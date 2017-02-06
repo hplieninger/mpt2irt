@@ -23,10 +23,9 @@
 #' @import methods
 #' @importFrom rstan optimizing sampling vb constrain_pars extract
 #'   extract_sparse_parts get_posterior_mean stanc
-#' @import stats
 #' @import Rcpp
-#' @import bayesplot
 #' @import rstantools
+#' @importFrom stats cor cov2cor pnorm qnorm quantile rWishart rmultinom rnorm runif window
 #' 
 #' @examples 
 #' \dontrun{

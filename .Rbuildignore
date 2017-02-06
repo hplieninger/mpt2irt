@@ -4,3 +4,4 @@
 compile_stan_models.R
 ^README\.Rmd$
 ^README-.*\.png$
+^\.travis\.yml$

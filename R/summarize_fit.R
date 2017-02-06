@@ -81,7 +81,7 @@ tidyup_irtree_fit <- function(fit,
             }
         }
         if(class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
-        fit$summary <- coda::summary.mcmc.list(fit$mcmc)
+        fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
     }
     
     if (!is.null(S)) {
@@ -365,7 +365,7 @@ summarize_irtree_fit <- function(fit,
     #     fit$mcmc[[iii]] <- tmp3
     # }
     
-    fit$summary <- coda::summary.mcmc.list(fit$mcmc, ...)
+    fit$summary <- coda:::summary.mcmc.list(fit$mcmc, ...)
     
     return(fit)
 }

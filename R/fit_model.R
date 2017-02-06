@@ -62,7 +62,6 @@
 # @details  Note that the progress of Stan is shown in a text file in the
 #'   working directory ("_Stanprogress.txt")
 #' @inheritParams runjags::run.jags
-# @import rstan
 #' @return Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
 #' @examples 
 #' \dontrun{
@@ -232,9 +231,9 @@ fit_irtree <- function(X,
         if (is.null(outFormat)) {
             boeck.samp <- boeck.jags
         } else if (outFormat == "mcmc.list") {
-            try(boeck.samp <- runjags:::as.mcmc.list.runjags(boeck.samp))
+            try(boeck.samp <- boeck.samp$mcmc)
         } else if (outFormat == "stan") {
-            try(boeck.samp <- runjags:::as.mcmc.list.runjags(boeck.samp))
+            try(boeck.samp <- boeck.samp$mcmc)
             try(boeck.samp <- mcmc.list2stan(boeck.samp))
         }
         time2 <- Sys.time()
@@ -257,16 +256,16 @@ fit_irtree <- function(X,
             stanExe <- stanmodels$stan_pcm
         } else if (fitModel == "ext2"){
             # stanExe <- boeck_stan_ext2
-            error("Model 'ext2' currently not implemented")
+            stop("Model 'ext2' currently not implemented")
         } else if (fitModel == "ext3"){
             # stanExe <- boeck_stan_ext3
-            error("Model 'ext3' currently not implemented")
+            stop("Model 'ext3' currently not implemented")
         } else if (fitModel == "ext4"){
             # stanExe <- boeck_stan_ext4
-            error("Model 'ext4' currently not implemented")
+            stop("Model 'ext4' currently not implemented")
         } else if (fitModel == "ext5"){
             # stanExe <- boeck_stan_ext5
-            error("Model 'ext5' currently not implemented")
+            stop("Model 'ext5' currently not implemented")
         } else {
             stanExe <- stanmodels$stan_boeck_2012
         }

@@ -61,6 +61,8 @@ plot_responses <- function(X,
 #' @param fit_sum List. A summary of theta and beta parameters as returned from \code{\link{tidyup_irtree_fit}}.
 #' @param theta Matrix. A matrix of person parameters for which the predictions should be made.
 #' @inheritParams fit_irtree
+#' @inheritParams tidyup_irtree_fit
+#' @inheritParams generate_irtree_ext
 #' @return Function returns a data frame in long format with predicted response probability for each person-item combination.
 #' @examples 
 #' \dontrun{

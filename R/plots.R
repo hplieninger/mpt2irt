@@ -123,7 +123,7 @@ plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp,
 #' 
 #' This function takes the output from a fitted model and plots the item
 #' parameters. More precisely, the probability to pass an item's threshold
-#' \eqn{($\Phi(0-\beta$)} for an average person with \eqn{$\theta$=0} is depicted as a
+#' \eqn{\Phi(0-\beta)} for an average person with \eqn{\theta=0} is depicted as a
 #' function of the cognitive process involved (i.e., MRS, ERS, ARS, target
 #' trait) and both \code{traitItem} and \code{revItem}.
 #' 
@@ -212,7 +212,7 @@ plot_irtree <- function(fit,
             }
         }
         if(class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
-        fit$summary <- coda::summary.mcmc.list(fit$mcmc)
+        fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
     }
     
     ss <- merge(data.frame("id" = rownames(fit$summary$statistics), "Mean" = fit$summary$statistics[, "Mean"]),

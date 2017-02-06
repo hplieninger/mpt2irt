@@ -320,7 +320,7 @@ recovery_irtree <- function(rrr = NULL,
                 returnlist$param.sum[[fitModel[sss]]] <- fit.stan
                 returnlist$param.sum[[fitModel[sss]]]$mcmc <- rstan::As.mcmc.list(fit.stan$samples)
                 returnlist$param.sum[[fitModel[sss]]]$summary <-
-                    coda::summary.mcmc.list(returnlist$param.sum[[fitModel[sss]]]$mcmc)
+                    coda:::summary.mcmc.list(returnlist$param.sum[[fitModel[sss]]]$mcmc)
                 returnlist$df <- fit.stan$df
                 returnlist$V <- fit.stan$V
                 returnlist$session <- sessionInfo()

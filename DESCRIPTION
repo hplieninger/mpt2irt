@@ -20,7 +20,7 @@ Depends:
     Rcpp (>= 0.12.0),
     methods
 Imports:
-    ggplot2 (>= 2.2.1),
+    ggplot2,
     rstan (>= 2.14.1),
     rstantools (>= 1.1.0),
 	checkmate,
@@ -40,7 +40,10 @@ Suggests:
     knitr (>= 1.15.1),
     rmarkdown,
     roxygen2,
-    testthat (>= 1.0.2)
+    testthat (>= 1.0.2),
+    purrr,
+    tibble,
+    numDeriv
 LinkingTo: StanHeaders (>= 2.14.0), rstan (>= 2.14.1), BH (>= 1.62.0), Rcpp (>=
     0.12.0), RcppEigen
 LazyData: true

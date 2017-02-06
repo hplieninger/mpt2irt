@@ -1,4 +1,4 @@
-#' Load RData file
+#' Load RData file.
 #' 
 #' Load a single \code{R} object stored in an RData file and give the object a
 #' name of choice.
