@@ -10,6 +10,7 @@
 #' @inheritParams fit_irtree
 #' @inheritParams plot_irtree
 #' @return The function returns a list for each of the core parameters (e.g., theta, beta), which are each summarized with the posterior mean, median and 95% CI.
+#' @import coda
 #' @examples
 #' \dontrun{
 #' # generate data
@@ -81,7 +82,8 @@ tidyup_irtree_fit <- function(fit,
             }
         }
         if(class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
-        fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
+        # fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
+        fit$summary <- summary(fit$mcmc)
     }
     
     if (!is.null(S)) {
@@ -262,6 +264,7 @@ tidyup_irtree_fit <- function(fit,
 #' @return Returns a list containing the input \code{fit} as well as an MCMC list and \code{summary}.
 #' @inheritParams fit_irtree
 #' @importFrom magrittr %>% 
+#' @import coda
 #' @examples
 #' \dontrun{
 #' # generate data
@@ -365,7 +368,8 @@ summarize_irtree_fit <- function(fit,
     #     fit$mcmc[[iii]] <- tmp3
     # }
     
-    fit$summary <- coda:::summary.mcmc.list(fit$mcmc, ...)
+    # fit$summary <- coda:::summary.mcmc.list(fit$mcmc, ...)
+    fit$summary <- summary(fit$mcmc, ...)
     
     return(fit)
 }

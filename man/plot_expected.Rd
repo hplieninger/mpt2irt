@@ -30,6 +30,11 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{col}{Color of the prediction line.}
 
+\item{lwd}{The line width, a positive number, defaulting to 2. The
+interpretation is device-specific, and some devices do not implement line
+widths less than one. (See the help on the device for details of the
+interpretation.)}
+
 \item{ylim}{the y limits of the plot.}
 
 \item{measure}{Character vector that indicates whether the mean (default) or

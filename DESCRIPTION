@@ -48,4 +48,3 @@ LinkingTo: StanHeaders (>= 2.14.0), rstan (>= 2.14.1), BH (>= 1.62.0), Rcpp (>=
     0.12.0), RcppEigen
 LazyData: true
 NeedsCompilation: yes
-RoxygenNote: 6.0.0.9000

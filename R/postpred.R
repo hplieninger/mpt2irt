@@ -27,6 +27,7 @@
 #' @inheritParams fit_irtree
 #' @inheritParams runjags::combine.mcmc
 #' @importFrom magrittr %>%
+#' @import coda
 #' @examples 
 #' \dontrun{
 #' J <- 10
@@ -116,7 +117,8 @@ pp_irtree <- function(mcmc.objects,
     #                 "2012" = vars,
     #                 "pcm"  = vars)
 
-    fit_mcmc2 <- coda:::window.mcmc.list(mcmc.objects, thin = thin) %>% 
+    # fit_mcmc2 <- coda:::window.mcmc.list(mcmc.objects, thin = thin) %>%
+    fit_mcmc2 <- window(mcmc.objects, thin = thin) %>% 
         runjags::combine.mcmc(., vars = vars)
     
     # fit_mcmc2 <- runjags::combine.mcmc(mcmc.objects, vars = vars)

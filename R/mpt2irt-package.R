@@ -26,7 +26,7 @@
 #' @import Rcpp
 #' @import rstantools
 #' @importFrom utils menu object.size sessionInfo setTxtProgressBar txtProgressBar
-#' @importFrom stats cor cov2cor pnorm qnorm quantile rWishart rmultinom rnorm runif setNames window
+#' @import stats
 #' @importFrom grDevices heat.colors
 #' @importFrom graphics abline barplot hist legend lines par plot
 #' 

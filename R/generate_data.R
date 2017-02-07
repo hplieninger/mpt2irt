@@ -225,7 +225,7 @@ generate_irtree_2012 <- function(N = NULL,
 #' J <- 10
 #' # use defaults
 #' betapar <- mpt2irt:::gen_betas("ext", J = J, betas = NULL)
-#' dat <- generate_irtree_ext(N = N, J = J, betas = betapar, beta_ARS_extreme = 1)
+#' dat <- generate_irtree_ext(N = 20, J = J, betas = betapar, beta_ARS_extreme = 1)
 #' 
 #' # modify distribution (truncated normal) from which to draw betas, here for MRS
 #' tmp1 <- list("beta.mrs" = list("mean" =  0,
