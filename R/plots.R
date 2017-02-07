@@ -12,6 +12,7 @@
 #' @param true.par a list with true values for beta and theta
 #' @param traitItem if more than a single trait is measured, items measuring different traits are shown in different colors
 #' @param revItem if specified, reversed items are shown as different points
+#' @import coda
 #' @examples
 #' \dontrun{
 #' # generate data (Boeckenholt, 2012)
@@ -213,7 +214,8 @@ plot_irtree <- function(fit,
             }
         }
         if(class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
-        fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
+        # fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
+        fit$summary <- summary(fit$mcmc)
     }
     
     ss <- merge(data.frame("id" = rownames(fit$summary$statistics), "Mean" = fit$summary$statistics[, "Mean"]),

@@ -53,7 +53,7 @@
 #'   parameters in \code{sim-results$param.sum$gen}, fitted parameters and other model fit
 #'   information in \code{sim-results$param.sum$foo}, as well as a summary of the setup.
 #' @details Note that a text file "progress.txt" is written (and updated) to \code{dir} informing you about the progress of the simulation.
-# @importFrom coda
+#' @import coda
 # @import doParallel
 # @import runjags
 # @import parallel
@@ -325,7 +325,8 @@ recovery_irtree <- function(rrr = NULL,
                 returnlist$param.sum[[fitModel[sss]]] <- fit.stan
                 returnlist$param.sum[[fitModel[sss]]]$mcmc <- rstan::As.mcmc.list(fit.stan$samples)
                 returnlist$param.sum[[fitModel[sss]]]$summary <-
-                    coda:::summary.mcmc.list(returnlist$param.sum[[fitModel[sss]]]$mcmc)
+                    # coda:::summary.mcmc.list(returnlist$param.sum[[fitModel[sss]]]$mcmc)
+                    summary(returnlist$param.sum[[fitModel[sss]]]$mcmc)
                 returnlist$df <- fit.stan$df
                 returnlist$V <- fit.stan$V
                 returnlist$session <- sessionInfo()

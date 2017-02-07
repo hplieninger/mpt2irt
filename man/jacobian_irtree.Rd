@@ -2,19 +2,23 @@
 % Please edit documentation in R/jacobian.R
 \name{jacobian_irtree}
 \alias{jacobian_irtree}
-\title{Check Identifiability of Models}
+\title{Check identifiability of models.}
 \usage{
 jacobian_irtree(N, J, revItem = rep(1, J), traitItem = rep(1, J), type,
   fixed.theta = TRUE, rep = 100, betas, theta)
 }
 \arguments{
-\item{N}{number of participants}
+\item{N}{number of persons}
 
 \item{J}{number of items}
 
-\item{revItem}{vector with 0/1 for normal/reversed items}
+\item{revItem}{vector of length J specifying reversed items (1=reversed,
+0=not reversed)}
 
-\item{traitItem}{vector of length J specifying latent traits, e.g., for Big5 from 1...5 . standard: unidimensional test, all items measure the same trait.}
+\item{traitItem}{vector of length J specifying the underlying traits (e.g.,
+indexed from 1...5). Standard: only a single trait is measured by all
+items. If the Big5 are measures, might be something like
+c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{type}{either "2012", "ext", "ext2", or "ext3"}
 
@@ -31,12 +35,6 @@ Generate random parameter values and test, whether the Jacobian has full rank.
 }
 \examples{
 # Standard model identified, even without reversed items:
-jacobian_irtree(N=6, J=8, revItem=rep(1,6), type=2012, rep=5)
+jacobian_irtree(N=6, J=8, revItem=rep(1,8), type=2012, rep=5)
 
-# Extended model NOT identified without reversed items:
-jacobian_irtree(N=6, J=8, revItem=rep(1,8), type="ext", rep=5)
-
-# Ext3 identified with reversed items and 2 traits:
-jacobian_irtree(N=6, J=8, revItem=rep(0:1,4), 
-               traitItem=rep(1:2,each=4), type="ext3", rep=5)
 }

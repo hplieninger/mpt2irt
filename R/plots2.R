@@ -173,6 +173,10 @@ boeck_predict <- function(fit_sum = NULL,
 #' Plot histograms of observed response frequencies separately for each item (via \code{\link{plot_responses}}), and adds the predictions from \code{\link{boeck_predict}}.
 #' 
 #' @param col Color of the prediction line.
+#' @param lwd The line width, a positive number, defaulting to 2. The
+#'   interpretation is device-specific, and some devices do not implement line
+#'   widths less than one. (See the help on the device for details of the
+#'   interpretation.)
 #' @param ... Additional arguments passed to \code{\link[graphics]{lines}}.
 #' @inheritParams fit_irtree
 #' @inheritParams boeck_predict
