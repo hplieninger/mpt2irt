@@ -1,30 +1,21 @@
-#' Check Identifiability of Models
+#' Check identifiability of models.
 #' 
 #' Generate random parameter values and test, whether the Jacobian has full rank.
 #' 
-#' @param N number of participants
-#' @param J number of items
-#' @param revItem vector with 0/1 for normal/reversed items
-#' @param traitItem vector of length J specifying latent traits, e.g., for Big5 from 1...5 . standard: unidimensional test, all items measure the same trait.
 #' @param type either "2012", "ext", "ext2", or "ext3"
 #' @param fixed.theta if TRUE, assumes that mean of theta parameters is assumed to be fixed at zero
 #' @param rep number of points in parameter space to check identification
 #' @param betas optional matrix with beta parameters
 #' @param theta optional matrix with theta parameters (note that the parameters of the first person will be set to to minus the theta-column means if \code{fixed.theta=TRUE})
+#' @inheritParams generate_irtree_ext
 # @importFrom numDeriv jacobian
 #' @examples 
 #' # Standard model identified, even without reversed items:
-#' jacobian_irtree(N=6, J=8, revItem=rep(1,6), type=2012, rep=5)
+#' jacobian_irtree(N=6, J=8, revItem=rep(1,8), type=2012, rep=5)
 #' 
-#' # Extended model NOT identified without reversed items:
-#' jacobian_irtree(N=6, J=8, revItem=rep(1,8), type="ext", rep=5)
-#' 
-#' # Ext3 identified with reversed items and 2 traits:
-#' jacobian_irtree(N=6, J=8, revItem=rep(0:1,4), 
-#'                traitItem=rep(1:2,each=4), type="ext3", rep=5)
 #' @export
 jacobian_irtree <- function(N, J, revItem=rep(1,J), traitItem=rep(1,J), 
-                           type, fixed.theta=TRUE, rep=100, betas, theta){
+                            type, fixed.theta=TRUE, rep=100, betas, theta){
     
     n.trait <- length(unique(traitItem))
     S.type <- ifelse(as.character(type) != "2012", 3, 2)
@@ -46,12 +37,13 @@ jacobian_irtree <- function(N, J, revItem=rep(1,J), traitItem=rep(1,J),
         par <- c(betas, theta)
         
         extreme_ARS<-runif(1)
-        if(type %in% c("ext2", "ext3")){
+        # if(type %in% c("ext2", "ext3")){
+        if(type %in% c("ext", "ext2", "ext3")){
             par <- c(par, extreme_ARS)
         }
         Jac <- numDeriv::jacobian(catprob_irtree_wrapper, x=par, 
-                        N=N, J=J, revItem=revItem, fixed.theta=fixed.theta,
-                        traitItem=traitItem, type=type)
+                                  N=N, J=J, revItem=revItem, fixed.theta=fixed.theta,
+                                  traitItem=traitItem, type=type)
         rk <- qr(Jac)$rank
         min.rank <- min(min.rank, rk)
         max.rank <- max(max.rank, rk)
@@ -106,9 +98,11 @@ catprob_irtree <- function(betas, theta, revItem=rep(1,J), traitItem=rep(1,J),
             p.trait <- ifelse(revItem[j] == 1, 1-y[i,j], y[i,j])
             
             # type of ERS in case of ARS:
-            extr_ars <- switch(as.character(type), "ext"=e[i,j], 
+            extr_ars <- switch(as.character(type),
+                               # "ext" =e[i,j], 
+                               "ext" =pnorm(theta[i, 2] - qnorm(extreme_ARS)),
                                "ext2"=extreme_ARS, 
-                               "ext3"=pnorm(theta[i,S]+qnorm(extreme_ARS)),
+                               "ext3"=pnorm(theta[i, S] - qnorm(extreme_ARS)),
                                "2012"=.5)
             
             # response probabilities: MPT model from -2, -1, 0, 1, 2 // 0,1,2,3,4
@@ -125,13 +119,14 @@ catprob_irtree <- function(betas, theta, revItem=rep(1,J), traitItem=rep(1,J),
 }
 
 catprob_irtree_wrapper <- function(par, N, J, revItem=rep(1,J), traitItem=rep(1,J), 
-                                  type="ext", fixed.theta=TRUE){
+                                   type="ext", fixed.theta=TRUE){
     n.trait <- length(unique(traitItem))
     S.type <- ifelse(as.character(type) != "2012", 3, 2)
     cols <- S.type+n.trait 
     idx.max <- J*(S.type+1)
     betas <- matrix(par[1:idx.max], J, S.type+1)
-    ll <- length(par) - ifelse(type %in% c("ext","2012"), 0, 1)
+    # ll <- length(par) - ifelse(type %in% c("ext","2012"), 0, 1)
+    ll <- length(par) - ifelse(type %in% c("2012"), 0, 1)
     if(!fixed.theta){
         theta <- matrix(par[(idx.max+1):ll], N, cols + ifelse(type=="ext3", 1, 0))
     }else{
