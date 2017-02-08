@@ -54,10 +54,8 @@
 #'   information in \code{sim-results$param.sum$foo}, as well as a summary of the setup.
 #' @details Note that a text file "progress.txt" is written (and updated) to \code{dir} informing you about the progress of the simulation.
 #' @import coda
-# @import doParallel
 # @import runjags
 # @import parallel
-# @import foreach
 #' @examples
 #' \dontrun{
 #' recovery_irtree(rrr = 1:2, N = 20, J = 10, genModel = "ext", fitModel = "ext",
