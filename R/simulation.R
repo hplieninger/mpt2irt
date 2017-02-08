@@ -140,18 +140,24 @@ recovery_irtree <- function(rrr = NULL,
         time_1 <- Sys.time()
         
         ### GENERATE A SINGLE DATASET ----------------------------------------------
+        cor2cov <- function(mat = NULL, sd = NULL) {
+            # is in MBESS package, but MBESS has so many dependencies
+            checkmate::qassert(mat, "M+[-1,1]")
+            checkmate::qassert(sd, "N+(0,1]")
+            return(diag(sd) %*% mat %*% diag(sd))
+        }
         
         if (missing(theta.vcov)) {
             xx1 <- diag(S.gen)
             xx1[1, 2] <- xx1[2, 1] <- -.2
             theta_vcov_i <- cov2cor(rWishart(1, df = df_vcov, xx1)[, , 1])
             # the default variances are 0.33 for RS and 1.0 for TRAIT
-            theta_vcov_i <- MBESS::cor2cov(theta_vcov_i, sqrt(c(rep(.33, S.gen - n.trait), rep(1, n.trait))))
+            theta_vcov_i <- cor2cov(theta_vcov_i, sqrt(c(rep(.33, S.gen - n.trait), rep(1, n.trait))))
             # theta_vcov_i <- diag(S.gen)  # middle  / extremity / acq / trait(s)
         } else if (is.vector(theta.vcov)) {
             repeat {
                 vcov.0 <- cov2cor(rWishart(1, df = df_vcov, diag(theta.vcov))[, , 1])
-                theta_vcov_i <- MBESS::cor2cov(vcov.0, sqrt(theta.vcov))
+                theta_vcov_i <- cor2cov(vcov.0, sqrt(theta.vcov))
                 # theta.vcov <- diag(S.gen) * theta.vcov   # middle /  extremity / trait(s)
                 if (det(theta_vcov_i) != 0) break
             }
