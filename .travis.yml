@@ -12,6 +12,36 @@ r_check_args: --no-build-vignettes
 # r_github_packages:
 #   - jimhester/covr
 
+r_binary_packages: 
+  - assertthat
+  - base64enc
+  - bitops
+  - brew
+  - caTools
+  - checkmate
+  - colorspace
+  - dplyr
+  - dichromat
+  - highr
+  - htmltools
+  - labeling
+  - lattice
+  - magrittr
+  - markdown
+  - MASS
+  - munsell
+  - numDeriv
+  - praise
+  - purrr
+  - RColorBrewer
+  - reshape2
+  - rmarkdown
+  - scales
+  - testthat
+  - tidyr
+  - truncnorm
+  - tibble
+
 env:
   matrix: 
     - CXX_OLEVEL=2 CXX=clang++
