@@ -1,7 +1,7 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: R
-sudo: false
+sudo: required
 r: release
 cache: packages
 
@@ -11,6 +11,36 @@ r_check_args: --no-build-vignettes
 
 # r_github_packages:
 #   - jimhester/covr
+
+r_binary_packages: 
+  - assertthat
+  - base64enc
+  - bitops
+  - brew
+  - caTools
+  - checkmate
+  - colorspace
+  - dplyr
+  - dichromat
+  - highr
+  - htmltools
+  - labeling
+  - lattice
+  - magrittr
+  - markdown
+  - MASS
+  - munsell
+  - numDeriv
+  - praise
+  - purrr
+  - RColorBrewer
+  - reshape2
+  - rmarkdown
+  - scales
+  - testthat
+  - tidyr
+  - truncnorm
+  - tibble
 
 env:
   matrix: 
@@ -24,6 +54,7 @@ before_install:
   - if [[ $CXX = "clang++" ]] ;  then export CLANG_EXTRA_ARG=" -Qunused-arguments -fcolor-diagnostics " ; fi
   - sed -i.bak "s/ g++/ ${CXX}${CLANG_EXTRA_ARG}/" ~/.R/Makevars
   - sed -i.bak "s/O[0-3]/O$CXX_OLEVEL/" ~/.R/Makevars
+  - sudo apt-get install jags
 
 script: 
   - |
