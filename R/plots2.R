@@ -1,3 +1,5 @@
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+
 #' Plot observed frequencies.
 #' 
 #' Plot histograms of observed response frequencies separately for each item.
@@ -29,10 +31,10 @@ plot_responses <- function(X,
                                  len = J)
     checkmate::qassert(points, "X1[1,]")
     
-    if(missing(revItem))
-        revItem <- rep(1, J)
-    if(missing(traitItem))
-        traitItem <- rep(1,J)
+    # if(missing(revItem))
+    #     revItem <- rep(1, J)
+    # if(missing(traitItem))
+    #     traitItem <- rep(1, J)
     n1 <- floor(sqrt(J) )
     n2 <- ceiling(J/n1)
     
@@ -93,6 +95,7 @@ boeck_predict <- function(fit_sum = NULL,
                           revItem = NULL,
                           traitItem = NULL,
                           fitModel = NULL){
+    
     measure <- match.arg(measure)
     if (is.null(betas))
         betas <- fit_sum$beta[[measure]]
@@ -162,7 +165,8 @@ boeck_predict <- function(fit_sum = NULL,
     px$Categ <- factor(px$Categ)
     rownames(px) <- NULL
     if (N == 1) {
-        px <- subset(px, select = -Person)
+        # px <- subset(px, select = -Person)
+        px <- dplyr::select(px, -dplyr::matches("Person"))
     }
     return(px)
 }

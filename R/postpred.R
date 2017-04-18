@@ -1,3 +1,5 @@
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+
 #' Draw posterior predictive values.
 #' 
 #' Function takes an MCMC list and draws posterior predictive values.
@@ -27,6 +29,7 @@
 #' @inheritParams fit_irtree
 #' @inheritParams runjags::combine.mcmc
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @import coda
 #' @examples 
 #' \dontrun{
@@ -77,7 +80,7 @@ pp_irtree <- function(mcmc.objects,
     }
     
     J <- length(traitItem)
-    M <- mcmc.objects %>% extract2(1) %>% nrow
+    M <- mcmc.objects %>% magrittr::extract2(1) %>% nrow
     chains <- mcmc.objects %>% length
     
     arsModel <- switch(fitModel, 
@@ -89,10 +92,10 @@ pp_irtree <- function(mcmc.objects,
                        "2012" = FALSE,
                        "pcm"  = FALSE)
     
-    # tmp1 <- M %>% divide_by(iter) %>% floor
+    # tmp1 <- M %>% magrittr::divide_by(iter) %>% floor
     # reps <- sapply(seq(1, by = M, length = chains), . %>% seq(by = tmp1, length = iter)) %>% as.vector
     
-    thin <- M %>% divide_by(iter) %>% round
+    thin <- M %>% magrittr::divide_by(iter) %>% round
 
     dimen <- switch(fitModel, 
                     "ext" = 3,  
@@ -139,11 +142,13 @@ pp_irtree <- function(mcmc.objects,
         array(dim = c(J, ifelse(fitModel == "pcm", 4, dimen), length(reps)))
     
     if (arsModel == TRUE)
-        beta_ARS_extreme <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta_ARS_extreme", collapse.chains = F)
+        beta_ARS_extreme <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta_ARS_extreme",
+                                                  collapse.chains = F)
     
     pp <- array(NA_real_, dim = c(N, J, length(reps)))
     
-    message(paste0("I'm going to loop over ", length(reps), " replications, this may take a little time, go get a coffee."))
+    message(paste0("I'm going to loop over ", length(reps),
+                   " replications, this may take a little time, go get a coffee."))
     
     pb <- txtProgressBar(style = 3, char = "zzz ", min = min(reps), max = max(reps))
     
@@ -186,7 +191,6 @@ pp_irtree <- function(mcmc.objects,
             } else {
                 extreme_a <- matrix(0, N, J)
             }
-            
             
             p_cat[, , 1] <- (1-acquies)*(1-middle)*(1-trait)*extreme
             p_cat[, , 2] <- (1-acquies)*(1-middle)*(1-trait)*(1-extreme)
@@ -272,20 +276,20 @@ pp_irtree <- function(mcmc.objects,
     message("I drew posterior predictives, I need a little bit more time to restructure the results, I ask for your patience.")
     
     tmp1 <- pp %>% 
-        reshape2::melt() %>% 
-        dplyr::transmute(Person = factor(Var1),
-                         Item = factor(Var2),
-                         Iter = Var3,
-                         value)
+        reshape2::melt() %>%
+        dplyr::transmute(Person = factor(.data$Var1),
+                         Item = factor(.data$Var2),
+                         Iter = .data$Var3,
+                         value = .data$value)
     
     tmp2 <- tmp1 %>% 
-        dplyr::group_by(Item, Iter) %>% 
-        dplyr::summarise(Categ = list(value %>%
+        dplyr::group_by_("Item", "Iter") %>% 
+        dplyr::summarise(Categ = list(.data$value %>%
                                           factor(levels = 1:5) %>%
                                           table %>%
                                           names %>%
                                           factor),
-                  pp = list(value %>%
+                  pp = list(.data$value %>%
                                 factor(levels = 1:5) %>%
                                 table %>%
                                 prop.table)) %>%
@@ -294,7 +298,7 @@ pp_irtree <- function(mcmc.objects,
         tidyr::unnest()
     
     tmp3 <- tmp2 %>% 
-        dplyr::group_by(Item, Categ) %>% 
+        dplyr::group_by_("Item", "Categ") %>% 
         dplyr::summarise(pp = list(pp %>%
                                        quantile(., probs = probs)),
                          Q = list(names(probs))) %>% 

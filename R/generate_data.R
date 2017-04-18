@@ -5,7 +5,7 @@
 #' @param N number of persons
 #' @param J number of items
 #' @param betas Jx4 matrix with item parameters on four response dimensions (middle, extreme, acquiescence, relevant trait defined by \code{traitItem}).
-#' @param theta.vcov 4x4 covariance matrix for middle, extremity, acquiescence, trait(s) (can be a vector of length 4 with variances for uncorrelated processes).
+#' @param theta_vcov 4x4 covariance matrix for middle, extremity, acquiescence, trait(s) (can be a vector of length 4 with variances for uncorrelated processes).
 #' @param prop.rev proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.
 #' @param genModel Character. Either \code{"2012"} (Boeckenholt Model without
 #'   acquiescence) or \code{"ext"} (Acquiescence Model)
@@ -29,7 +29,7 @@ generate_irtree_ext <- function(N = NULL,
                                 J = NULL,
                                 betas = NULL,
                                 traitItem = rep(1,J),
-                                theta.vcov = NULL, 
+                                theta_vcov = NULL, 
                                 prop.rev = .5,
                                 genModel = "ext",
                                 beta_ARS_extreme = NULL,
@@ -55,16 +55,16 @@ generate_irtree_ext <- function(N = NULL,
         prop.rev <- rep(prop.rev, n.trait)
     }
     if (is.null(theta)) {
-        if(missing(theta.vcov) | is.null(theta.vcov)) {
-            theta.vcov <- diag(S)
-        } else if (is.vector(theta.vcov)) {
-            theta.vcov <- theta.vcov * diag(S)
-        } else if (any(dim(theta.vcov) != S)) {
-            warning(paste0("check definition of theta.vcov: wrong dimension (required: ", S,")"))
+        if(missing(theta_vcov) | is.null(theta_vcov)) {
+            theta_vcov <- diag(S)
+        } else if (is.vector(theta_vcov)) {
+            theta_vcov <- theta_vcov * diag(S)
+        } else if (any(dim(theta_vcov) != S)) {
+            warning(paste0("check definition of theta_vcov: wrong dimension (required: ", S,")"))
         }
         
         theta.mu <- rep(0, S)
-        theta <- MASS::mvrnorm(N, theta.mu, theta.vcov)
+        theta <- MASS::mvrnorm(N, theta.mu, theta_vcov)
     }
     
     
@@ -118,7 +118,7 @@ generate_irtree_ext <- function(N = NULL,
     }
 
     res <- list(X = X, revItem = revItem, traitItem = traitItem, theta = theta,
-                betas = betas, theta.vcov = theta.vcov,
+                betas = betas, theta_vcov = theta_vcov,
                 p = p, middle = m, trait = y, extreme = e, genModel = genModel)
     if(genModel != "2012") res$beta_ARS_extreme <- beta_ARS_extreme
     return(res)
@@ -130,7 +130,7 @@ generate_irtree_ext <- function(N = NULL,
 #' Function generates categorical data 1...5 for \code{N} persons and \code{J} items given the item parameters \code{betas}.
 #' 
 #' @param betas Jx3 matrix with item parameters on three response dimensions (middle, extreme, target trait defined by \code{traitItem}).
-#' @param theta.vcov 3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).
+#' @param theta_vcov 3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).
 #' @return The function returns a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters.
 #' @inheritParams fit_irtree
 #' @inheritParams generate_irtree_ext
@@ -144,7 +144,7 @@ generate_irtree_2012 <- function(N = NULL,
                                  J = NULL,
                                  betas = NULL,
                                  traitItem = rep(1, J),
-                                 theta.vcov = NULL,
+                                 theta_vcov = NULL,
                                  prop.rev = .5,
                                  cat = TRUE){
     
@@ -162,16 +162,16 @@ generate_irtree_2012 <- function(N = NULL,
         warning("Check definition of traitItem!")
     S <- 2 + n.trait
     
-    if(missing(theta.vcov) | is.null(theta.vcov)){
-        theta.vcov <- diag(S)
-    }else if (is.vector(theta.vcov)){
-        theta.vcov <- theta.vcov * diag(S)
+    if(missing(theta_vcov) | is.null(theta_vcov)){
+        theta_vcov <- diag(S)
+    }else if (is.vector(theta_vcov)){
+        theta_vcov <- theta_vcov * diag(S)
     }
     if(length(prop.rev) == 1)
         prop.rev <- rep(prop.rev, n.trait)
     
     theta.mu <- rep(0, S)
-    theta <- MASS::mvrnorm(N, theta.mu, theta.vcov)
+    theta <- MASS::mvrnorm(N, theta.mu, theta_vcov)
     
     # reversed items
     revItem <- rep(0,J)
@@ -209,7 +209,7 @@ generate_irtree_2012 <- function(N = NULL,
         X <- mult_to_cat(X)
     }
     
-    return(list(X=X, revItem=revItem, traitItem=traitItem, theta=theta, betas=betas, theta.vcov=theta.vcov,
+    return(list(X=X, revItem=revItem, traitItem=traitItem, theta=theta, betas=betas, theta_vcov=theta_vcov,
                 p=p, middle=m, trait=y, extreme=e))
 }
 

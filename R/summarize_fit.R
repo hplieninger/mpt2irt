@@ -1,3 +1,5 @@
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+
 #' Summarize and tidy up a fitted model.
 #' 
 #' Function takes a fitted model returned from \code{\link{fit_irtree}} and
@@ -35,7 +37,7 @@ tidyup_irtree_fit <- function(fit,
                               N = NULL,
                               J = NULL,
                               revItem = NULL,
-                              traitItem = rep(1, ncol(X)),
+                              traitItem = NULL,
                               fitModel = c("ext", "2012", "pcm"),
                               fitMethod = c("stan", "jags"), 
                               measure = c("Median", "Mean"),
@@ -292,7 +294,7 @@ summarize_irtree_fit <- function(fit,
                                    ", you may run out of memory. Do you want to proceed?")) + 1,
                FALSE, TRUE, FALSE)
         if (proceed == FALSE) {
-            message("I'm exiting the function and invisibly returning 'fit'.")
+            message("I'm terminating the function call and invisibly returning 'fit'.")
             return(invisible(fit))
         }
     }

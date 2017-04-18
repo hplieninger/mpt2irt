@@ -73,12 +73,12 @@ catprob_irtree <- function(betas, theta, revItem=rep(1,J), traitItem=rep(1,J),
     S <- S.type + n.trait + ifelse(type=="ext3", 1, 0)
     
     
-    #     if(missing(theta.vcov) | is.null(theta.vcov)){
-    #         theta.vcov <- diag(S)
-    #     }else if (is.vector(theta.vcov)){
-    #         theta.vcov <- theta.vcov * diag(S)
-    #     }else if(any(dim(theta.vcov) != S)){
-    #         warning(paste0("check definition of theta.vcov: wrong dimension (required: ", S,")"))
+    #     if(missing(theta_vcov) | is.null(theta_vcov)){
+    #         theta_vcov <- diag(S)
+    #     }else if (is.vector(theta_vcov)){
+    #         theta_vcov <- theta_vcov * diag(S)
+    #     }else if(any(dim(theta_vcov) != S)){
+    #         warning(paste0("check definition of theta_vcov: wrong dimension (required: ", S,")"))
     #     }
     
     # decompose to person ability and item difficulty

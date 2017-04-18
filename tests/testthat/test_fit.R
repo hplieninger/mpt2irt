@@ -1,4 +1,4 @@
-library(mpt2irt)
+library("mpt2irt")
 library("magrittr")
 
 # DATA GENERATION ---------------------------------------------------------
@@ -70,19 +70,20 @@ test_that("generate_irtree() returns correct output", {
 context("Model fitting")
 
 M <- 100
+warmup <- 100
 
 invisible(capture.output(
     res1 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       M = M, warmup = 100, n.chains = 1,
+                       M = M, warmup = warmup, n.chains = 1,
                        fitModel = "2012", fitMethod = "jags"),
     res2 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       M = M, warmup = 100, n.chains = 1,
+                       M = M, warmup = warmup, n.chains = 1,
                        fitModel = "ext", fitMethod = "stan"),
     res3 <- fit_irtree(dat2$X, revItem = dat1$revItem,
-                       M = M, warmup = 100, n.chains = 1,
+                       M = M, warmup = warmup, n.chains = 1,
                        fitModel = "ext", fitMethod = "jags"),
     res4 <- fit_irtree(dat2$X, revItem = dat1$revItem,
-                       M = M, warmup = 100, n.chains = 1,
+                       M = M, warmup = warmup, n.chains = 1,
                        fitModel = "2012", fitMethod = "stan")
 ))
 
@@ -111,8 +112,6 @@ test_that("fit_irtree() returns MCMC list", {
 
 context("Summarizing fitted models")
 
-
-
 res1b <- summarize_irtree_fit(res1)
 res1c <- tidyup_irtree_fit(res1b, N = N, J = J, revItem = dat1$revItem,
                            traitItem = dat1$traitItem, fitModel = res1$fitModel,
@@ -129,7 +128,6 @@ res4b <- summarize_irtree_fit(res4)
 res4c <- tidyup_irtree_fit(res4b, N = N, J = J, revItem = dat2$revItem,
                            traitItem = dat2$traitItem, fitModel = res4$fitModel,
                            fitMethod = res4$fitMethod)
-unique(sapply(res1c$beta, nrow))
 
 test_that("tidyup_irtree_fit() returns correlations", {
     expect_equal(length(res1c$Corr), 4)
@@ -152,3 +150,10 @@ test_that("tidyup_irtree_fit() returns correct number of parameters", {
     expect_equal(unique(sapply(res3c$theta, nrow)), N)
     expect_equal(unique(sapply(res4c$theta, nrow)), N)
 })
+
+
+# # posterior predictives for 512 hypothetical persons
+# res2d <- pp_irtree(res2b$mcmc, iter = 10, N = 4, revItem = dat1$revItem,
+#                    traitItem = dat1$traitItem, fitModel = res2$fitModel)
+# 
+# plot_irtree(res2b, J = length(dat1$traitItem), revItem = dat1$revItem)

@@ -22,7 +22,7 @@
 # @param RSmin minimum of range for uniformly distributed response styles (can
 #   be a vector with separate bounds for middle/extreme/(acquiesence))
 # @param RSmax maximum of range for response styles (can also be a vector)
-#' @param theta.vcov true covariance matrix of response processes (order:
+#' @param theta_vcov true covariance matrix of response processes (order:
 #'   middle, extreme, (acquiescence), trait). standard is diag(3) / diag(4). Can be a vector of variances (not SDs).
 #' @param betas Optional list. May have entries \code{"beta.mrs"},
 #'   \code{"beta.ers"}, \code{"beta.trait"}, and/or \code{"beta.ars"}. Each of
@@ -79,7 +79,7 @@ recovery_irtree <- function(rrr = NULL,
                             genModel = c("ext", "2012"),
                             fitModel = NULL,
                             fitMethod = c("stan", "jags"), 
-                            theta.vcov = NULL,
+                            theta_vcov = NULL,
                             betas = NULL,
                             beta_ARS_extreme = NULL,
                             df = NULL,
@@ -145,18 +145,18 @@ recovery_irtree <- function(rrr = NULL,
             return(diag(sd) %*% mat %*% diag(sd))
         }
         
-        if (missing(theta.vcov)) {
+        if (is.null(theta_vcov)) {
             xx1 <- diag(S.gen)
             xx1[1, 2] <- xx1[2, 1] <- -.2
             theta_vcov_i <- cov2cor(rWishart(1, df = df_vcov, xx1)[, , 1])
             # the default variances are 0.33 for RS and 1.0 for TRAIT
             theta_vcov_i <- cor2cov(theta_vcov_i, sqrt(c(rep(.33, S.gen - n.trait), rep(1, n.trait))))
             # theta_vcov_i <- diag(S.gen)  # middle  / extremity / acq / trait(s)
-        } else if (is.vector(theta.vcov)) {
+        } else if (is.vector(theta_vcov)) {
             repeat {
-                vcov.0 <- cov2cor(rWishart(1, df = df_vcov, diag(theta.vcov))[, , 1])
-                theta_vcov_i <- cor2cov(vcov.0, sqrt(theta.vcov))
-                # theta.vcov <- diag(S.gen) * theta.vcov   # middle /  extremity / trait(s)
+                vcov.0 <- cov2cor(rWishart(1, df = df_vcov, diag(theta_vcov))[, , 1])
+                theta_vcov_i <- cor2cov(vcov.0, sqrt(theta_vcov))
+                # theta_vcov <- diag(S.gen) * theta_vcov   # middle /  extremity / trait(s)
                 if (det(theta_vcov_i) != 0) break
             }
         } else {
@@ -164,7 +164,7 @@ recovery_irtree <- function(rrr = NULL,
         }
         
         if (any(dim(theta_vcov_i)!= S.gen) | det(theta_vcov_i) == 0){
-            warning("Check definition of theta.vcov!")
+            warning("Check definition of theta_vcov!")
         }
         
         
@@ -181,7 +181,7 @@ recovery_irtree <- function(rrr = NULL,
             #     betas_i <- betas
             # }
             betas_i <- gen_betas(genModel = genModel, J = J, betas = betas)
-            gen <- generate_irtree_2012(N = N, J = J, betas = betas_i, theta.vcov = theta_vcov_i,
+            gen <- generate_irtree_2012(N = N, J = J, betas = betas_i, theta_vcov = theta_vcov_i,
                                   prop.rev = prop.rev, traitItem = traitItem, cat = TRUE)
         } else if (genModel == "ext") {
             # if (missing(betas)) {
@@ -207,7 +207,7 @@ recovery_irtree <- function(rrr = NULL,
             } else {
                 beta_ARS_extreme_i <- beta_ARS_extreme
             }
-            gen <- generate_irtree_ext(N = N, J = J, betas = betas_i, theta.vcov = theta_vcov_i,
+            gen <- generate_irtree_ext(N = N, J = J, betas = betas_i, theta_vcov = theta_vcov_i,
                                  prop.rev = prop.rev, traitItem = traitItem, cat = TRUE,
                                  beta_ARS_extreme = beta_ARS_extreme_i, genModel = genModel)
         }
@@ -225,7 +225,7 @@ recovery_irtree <- function(rrr = NULL,
         }
         param.sum <- vector("list", length(S.fit) + 1)
         names(param.sum) <- c(fitModel, "gen")
-        param.sum$gen <- matrix(c(gen$theta, gen$betas, gen$theta.vcov,
+        param.sum$gen <- matrix(c(gen$theta, gen$betas, gen$theta_vcov,
                                   switch(genModel, "ext" = gen$beta_ARS_extreme)),
                                 ncol = 1, dimnames = list(genNames, NULL))
         
@@ -503,7 +503,7 @@ recovery_irtree <- function(rrr = NULL,
     #             beta.trait <- truncnorm::rtruncnorm(n = J, mean = 0, sd = sqrt(.5),
     #                                                 a = qnorm(.3), b = qnorm(.7))
     #             betas_i <- cbind(beta.mrs, beta.ers, beta.trait)
-    #             gen <- generate_irtree_2012(N = N, J = J, betas = betas_i, theta.vcov = theta_vcov_i,
+    #             gen <- generate_irtree_2012(N = N, J = J, betas = betas_i, theta_vcov = theta_vcov_i,
     #                                   prop.rev = prop.rev, traitItem = traitItem, cat = TRUE)
     #         }else if (genModel == "ext"){
     #             beta.mrs <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
@@ -519,7 +519,7 @@ recovery_irtree <- function(rrr = NULL,
     # #                           runif(J,RSmin[2],RSmax[2]), 
     # #                           runif(J,RSmin[3],RSmax[3]),
     # #                           rnorm(J,0,trait.sd ))
-    #             gen <- generate_irtree_ext(N = N, J = J, betas = betas_i, theta.vcov = theta_vcov_i,
+    #             gen <- generate_irtree_ext(N = N, J = J, betas = betas_i, theta_vcov = theta_vcov_i,
     #                                  prop.rev = prop.rev, traitItem = traitItem, cat = TRUE)
     #         }
     
@@ -571,7 +571,7 @@ recovery_irtree <- function(rrr = NULL,
     #             
     #             fitpar[[sss]] <- rstan::monitor(boeck.stan, print=T)[fitNames[[sss]],] 
     #         }
-    #         genpar <- c(gen$theta, gen$betas, gen$theta.vcov)
+    #         genpar <- c(gen$theta, gen$betas, gen$theta_vcov)
     #         names(genpar) <- genNames
     #         
     #         if(path != ""){
@@ -646,7 +646,7 @@ recovery_irtree <- function(rrr = NULL,
     #     
     #     res <- list(estimate1=estimate1, estimate2=estimate2, true=true, dic=dic, N=N, J=J, S.gen=S.gen, 
     #                 S.fit=S.fit, R=R, genModel=genModel, fitModel=fitModel, fitMethod=fitMethod, 
-    #                 RSmin=RSmin, RSmax=RSmax, theta.vcov=theta_vcov_i, numRS.gen=numRS.gen, numRS.fit=numRS.fit,
+    #                 RSmin=RSmin, RSmax=RSmax, theta_vcov=theta_vcov_i, numRS.gen=numRS.gen, numRS.fit=numRS.fit,
     #                 prop.rev=prop.rev, traitItem=traitItem, trait.sd=trait.sd, thin=thin, M=M)
     #     class(res) <- "boecksim"
     #     return(res)

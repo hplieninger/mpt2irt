@@ -6,7 +6,7 @@
 \usage{
 recovery_irtree(rrr = NULL, N = NULL, J = NULL, prop.rev = 0.5,
   genModel = c("ext", "2012"), fitModel = NULL, fitMethod = c("stan",
-  "jags"), theta.vcov = NULL, betas = NULL, beta_ARS_extreme = NULL,
+  "jags"), theta_vcov = NULL, betas = NULL, beta_ARS_extreme = NULL,
   df = NULL, V = NULL, M = 500, n.chains = 3, thin = 1,
   warmup = 500, method = "simple", outFormat = NULL, startSmall = FALSE,
   df_vcov = 50, dir = NULL, keep_mcmc = FALSE, savext_mcmc = FALSE,
@@ -31,7 +31,7 @@ c("2012", "ext")).}
 
 \item{fitMethod}{Character. Whether to use "stan" or "jags".}
 
-\item{theta.vcov}{true covariance matrix of response processes (order:
+\item{theta_vcov}{true covariance matrix of response processes (order:
 middle, extreme, (acquiescence), trait). standard is diag(3) / diag(4). Can be a vector of variances (not SDs).}
 
 \item{betas}{Optional list. May have entries \code{"beta.mrs"},

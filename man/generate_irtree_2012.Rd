@@ -5,7 +5,7 @@
 \title{Generate data for Boeckenholt Model.}
 \usage{
 generate_irtree_2012(N = NULL, J = NULL, betas = NULL,
-  traitItem = rep(1, J), theta.vcov = NULL, prop.rev = 0.5, cat = TRUE)
+  traitItem = rep(1, J), theta_vcov = NULL, prop.rev = 0.5, cat = TRUE)
 }
 \arguments{
 \item{N}{number of persons}
@@ -19,7 +19,7 @@ indexed from 1...5). Standard: only a single trait is measured by all
 items. If the Big5 are measures, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{theta.vcov}{3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).}
+\item{theta_vcov}{3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).}
 
 \item{prop.rev}{proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.}
 

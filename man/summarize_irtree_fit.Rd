@@ -24,9 +24,11 @@ calculates summaries for all parameters using coda's
 \code{\link[coda]{summary.mcmc.list}}.
 }
 \details{
-The difference between the present function and directly calling coda's
-\code{\link[coda]{summary.mcmc.list}} is that, herein, the correlations of the thetas
-are summarized in addition to the covariances.
+The difference between the present function and directly calling coda's 
+\code{\link[coda]{summary.mcmc.list}} is that, herein, the correlations of
+the thetas are summarized in addition to the covariances. This is useful if
+\code{fitMethod = "jags"}, because JAGS does only save the covariances; in
+Stan, the correlations are computed directly during sampling.
 }
 \examples{
 \dontrun{

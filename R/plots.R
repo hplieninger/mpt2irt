@@ -279,13 +279,13 @@ plot_irtree <- function(fit,
     # library("ggplot2")
     # loadNamespace("ggplot2")
     
-    gg <- ggplot(aes(x = Item, y = get(measure), col = revItem), data = ss) + 
+    gg <- ggplot(aes_string(x = "Item", y = measure, col = "revItem"), data = ss) + 
         # ggplot(aes(x=Item, y=Mean, col=revItem), data=ss) + 
         geom_point() +
         theme_bw() +
         # facet_wrap(~ Type + traitItem, nrow = S, scales = "free_x") +
         facet_grid(Type ~ traitItem, scales = "free_x") +
-        geom_errorbar(aes(ymin = q025, ymax = q975)) + 
+        geom_errorbar(aes_string(ymin = "q025", ymax = "q975")) + 
         ylim(0, 1) +
         labs(y = expression(Phi(-beta)),
              title = paste0("Estimated Item Parameters (", measure, ", 95% CI)"))

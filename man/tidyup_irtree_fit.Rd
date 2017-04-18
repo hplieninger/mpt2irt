@@ -5,7 +5,7 @@
 \title{Summarize and tidy up a fitted model.}
 \usage{
 tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
-  traitItem = rep(1, ncol(X)), fitModel = c("ext", "2012", "pcm"),
+  traitItem = NULL, fitModel = c("ext", "2012", "pcm"),
   fitMethod = c("stan", "jags"), measure = c("Median", "Mean"),
   tt_names = NULL, plot = TRUE, ...)
 }
