@@ -256,9 +256,11 @@ tidyup_irtree_fit <- function(fit,
 #' calculates summaries for all parameters using coda's
 #' \code{\link[coda]{summary.mcmc.list}}.
 #' 
-#' The difference between the present function and directly calling coda's
-#' \code{\link[coda]{summary.mcmc.list}} is that, herein, the correlations of the thetas
-#' are summarized in addition to the covariances.
+#' The difference between the present function and directly calling coda's 
+#' \code{\link[coda]{summary.mcmc.list}} is that, herein, the correlations of
+#' the thetas are summarized in addition to the covariances. This is useful if
+#' \code{fitMethod = "jags"}, because JAGS does only save the covariances; in
+#' Stan, the correlations are computed directly during sampling.
 #' 
 #' @param fit a fitted object from \code{\link{fit_irtree}}.
 #' @param interact logical. If set to \code{TRUE}, the function may be prompt for input.
@@ -322,32 +324,34 @@ summarize_irtree_fit <- function(fit,
         }
     }
     
-    # for every chain do (via purrr::map) cov2cor and save correlations in tmp1
-    tmp1 <- fit$mcmc %>%
-        purrr::map(~ runjags::combine.mcmc(., vars = "^Sigma", collapse.chains = F) %>% 
-                       # magrittr::extract(1:2,)) %>%
-                       split(., 1:nrow(.)) %>% 
-                       purrr::map(~ matrix(., sqrt(length(.)), sqrt(length(.)))) %>% 
-                       purrr::map(cov2cor) %>% 
-                       purrr::map(as.vector) %>%
-                       data.frame %>% 
-                       t %>% 
-                       magrittr::set_rownames(NULL) %>% {
-                           tmp1 <- sqrt(ncol(.))
-                           tmp2 <- paste0("Corr[", 
-                                          rep(seq(1, tmp1), each = tmp1),
-                                          ",",
-                                          rep(seq(1, tmp1), times = tmp1),
-                                          "]")
-                           magrittr::set_colnames(., tmp2)
-                       })
-    
-    # cbind every chain with correponding correlations
-    fit$mcmc <- tmp1  %>% 
-        purrr::map2(fit$mcmc, ., cbind) %>% 
-        purrr::map(~ do.call(coda::mcmc, args = c(list(data = .), as.list(attr(fit$mcmc[[1]], "mcpar"))))) %>% 
-        # purrr::map(~ coda::mcmc(., 301, 600, 1)) %>% 
-        coda::mcmc.list()
+    if (!("Corr[1,1]" %in% colnames(fit$mcmc[[1]]))) {
+        # for every chain do (via purrr::map) cov2cor and save correlations in tmp1
+        tmp1 <- fit$mcmc %>%
+            purrr::map(~ runjags::combine.mcmc(., vars = "^Sigma", collapse.chains = F) %>% 
+                           # magrittr::extract(1:2,)) %>%
+                           split(., 1:nrow(.)) %>% 
+                           purrr::map(~ matrix(., sqrt(length(.)), sqrt(length(.)))) %>% 
+                           purrr::map(cov2cor) %>% 
+                           purrr::map(as.vector) %>%
+                           data.frame %>% 
+                           t %>% 
+                           magrittr::set_rownames(NULL) %>% {
+                               tmp1 <- sqrt(ncol(.))
+                               tmp2 <- paste0("Corr[", 
+                                              rep(seq(1, tmp1), each = tmp1),
+                                              ",",
+                                              rep(seq(1, tmp1), times = tmp1),
+                                              "]")
+                               magrittr::set_colnames(., tmp2)
+                           })
+        
+        # cbind every chain with correponding correlations
+        fit$mcmc <- tmp1  %>% 
+            purrr::map2(fit$mcmc, ., cbind) %>% 
+            purrr::map(~ do.call(coda::mcmc, args = c(list(data = .), as.list(attr(fit$mcmc[[1]], "mcpar"))))) %>% 
+            # purrr::map(~ coda::mcmc(., 301, 600, 1)) %>% 
+            coda::mcmc.list()
+    }
     
     # for (iii in 1:length(fit$mcmc)) {
     #     tmp1 <- fit$mcmc %>% 

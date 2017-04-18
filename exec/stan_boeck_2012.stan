@@ -154,12 +154,16 @@ generated quantities {
     // int<lower=0, upper=1> post_p;
     vector<lower=0>[S] sigma_beta;	 # item SD
     // vector[S] mu_beta;	             #  item mean
+    
+    cov_matrix[S] Corr;
 
     // # rescaled item mean and SD
     // mu_beta = xi_beta .* mu_beta_raw;
     // sigma_beta = xi_beta .* sigma_beta_raw;
     sigma_beta = rep_vector(1, S) .* sigma_beta_raw;
-
+    
+    Corr = diag_matrix(inv_sqrt(diagonal(Sigma))) * Sigma * diag_matrix(inv_sqrt(diagonal(Sigma)));
+    
     for(i in 1:N2){
         for(j in 1:J){
             X_pred[i,j] = categorical_rng(p_cat[i,j]);

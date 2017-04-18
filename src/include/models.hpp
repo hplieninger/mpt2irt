@@ -649,6 +649,7 @@ public:
         names__.push_back("trait");
         names__.push_back("X_pred");
         names__.push_back("sigma_beta");
+        names__.push_back("Corr");
     }
 
 
@@ -713,6 +714,10 @@ public:
         dims__.push_back(J);
         dimss__.push_back(dims__);
         dims__.resize(0);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
         dims__.push_back(S);
         dimss__.push_back(dims__);
     }
@@ -938,18 +943,24 @@ public:
         (void) sigma_beta;  // dummy to suppress unused var warning
         stan::math::initialize(sigma_beta, std::numeric_limits<double>::quiet_NaN());
         stan::math::fill(sigma_beta,DUMMY_VAR__);
+        matrix_d Corr(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        (void) Corr;  // dummy to suppress unused var warning
+        stan::math::initialize(Corr, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(Corr,DUMMY_VAR__);
 
 
         try {
-            current_statement_begin__ = 175;
-            stan::math::assign(sigma_beta, elt_multiply(rep_vector(1,S),sigma_beta_raw));
             current_statement_begin__ = 177;
+            stan::math::assign(sigma_beta, elt_multiply(rep_vector(1,S),sigma_beta_raw));
+            current_statement_begin__ = 179;
+            stan::math::assign(Corr, multiply(multiply(diag_matrix(inv_sqrt(diagonal(Sigma))),Sigma),diag_matrix(inv_sqrt(diagonal(Sigma)))));
+            current_statement_begin__ = 181;
             for (int i = 1; i <= N2; ++i) {
 
-                current_statement_begin__ = 178;
+                current_statement_begin__ = 182;
                 for (int j = 1; j <= J; ++j) {
 
-                    current_statement_begin__ = 179;
+                    current_statement_begin__ = 183;
                     stan::math::assign(get_base1_lhs(get_base1_lhs(X_pred,i,"X_pred",1),j,"X_pred",2), categorical_rng(get_base1(get_base1(p_cat,i,"p_cat",1),j,"p_cat",2), base_rng__));
                 }
             }
@@ -967,6 +978,7 @@ public:
             }
         }
         check_greater_or_equal(function__,"sigma_beta",sigma_beta,0);
+        stan::math::check_cov_matrix(function__,"Corr",Corr);
 
         // write generated quantities
         for (int k_1__ = 0; k_1__ < J; ++k_1__) {
@@ -976,6 +988,11 @@ public:
         }
         for (int k_0__ = 0; k_0__ < S; ++k_0__) {
             vars__.push_back(sigma_beta[k_0__]);
+        }
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+                vars__.push_back(Corr(k_0__, k_1__));
+            }
         }
 
     }
@@ -1115,6 +1132,13 @@ public:
             param_name_stream__ << "sigma_beta" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "Corr" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
     }
 
 
@@ -1224,6 +1248,11 @@ public:
         for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "sigma_beta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= (S + ((S * (S - 1)) / 2)); ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "Corr" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
     }
@@ -1394,7 +1423,7 @@ public:
             check_less_or_equal(function__,"revItem[k0__]",revItem[k0__],1);
         }
         for (int k0__ = 0; k0__ < J; ++k0__) {
-            check_greater_or_equal(function__,"traitItem[k0__]",traitItem[k0__],1);
+            check_greater_or_equal(function__,"traitItem[k0__]",traitItem[k0__],0);
         }
         check_greater_or_equal(function__,"N2",N2,1);
         check_greater_or_equal(function__,"df",df,(S + 1));
@@ -1705,16 +1734,24 @@ public:
                     current_statement_begin__ = 111;
                     stan::math::assign(get_base1_lhs(get_base1_lhs(acquies,i,"acquies",1),j,"acquies",2), Phi_approx((get_base1(theta,i,3,"theta",1) - get_base1(beta,j,3,"beta",1))));
                     current_statement_begin__ = 113;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(trait,i,"trait",1),j,"trait",2), Phi_approx((pow(-(1),get_base1(revItem,j,"revItem",1)) * (get_base1(theta,i,(3 + get_base1(traitItem,j,"traitItem",1)),"theta",1) - get_base1(beta,j,4,"beta",1)))));
-                    current_statement_begin__ = 116;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2)));
-                    current_statement_begin__ = 117;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))));
-                    current_statement_begin__ = 118;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * get_base1(get_base1(middle,i,"middle",1),j,"middle",2)));
-                    current_statement_begin__ = 119;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * get_base1(get_base1(trait,i,"trait",1),j,"trait",2)) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))) + (get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2) * (1 - get_base1(extreme_a,i,"extreme_a",1)))));
+                    if (as_bool(logical_gt(get_base1(traitItem,j,"traitItem",1),0))) {
+
+                        current_statement_begin__ = 114;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(trait,i,"trait",1),j,"trait",2), Phi_approx((pow(-(1),get_base1(revItem,j,"revItem",1)) * (get_base1(theta,i,(3 + get_base1(traitItem,j,"traitItem",1)),"theta",1) - get_base1(beta,j,4,"beta",1)))));
+                    } else {
+
+                        current_statement_begin__ = 116;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(trait,i,"trait",1),j,"trait",2), Phi_approx((pow(-(1),get_base1(revItem,j,"revItem",1)) * -(get_base1(beta,j,4,"beta",1)))));
+                    }
                     current_statement_begin__ = 120;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2)));
+                    current_statement_begin__ = 121;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))));
+                    current_statement_begin__ = 122;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * get_base1(get_base1(middle,i,"middle",1),j,"middle",2)));
+                    current_statement_begin__ = 123;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * get_base1(get_base1(trait,i,"trait",1),j,"trait",2)) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))) + (get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2) * (1 - get_base1(extreme_a,i,"extreme_a",1)))));
+                    current_statement_begin__ = 124;
                     stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),5,"p_cat",3), (((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * get_base1(get_base1(trait,i,"trait",1),j,"trait",2)) * get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2)) + (get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2) * get_base1(extreme_a,i,"extreme_a",1))));
                 }
             }
@@ -1855,36 +1892,36 @@ public:
         // model body
         try {
 
-            current_statement_begin__ = 130;
+            current_statement_begin__ = 134;
             for (int j = 1; j <= J; ++j) {
 
-                current_statement_begin__ = 132;
+                current_statement_begin__ = 136;
                 for (int s = 1; s <= 3; ++s) {
 
-                    current_statement_begin__ = 133;
+                    current_statement_begin__ = 137;
                     lp_accum__.add(normal_log<propto__>(get_base1(beta_raw,j,s,"beta_raw",1), 0, get_base1(sigma_beta_raw,s,"sigma_beta_raw",1)));
                 }
-                current_statement_begin__ = 136;
+                current_statement_begin__ = 141;
                 lp_accum__.add(normal_log<propto__>(get_base1(beta_raw,j,4,"beta_raw",1), 0, get_base1(sigma_beta_raw,(3 + get_base1(traitItem,j,"traitItem",1)),"sigma_beta_raw",1)));
             }
-            current_statement_begin__ = 141;
-            lp_accum__.add(normal_log<propto__>(beta_ARS_extreme, 0, 1));
-            current_statement_begin__ = 143;
-            lp_accum__.add(normal_log<propto__>(mu_beta, 0, 1));
-            current_statement_begin__ = 144;
-            lp_accum__.add(inv_gamma_log<propto__>(sigma2_beta_raw, 1, 1));
-            current_statement_begin__ = 145;
-            lp_accum__.add(inv_wishart_log<propto__>(Sigma_raw, df, V));
             current_statement_begin__ = 147;
+            lp_accum__.add(normal_log<propto__>(beta_ARS_extreme, 0, 1));
+            current_statement_begin__ = 149;
+            lp_accum__.add(normal_log<propto__>(mu_beta, 0, 1));
+            current_statement_begin__ = 150;
+            lp_accum__.add(inv_gamma_log<propto__>(sigma2_beta_raw, 1, 1));
+            current_statement_begin__ = 151;
+            lp_accum__.add(inv_wishart_log<propto__>(Sigma_raw, df, V));
+            current_statement_begin__ = 153;
             for (int i = 1; i <= N; ++i) {
 
-                current_statement_begin__ = 148;
+                current_statement_begin__ = 154;
                 for (int j = 1; j <= J; ++j) {
 
-                    current_statement_begin__ = 150;
+                    current_statement_begin__ = 156;
                     lp_accum__.add(categorical_log<propto__>(get_base1(get_base1(X,i,"X",1),j,"X",2), get_base1(get_base1(p_cat,i,"p_cat",1),j,"p_cat",2)));
                 }
-                current_statement_begin__ = 155;
+                current_statement_begin__ = 161;
                 lp_accum__.add(multi_normal_log<propto__>(get_base1(theta_raw,i,"theta_raw",1), theta_mu, Sigma_raw));
             }
         } catch (const std::exception& e) {
@@ -1931,6 +1968,7 @@ public:
         names__.push_back("extreme_a");
         names__.push_back("X_pred");
         names__.push_back("sigma_beta");
+        names__.push_back("Corr");
     }
 
 
@@ -2004,6 +2042,10 @@ public:
         dims__.push_back(J);
         dimss__.push_back(dims__);
         dims__.resize(0);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
         dims__.push_back(S);
         dimss__.push_back(dims__);
     }
@@ -2145,16 +2187,24 @@ public:
                     current_statement_begin__ = 111;
                     stan::math::assign(get_base1_lhs(get_base1_lhs(acquies,i,"acquies",1),j,"acquies",2), Phi_approx((get_base1(theta,i,3,"theta",1) - get_base1(beta,j,3,"beta",1))));
                     current_statement_begin__ = 113;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(trait,i,"trait",1),j,"trait",2), Phi_approx((pow(-(1),get_base1(revItem,j,"revItem",1)) * (get_base1(theta,i,(3 + get_base1(traitItem,j,"traitItem",1)),"theta",1) - get_base1(beta,j,4,"beta",1)))));
-                    current_statement_begin__ = 116;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2)));
-                    current_statement_begin__ = 117;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))));
-                    current_statement_begin__ = 118;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * get_base1(get_base1(middle,i,"middle",1),j,"middle",2)));
-                    current_statement_begin__ = 119;
-                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * get_base1(get_base1(trait,i,"trait",1),j,"trait",2)) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))) + (get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2) * (1 - get_base1(extreme_a,i,"extreme_a",1)))));
+                    if (as_bool(logical_gt(get_base1(traitItem,j,"traitItem",1),0))) {
+
+                        current_statement_begin__ = 114;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(trait,i,"trait",1),j,"trait",2), Phi_approx((pow(-(1),get_base1(revItem,j,"revItem",1)) * (get_base1(theta,i,(3 + get_base1(traitItem,j,"traitItem",1)),"theta",1) - get_base1(beta,j,4,"beta",1)))));
+                    } else {
+
+                        current_statement_begin__ = 116;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(trait,i,"trait",1),j,"trait",2), Phi_approx((pow(-(1),get_base1(revItem,j,"revItem",1)) * -(get_base1(beta,j,4,"beta",1)))));
+                    }
                     current_statement_begin__ = 120;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2)));
+                    current_statement_begin__ = 121;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), ((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * (1 - get_base1(get_base1(trait,i,"trait",1),j,"trait",2))) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))));
+                    current_statement_begin__ = 122;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * get_base1(get_base1(middle,i,"middle",1),j,"middle",2)));
+                    current_statement_begin__ = 123;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * get_base1(get_base1(trait,i,"trait",1),j,"trait",2)) * (1 - get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2))) + (get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2) * (1 - get_base1(extreme_a,i,"extreme_a",1)))));
+                    current_statement_begin__ = 124;
                     stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),5,"p_cat",3), (((((1 - get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2)) * (1 - get_base1(get_base1(middle,i,"middle",1),j,"middle",2))) * get_base1(get_base1(trait,i,"trait",1),j,"trait",2)) * get_base1(get_base1(extreme,i,"extreme",1),j,"extreme",2)) + (get_base1(get_base1(acquies,i,"acquies",1),j,"acquies",2) * get_base1(extreme_a,i,"extreme_a",1))));
                 }
             }
@@ -2259,18 +2309,24 @@ public:
         (void) sigma_beta;  // dummy to suppress unused var warning
         stan::math::initialize(sigma_beta, std::numeric_limits<double>::quiet_NaN());
         stan::math::fill(sigma_beta,DUMMY_VAR__);
+        matrix_d Corr(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        (void) Corr;  // dummy to suppress unused var warning
+        stan::math::initialize(Corr, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(Corr,DUMMY_VAR__);
 
 
         try {
-            current_statement_begin__ = 196;
+            current_statement_begin__ = 203;
             stan::math::assign(sigma_beta, elt_multiply(rep_vector(1,S),sigma_beta_raw));
-            current_statement_begin__ = 206;
+            current_statement_begin__ = 205;
+            stan::math::assign(Corr, multiply(multiply(diag_matrix(inv_sqrt(diagonal(Sigma))),Sigma),diag_matrix(inv_sqrt(diagonal(Sigma)))));
+            current_statement_begin__ = 215;
             for (int i = 1; i <= N2; ++i) {
 
-                current_statement_begin__ = 207;
+                current_statement_begin__ = 216;
                 for (int j = 1; j <= J; ++j) {
 
-                    current_statement_begin__ = 208;
+                    current_statement_begin__ = 217;
                     stan::math::assign(get_base1_lhs(get_base1_lhs(X_pred,i,"X_pred",1),j,"X_pred",2), categorical_rng(get_base1(get_base1(p_cat,i,"p_cat",1),j,"p_cat",2), base_rng__));
                 }
             }
@@ -2288,6 +2344,7 @@ public:
             }
         }
         check_greater_or_equal(function__,"sigma_beta",sigma_beta,0);
+        stan::math::check_cov_matrix(function__,"Corr",Corr);
 
         // write generated quantities
         for (int k_1__ = 0; k_1__ < J; ++k_1__) {
@@ -2297,6 +2354,11 @@ public:
         }
         for (int k_0__ = 0; k_0__ < S; ++k_0__) {
             vars__.push_back(sigma_beta[k_0__]);
+        }
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+                vars__.push_back(Corr(k_0__, k_1__));
+            }
         }
 
     }
@@ -2451,6 +2513,13 @@ public:
             param_name_stream__ << "sigma_beta" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "Corr" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
     }
 
 
@@ -2575,6 +2644,11 @@ public:
         for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "sigma_beta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= (S + ((S * (S - 1)) / 2)); ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "Corr" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
     }

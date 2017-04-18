@@ -155,8 +155,9 @@ generated quantities {
     // real<lower=0, upper=1> Zextreme_a;
     
 	vector<lower=0>[S] sigma_beta;	      # item SD
+	
+	cov_matrix[S] Corr;
 
-    // 
     // matrix[J,5] diff_item_obs;
     // matrix[J,5] diff_item_pred;
     // matrix<lower=0, upper=N>[J,5] mean_item_exp;
@@ -180,6 +181,8 @@ generated quantities {
     # rescaled item mean and SD
     // sigma_beta = xi_beta .* sigma_beta_raw;
     sigma_beta = rep_vector(1, S) .* sigma_beta_raw;
+    
+    Corr = diag_matrix(inv_sqrt(diagonal(Sigma))) * Sigma * diag_matrix(inv_sqrt(diagonal(Sigma)));
 
     // for(i in 1:N){
     // 	for(j in 1:J){
