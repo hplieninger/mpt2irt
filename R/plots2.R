@@ -19,8 +19,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 plot_responses <- function(X,
                            revItem = rep(0, ncol(X)),
                            traitItem = rep(1, ncol(X)),
-                           points = 5,
-                           ...){
+                           points = 5, ...){
     checkmate::assert_matrix(X, mode = "integerish", any.missing = FALSE,
                              min.rows = 2, min.cols = 2)
     J <- ncol(X)
@@ -47,8 +46,7 @@ plot_responses <- function(X,
         barplot(prop.table(table(factor(X[,j], levels=1:points))),
                 main = paste("Trait", traitItem[j], "(rev:",revItem[j],")"),
                 col = revItem[j]+1,
-                ylim = ylim,
-                ...)
+                ylim = ylim, ...)
     }
     
     par(mfrow=mfrow, mar=mar)
@@ -214,8 +212,7 @@ plot_expected <- function(fit_sum,
                           col = "cyan",
                           lwd = 2,
                           ylim = NULL,
-                          measure = c("Median", "Mean"),
-                          ...){
+                          measure = c("Median", "Mean"), ...){
     checkmate::assert_matrix(X, mode = "integerish", any.missing = FALSE,
                              min.rows = 2, min.cols = 2)
     J <- ncol(X)

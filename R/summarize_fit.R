@@ -43,8 +43,7 @@ tidyup_irtree_fit <- function(fit,
                               measure = c("Median", "Mean"),
                               tt_names = NULL, 
                               # rs_names = c("m", "e", "a", "t"), trait = NULL,
-                              plot = TRUE,
-                              ...){
+                              plot = TRUE, ...){
     fitModel <- match.arg(fitModel)
     fitMethod <- match.arg(fitMethod)
     measure <- match.arg(measure)
@@ -243,8 +242,8 @@ tidyup_irtree_fit <- function(fit,
                                                   traitItem = traitItem,
                                                   # trait = trait, rs_names = rs_names,
                                                   return_data = FALSE, tt_names = tt_names,
-                                                  measure = measure, fitMethod = fitMethod,
-                                                  ...))
+                                                  measure = measure,
+                                                  fitMethod = fitMethod, ...))
     }
     
     return(return_list)
@@ -286,8 +285,7 @@ tidyup_irtree_fit <- function(fit,
 #' @export
 summarize_irtree_fit <- function(fit,
                                  fitMethod = NULL,
-                                 interact = FALSE,
-                                 ...) {
+                                 interact = FALSE, ...) {
     
     if (interact == TRUE & object.size(fit) > 1000000000) {
         proceed <- switch(menu(c("Yes, proceed", "No, thank you."),

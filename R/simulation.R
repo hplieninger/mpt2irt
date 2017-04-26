@@ -95,8 +95,7 @@ recovery_irtree <- function(rrr = NULL,
                             dir = NULL,
                             keep_mcmc = FALSE,
                             savext_mcmc = FALSE,
-                            add2varlist = c("deviance", "pd", "popt", "dic"),
-                            ...) {
+                            add2varlist = c("deviance", "pd", "popt", "dic"), ...) {
     
     # It is assumed that parameters such as df and V are the same for all models
     # in fitModel. There's no problem in changing this, only remember to change

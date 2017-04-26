@@ -103,8 +103,7 @@ fit_irtree <- function(X,
                        add2varlist = NULL,
                        cores = NULL,
                        summarise = FALSE,
-                       N2 = 2, 
-                       ...){
+                       N2 = 2, ...){
     
     checkmate::assert_matrix(X, mode = "integerish", any.missing = FALSE,
                              min.rows = 2, min.cols = 2)
@@ -113,7 +112,7 @@ fit_irtree <- function(X,
     checkmate::assert_integerish(X, lower = 1, upper = 5, any.missing = FALSE)
     checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
                                  len = J)
-    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+    checkmate::assert_integerish(traitItem, lower = 0, any.missing = FALSE,
                                  len = J)
     checkmate::assert_number(df, lower = 0, null.ok = TRUE)
     checkmate::assert_matrix(V, mode = "numeric", any.missing = FALSE,
