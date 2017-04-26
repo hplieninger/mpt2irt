@@ -197,11 +197,18 @@ fit_irtree <- function(X,
         }
     }
     
-    datalist <- list(X=X, S=S, df=df, V=V, J=J, N=N, theta_mu=rep(0,S), 
-                     revItem=revItem, traitItem=traitItem, N2 = N2)
+    datalist <- list(X=X, S=S, df=df, V=V, J=J, N=N, theta_mu=rep(0, S),
+                     revItem=revItem, traitItem=traitItem)
+    if (fitMethod == "stan") {
+        datalist <- c(datalist, list(N2 = N2))
+    }
+    
     varlist <-  c("theta", "beta", "Sigma", "sigma_beta", "mu_beta")
-    if(fitModel %in% c("ext", "ext2", "ext3")){
+    if (fitModel %in% c("ext", "ext2", "ext3")) {
         varlist <- c(varlist, "beta_ARS_extreme")
+    }
+    if (fitMethod == "stan") {
+        varlist <- c(varlist, "Corr")
     }
     # if (fitMethod == "stan") {
     #     datalist$T1_CONST <- T1_CONST
