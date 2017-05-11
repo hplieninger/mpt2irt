@@ -132,8 +132,15 @@ fit_irtree <- function(X,
     if(max(traitItem) != n.trait){
         stop("Check definition of traitItem")
     }
-    if(length(unique(revItem)) > 1 & !any(cor(X) < 0)){
-        stop("All items have positive bivariate correlations;",
+    
+    tmp1 <- split(data.frame(t(X)), traitItem) %>% 
+        lapply(t) %>% 
+        lapply(cor) %>% 
+        lapply(function(x) x[lower.tri(x)]) %>% 
+        sapply(. %>% sign %>% unique %>% length)
+    
+    if (length(unique(revItem)) > 1 & any(tmp1 != 2)) {
+        stop("Items have only positive bivariate correlations;",
              "however, data should be provided in 'input'-format such that",
              "reverse-coded and regular items correlate negatively.")
     }
@@ -155,16 +162,16 @@ fit_irtree <- function(X,
     # if (!is.null(model2) & model2 == "HH") {
     #     S <- S + 1
     # }
-    if(is.null(df)){
-        df <- S+1
+    if (is.null(df)) {
+        df <- S + 1
     }
-    if(is.null(V)){
+    if (is.null(V)) {
         V <- diag(S)
     }
     
     # adjust starting values
     inits <- list()
-    if(startSmall == TRUE){
+    if (startSmall == TRUE) {
         inits <- lapply(1:n.chains, function(id) {
             get_inits(N = N, J = J, S = S, n.trait = n.trait,
                       fitMethod = fitMethod, fitModel = fitModel)
@@ -188,17 +195,17 @@ fit_irtree <- function(X,
                 inits[[iii]]$beta_ARS_extreme <- NULL
             } else if (fitModel == "ext5") {
                 inits[[iii]]$beta_ARS_extreme <- NULL
-                inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S+1, mean = 0, sd = 1,
+                inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S + 1, mean = 0, sd = 1,
                                                              a = -2, b = 2)
-                inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*(dimen+1), mean = 0, sd = 1,
+                inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*(dimen + 1), mean = 0, sd = 1,
                                                                       a = -2, b = 2),
-                                                nrow = J, ncol = dimen+1)
+                                                nrow = J, ncol = dimen + 1)
             }
         }
     }
     
-    datalist <- list(X=X, S=S, df=df, V=V, J=J, N=N, theta_mu=rep(0, S),
-                     revItem=revItem, traitItem=traitItem)
+    datalist <- list(X = X, S = S, df = df, V = V, J = J, N = N, theta_mu = rep(0, S),
+                     revItem = revItem, traitItem = traitItem)
     if (fitMethod == "stan") {
         datalist <- c(datalist, list(N2 = N2))
     }
@@ -225,9 +232,9 @@ fit_irtree <- function(X,
     
     time1 <- Sys.time()
     
-    if(fitMethod == "jags"){
+    if (fitMethod == "jags") {
         ##################### fit JAGS ###############################################
-        boeck.jags <- runjags::run.jags(model=paste0(.libPaths()[1],"/mpt2irt/models/jags_boeck_",
+        boeck.jags <- runjags::run.jags(model = paste0(.libPaths()[1],"/mpt2irt/models/jags_boeck_",
                                                      fitModel, ".txt"), 
                                         monitor = varlist, 
                                         data = datalist, inits = inits,
@@ -257,20 +264,20 @@ fit_irtree <- function(X,
         #     # fitting "model" requires changing S2 to S2+1 (see above)
         #     stanExe <- boeck_stan_ext_HH
         # } else
-        if (fitModel == "ext"){
+        if (fitModel == "ext") {
             stanExe <- stanmodels$stan_boeck_ext
-        } else if (fitModel == "pcm"){
+        } else if (fitModel == "pcm") {
             stanExe <- stanmodels$stan_pcm
-        } else if (fitModel == "ext2"){
+        } else if (fitModel == "ext2") {
             # stanExe <- boeck_stan_ext2
             stop("Model 'ext2' currently not implemented")
-        } else if (fitModel == "ext3"){
+        } else if (fitModel == "ext3") {
             # stanExe <- boeck_stan_ext3
             stop("Model 'ext3' currently not implemented")
-        } else if (fitModel == "ext4"){
+        } else if (fitModel == "ext4") {
             # stanExe <- boeck_stan_ext4
             stop("Model 'ext4' currently not implemented")
-        } else if (fitModel == "ext5"){
+        } else if (fitModel == "ext5") {
             # stanExe <- boeck_stan_ext5
             stop("Model 'ext5' currently not implemented")
         } else {
@@ -279,14 +286,14 @@ fit_irtree <- function(X,
         if (is.null(cores)) cores <- min(n.chains, parallel::detectCores() - 1)
         boeck.samp <- rstan::sampling(stanExe,
                                       data = datalist, pars = varlist, 
-                                      chains = n.chains, iter = warmup+M*thin, 
-                                      warmup=warmup, thin = thin,
+                                      chains = n.chains, iter = warmup + M*thin, 
+                                      warmup = warmup, thin = thin,
                                       cores = cores,
                                       init = inits, ...)
-        try( unlink(paste0(getwd(), "\\_StanProgress.txt")), silent=T)
+        try( unlink(paste0(getwd(), "\\_StanProgress.txt")), silent = T)
         if (is.null(outFormat)) {
             boeck.samp <- boeck.samp
-        } else if (outFormat == "mcmc.list"){
+        } else if (outFormat == "mcmc.list") {
             try(boeck.samp <- rstan::As.mcmc.list(boeck.samp))
         }
         time2 <- Sys.time()
@@ -309,15 +316,15 @@ fit_irtree <- function(X,
 # @export
 get_inits <- function(N, J, S, n.trait, fitMethod, fitModel){
   if (fitMethod == "jags") {
-    ll <- list(beta_raw = matrix(rnorm( J*(S-n.trait+1),0, 1), J),
+    ll <- list(beta_raw = matrix(rnorm( J*(S - n.trait + 1),0, 1), J),
                # xi_beta = runif(S, 3/4, 4/3),
-               Tau.theta.raw=rWishart(1,S+3,diag(S))[,,1],
+               Tau.theta.raw = rWishart(1, S + 3, diag(S))[, , 1],
                xi_theta = runif(S, 3/4, 4/3))
   } else {
     ll <- list(mu_beta         = rnorm(S, 0, .5)
-               , beta_raw        = matrix(rnorm(J*min(4, S-n.trait+1), 0, 1), J)
+               , beta_raw        = matrix(rnorm(J*min(4, S - n.trait + 1), 0, 1), J)
                , theta_raw       = matrix(rnorm(N*S, 0, 1), N)
-               , Sigma_raw       = solve(rWishart(1, S+3, diag(S))[, , 1])
+               , Sigma_raw       = solve(rWishart(1, S + 3, diag(S))[, , 1])
                , sigma2_beta_raw = runif(S, 3/4, 4/3)
                # , xi_beta         = runif(S, 3/4, 4/3)
                , xi_theta        = runif(S, 3/4, 4/3)
