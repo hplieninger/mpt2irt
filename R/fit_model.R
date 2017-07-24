@@ -139,7 +139,7 @@ fit_irtree <- function(X,
         lapply(function(x) x[lower.tri(x)]) %>% 
         sapply(. %>% sign %>% unique %>% length)
     
-    if (length(unique(revItem)) > 1 & any(tmp1 != 2)) {
+    if (length(unique(revItem)) > 1 & any(tmp1 < 2)) {
         stop("Items have only positive bivariate correlations;",
              "however, data should be provided in 'input'-format such that",
              "reverse-coded and regular items correlate negatively.")

@@ -5,7 +5,7 @@ library("magrittr")
 
 context("Data generation")
 
-N <- sample(2:20, 1)
+N <- sample(10:20, 1)
 J <- sample(2:20, 1)
 # N <- 2
 # J <- 2
@@ -32,7 +32,7 @@ while (cond2 == FALSE) {
                                 prop.rev = runif(1),
                                 genModel = "ext",
                                 beta_ARS_extreme = rnorm(1))
-    cond1 <- dat1$X %>% cor %>% is.na %>% any %>% magrittr::equals(FALSE)
+    cond1 <- suppressWarnings(cor(dat1$X)) %>% is.na %>% any %>% magrittr::equals(FALSE)
     if (cond1 == TRUE) {
         cond2 <- dat1$X %>% cor %>% sign %>% magrittr::equals(-1) %>% any
     }
@@ -44,7 +44,7 @@ while (cond2 == FALSE) {
                                  J = J,
                                  betas = betas2,
                                  prop.rev = runif(1))
-    cond1 <- dat2$X %>% cor %>% is.na %>% any %>% magrittr::equals(FALSE)
+    cond1 <- suppressWarnings(cor(dat2$X)) %>% is.na %>% any %>% magrittr::equals(FALSE)
     if (cond1 == TRUE) {
         cond2 <- dat2$X %>% cor %>% sign %>% magrittr::equals(-1) %>% any
     }
