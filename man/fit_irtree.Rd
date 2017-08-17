@@ -5,10 +5,11 @@
 \title{Fit an mpt2irt model.}
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
-  V = NULL, fitModel = c("ext", "2012", "pcm"), fitMethod = c("stan",
-  "jags"), outFormat = NULL, startSmall = TRUE, M = 1000, warmup = 1000,
-  n.chains = 2, thin = 1, method = "parallel", return_defaults = TRUE,
-  add2varlist = NULL, cores = NULL, summarise = FALSE, N2 = 2, ...)
+  V = NULL, fitModel = c("ext", "2012", "pcm", "tutz"),
+  fitMethod = c("stan", "jags"), outFormat = NULL, startSmall = TRUE,
+  M = 1000, warmup = 1000, n.chains = 2, thin = 1,
+  method = "parallel", return_defaults = TRUE, add2varlist = NULL,
+  cores = NULL, summarise = FALSE, N2 = 2, ...)
 }
 \arguments{
 \item{X}{an N x J matrix of observed responses for categories 1...5 (use

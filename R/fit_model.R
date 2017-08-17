@@ -51,7 +51,7 @@
 #' @param n.chains number of MCMC chains (and number of CPUs used)
 #' @param thin thinning of MCMC samples
 # @param mail email address to which a notification is sent when the simulation is finished (no dash "-" allowed!)
-#' @param return_defaults Logical. Whether to return input specifications or not.
+# @param return_defaults Logical. Whether to return input specifications or not.
 #' @param add2varlist Additional variables to monitor (e.g., \code{c("deviance",
 #'   "pd", "popt", "dic")} for JAGS)
 #' @param N2 Numeric. Number of persons for whom to draw posterior predictives.
@@ -308,12 +308,13 @@ fit_irtree <- function(X,
     #     mail::sendmail(mail, subject=paste("IRT-MPT Model finished on", Sys.info()["nodename"]),
     #                    message="Calculation finished!", password="rmail")
     
-    if (return_defaults == FALSE) {
-        return(boeck.samp)
-    } else {
-        return(list(samples = boeck.samp, V = V, df = df, startSmall = startSmall,
-                    fitModel = fitModel, fitMethod = fitMethod))
-    }
+    # if (return_defaults == FALSE) {
+    #     return(boeck.samp)
+    # } else {
+        # return(list(samples = boeck.samp, V = V, df = df, startSmall = startSmall,
+        #             fitModel = fitModel, fitMethod = fitMethod))
+    return(list(samples = boeck.samp, args = args))
+    # }
     
 }
 
