@@ -79,6 +79,7 @@
 #' str(res3)
 #' res3$plot
 #' }
+# @importFrom magrittr %>%
 # import runjags
 # @importFrom rstan stan sampling As.mcmc.list
 # @import parallel
@@ -139,9 +140,12 @@ fit_irtree <- function(X,
         lapply(function(x) x[lower.tri(x)]) %>% 
         sapply(. %>% sign %>% unique %>% length)
     
-    if (length(unique(revItem)) > 1 & any(tmp1 < 2)) {
+    tmp2 <- split(revItem, traitItem) %>% 
+        sapply(. %>% unique %>% length)
+    
+    if (tmp1[tmp2 == 2] < 2) {
         stop("Items have only positive bivariate correlations;",
-             "however, data should be provided in 'input'-format such that",
+             "however, data should be provided in raw format such that",
              "reverse-coded and regular items correlate negatively.")
     }
     if (any(grepl("X_pred", add2varlist)) + (N2 > 2) == 1) {

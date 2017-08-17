@@ -28,7 +28,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #'   posterior predictive distribution for every category of every item.
 #' @inheritParams fit_irtree
 #' @inheritParams runjags::combine.mcmc
-#' @importFrom magrittr %>%
+# @importFrom magrittr %>%
 #' @importFrom rlang .data
 #' @import coda
 #' @examples 

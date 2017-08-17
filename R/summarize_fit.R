@@ -266,7 +266,7 @@ tidyup_irtree_fit <- function(fit,
 #' @param ... Further arguments passed to \code{\link[coda]{summary.mcmc.list}}.
 #' @return Returns a list containing the input \code{fit} as well as an MCMC list and \code{summary}.
 #' @inheritParams fit_irtree
-#' @importFrom magrittr %>% 
+# @importFrom magrittr %>% 
 #' @import coda
 #' @examples
 #' \dontrun{

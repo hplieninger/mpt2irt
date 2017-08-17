@@ -29,6 +29,7 @@
 #' @import stats
 #' @importFrom grDevices heat.colors
 #' @importFrom graphics abline barplot hist legend lines par plot
+#' @importFrom magrittr %>%
 #' 
 #' @examples 
 #' \dontrun{
