@@ -1,4 +1,4 @@
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 
 #' Draw posterior predictive values.
 #' 
@@ -16,6 +16,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' distribution is summarized with the quantiles given in \code{probs} and a
 #' data frame containing these quantiles for every item is returned.
 #' 
+#' @param fit_sum List. Output from either \code{\link{tidyup_irtree_fit}} or
+#'   \code{\link{summarize_irtree_fit}} that contains \code{mcmc.objects}.
 #' @param iter Numeric. Number of iterations per chain to use for generating
 #'   posterior predictives.
 #' @param probs Numeric. Vector of probabilities (passed to
@@ -42,35 +44,51 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' res2 <- summarize_irtree_fit(res1)
 #' 
 #' # posterior predictives for 512 hypothetical persons
-#' res3 <- pp_irtree(res2$mcmc, iter = 10, N = 512, traitItem = dat$traitItem,
-#'                   revItem = dat$revItem, fitModel = res2$fitModel)
+#' res3 <- pp_irtree(res2, iter = 10, N = 512)
 #' }
 #' @export
-pp_irtree <- function(mcmc.objects,
-                     iter = 100,
-                     probs = NULL,
-                     N = NULL,
-                     traitItem = NULL,
-                     revItem = NULL,
-                     fitModel = NULL) {
+pp_irtree <- function(fit_sum = NULL,
+                      mcmc.objects = NULL,
+                      iter = 100,
+                      probs = NULL,
+                      N = NULL,
+                      traitItem = NULL,
+                      revItem = NULL,
+                      fitModel = NULL) {
     
-    checkmate::assert_numeric(iter, lower = 1, upper = Inf, finite = TRUE,
-                              any.missing = FALSE, len = 1,
-                              null.ok = FALSE)
-    checkmate::assert_numeric(probs, lower = 0, upper = 1, finite = TRUE,
+    checkmate::assert_list(fit_sum, all.missing = FALSE, min.len = 1,
+                           null.ok = TRUE)
+    checkmate::assert_list(mcmc.objects, types = "numeric", any.missing = FALSE,
+                           min.len = 1, null.ok = TRUE)
+    if (is.null(fit_sum) & is.null(mcmc.objects)) 
+        stop("At least one of 'fit_sum' and 'mcmc.objects' must be specified.")
+    if (is.null(mcmc.objects)) {
+        if ("mcmc" %in% names(fit_sum)) {
+            mcmc.objects <- fit_sum$mcmc
+        } else {
+            stop("'fit_sum' must contain an element 'mcmc' or 'mcmc.objects' ",
+                 "must be specified.")
+        }
+        flag1 <- ifelse("args" %in% names(fit_sum), TRUE, FALSE)
+    }
+    
+    checkmate::qassert(iter, "X1[1,)")
+    
+    checkmate::assert_numeric(probs, lower = 0, upper = 1,
                               any.missing = FALSE,  min.len = 1, unique = TRUE,
                               null.ok = TRUE)
-    checkmate::assert_numeric(N, lower = 1, upper = Inf, finite = TRUE,
-                              any.missing = FALSE, len = 1,
-                              null.ok = FALSE)
-    checkmate::assert_numeric(traitItem, lower = 1, upper = Inf, finite = TRUE,
-                              any.missing = FALSE, min.len = 1,
-                              null.ok = FALSE)
-    checkmate::assert_numeric(revItem, lower = 0, upper = 1, finite = TRUE,
-                              any.missing = FALSE, len = length(traitItem),
-                              null.ok = FALSE)
-    checkmate::assert_string(fitModel, na.ok = FALSE, min.chars = 1, 
-                             null.ok = FALSE)
+    checkmate::qassert(N, "X1[1,)")
+    checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = flag1)
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = flag1)
+    checkmate::assert_character(fitModel, min.chars = 1, any.missing = FALSE,
+                                len = 1, null.ok = flag1)
+    
+    if (is.null(revItem)) revItem <- fit_sum$args$revItem
+    if (is.null(traitItem)) traitItem <- fit_sum$args$traitItem
+    if (is.null(fitModel)) fitModel <- fit_sum$args$fitModel
+    # if (fitModel == "steps") stop("fitModel 'steps' not implemented yet.")
     
     if (is.null(probs)) {
         probs <- c(.025, .975, .16, .84)
@@ -80,31 +98,37 @@ pp_irtree <- function(mcmc.objects,
     }
     
     J <- length(traitItem)
-    M <- mcmc.objects %>% magrittr::extract2(1) %>% nrow
-    chains <- mcmc.objects %>% length
+    M <- mcmc.objects %>% 
+        magrittr::extract2(1) %>% 
+        nrow
+    chains <- length(mcmc.objects)
     
     arsModel <- switch(fitModel, 
-                       "ext"  = TRUE,  
-                       "ext2" = TRUE,
-                       "ext3" = TRUE,
-                       "ext4" = TRUE,
-                       "ext5" = TRUE,
-                       "2012" = FALSE,
-                       "pcm"  = FALSE)
+                       "ext"   = TRUE,  
+                       "ext2"  = TRUE,
+                       "ext3"  = TRUE,
+                       "ext4"  = TRUE,
+                       "ext5"  = TRUE,
+                       "2012"  = FALSE,
+                       "pcm"   = FALSE,
+                       "steps" = FALSE)
     
     # tmp1 <- M %>% magrittr::divide_by(iter) %>% floor
     # reps <- sapply(seq(1, by = M, length = chains), . %>% seq(by = tmp1, length = iter)) %>% as.vector
     
-    thin <- M %>% magrittr::divide_by(iter) %>% round
+    thin <- M %>% 
+        magrittr::divide_by(iter) %>% 
+        round
 
     dimen <- switch(fitModel, 
-                    "ext" = 3,  
-                    "ext2" = 3,
-                    "ext3" = 4,
-                    "ext4" = 3,
-                    "ext5" = 3,
-                    "2012" = 2,
-                    "pcm" = 0) + 1
+                    "ext"   = 3,  
+                    "ext2"  = 3,
+                    "ext3"  = 4,
+                    "ext4"  = 3,
+                    "ext5"  = 3,
+                    "2012"  = 2,
+                    "pcm"   = 0,
+                    "steps" = 0) + 1
     n.trait <- length(table(traitItem))
     S <- dimen - 1 + n.trait
     
@@ -134,12 +158,12 @@ pp_irtree <- function(mcmc.objects,
     betas <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta", collapse.chains = F) %>% 
         tibble::as_tibble() %>% 
         dplyr::select(., dplyr::matches("beta\\[")) %>% 
-        dplyr::select(sapply(1:ifelse(fitModel == "pcm", 4, dimen), . %>%
-                                 seq(., by = ifelse(fitModel == "pcm", 4, dimen), length = J)) %>%
+        dplyr::select(sapply(1:ifelse(fitModel %in% c("pcm", "steps"), 4, dimen), . %>%
+                                 seq(., by = ifelse(fitModel %in% c("pcm", "steps"), 4, dimen), length = J)) %>%
                           as.vector) %>%
         t %>% 
         matrix %>% 
-        array(dim = c(J, ifelse(fitModel == "pcm", 4, dimen), length(reps)))
+        array(dim = c(J, ifelse(fitModel %in% c("pcm", "steps"), 4, dimen), length(reps)))
     
     if (arsModel == TRUE)
         beta_ARS_extreme <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta_ARS_extreme",
@@ -150,10 +174,18 @@ pp_irtree <- function(mcmc.objects,
     message(paste0("I'm going to loop over ", length(reps),
                    " replications, this may take a little time, go get a coffee."))
     
-    pb <- txtProgressBar(style = 3, char = "zzz ", min = min(reps), max = max(reps))
+    # If user has dplyr installed, use dplyr::progress_estimated(), otherwise
+    # use txtProgressBar()
+    p <- FALSE
+    try(p <- dplyr::progress_estimated(length(reps), 5), silent = T)
+    if (!is.environment(p)) {
+        pb <- txtProgressBar(style = 3, char = "zzz ", min = min(reps), max = max(reps))
+    }
+    # pb <- txtProgressBar(style = 3, char = "zzz ", min = min(reps), max = max(reps))
     
-    if (fitModel != "pcm") {
-        for(rrr in reps) {
+    ##### pp for 'ext' and '2012' #####
+    if (fitModel %in% c("ext", "2012")) {
+        for (rrr in reps) {
             
             theta <- Sigma1[rrr, ] %>%
                 matrix(., S, S) %>% 
@@ -204,33 +236,66 @@ pp_irtree <- function(mcmc.objects,
                 magrittr::equals(1) %>% 
                 apply(2:3, which)
             
-            setTxtProgressBar(pb, rrr)
-            
-            # for(nnn in 1:N){	
-            #     
-            #     extreme_a[nnn] <- pnorm(theta[nnn,2] - beta_ARS_extreme[rrr, ])
-            #     
-            #     # loop across items
-            #     for(jjj in 1:J){
-            #         middle[nnn,jjj]  <- pnorm(theta[nnn,1]-beta[jjj,1,rrr])   #pnorm()
-            #         extreme[nnn,jjj] <- pnorm(theta[nnn,2]-beta[jjj,2,rrr])
-            #         acquies[nnn,jjj] <- pnorm(theta[nnn,3]-beta[jjj,3,rrr])
-            #         # standard items: theta-beta  // reversed items: beta-theta
-            #         trait[nnn,jjj]   <- pnorm( (-1)^revItem[jjj] *(theta[nnn,3+traitItem[jjj]]-beta[jjj,4,rrr]) )
-            #         
-            #         # response probabilities: MPT model for response categories 1, 2, 3, 4, 5
-            #         p_cat[nnn,jjj,1] <- (1-acquies[nnn,jjj])*(1-middle[nnn,jjj])*(1-trait[nnn,jjj])*extreme[nnn,jjj]
-            #         p_cat[nnn,jjj,2] <- (1-acquies[nnn,jjj])*(1-middle[nnn,jjj])*(1-trait[nnn,jjj])*(1-extreme[nnn,jjj])
-            #         p_cat[nnn,jjj,3] <- (1-acquies[nnn,jjj])*   middle[nnn,jjj]
-            #         p_cat[nnn,jjj,4] <- (1-acquies[nnn,jjj])*(1-middle[nnn,jjj])*trait[nnn,jjj]*(1-extreme[nnn,jjj]) + acquies[nnn,jjj]*(1-extreme_a[nnn])
-            #         p_cat[nnn,jjj,5] <- (1-acquies[nnn,jjj])*(1-middle[nnn,jjj])*trait[nnn,jjj]*extreme[nnn,jjj]     + acquies[nnn,jjj]*   extreme_a[nnn]
-            #         
-            #         pp[nnn, jjj, which(reps == rrr)] <- rmultinom(1, 1, p_cat[nnn, jjj, ]) %>% equals(1) %>% which
-            #     }
-            # }
+            if (is.environment(p)) {
+                p$tick()$print()
+            } else {
+                setTxtProgressBar(pb, rrr)
+            }
         }
-    } else {
-        for(rrr in reps) {
+    } else if (fitModel == "steps") {
+        ##### pp for 'steps' #####
+        for (rrr in reps) {
+            
+            theta <- Sigma1[rrr, ] %>%
+                matrix(., S, S) %>% 
+                MASS::mvrnorm(n = N, mu = rep(0, S), Sigma = .)
+            
+            p_catx <- array(NA_real_, dim = c(N, J, 5))
+            
+            node1 <- matrix(theta[, traitItem], N, J) %>% 
+                magrittr::subtract(matrix(betas[, 1, rrr], N, J, byrow = T)) %>% 
+                pnorm
+            
+            node2 <- matrix(theta[, traitItem], N, J) %>% 
+                magrittr::subtract(matrix(betas[, 2, rrr], N, J, byrow = T)) %>% 
+                pnorm
+            
+            node3 <- matrix(theta[, traitItem], N, J) %>% 
+                magrittr::subtract(matrix(betas[, 3, rrr], N, J, byrow = T)) %>% 
+                pnorm
+            
+            node4 <- matrix(theta[, traitItem], N, J) %>% 
+                magrittr::subtract(matrix(betas[, 4, rrr], N, J, byrow = T)) %>% 
+                pnorm
+            
+            p_catx[ , , 1] = (1-node1);
+            p_catx[ , , 2] =    node1 *(1-node2);
+            p_catx[ , , 3] =    node1 *   node2 *(1-node3);
+            p_catx[ , , 4] =    node1 *   node2 *   node3 *(1-node4);
+            p_catx[ , , 5] =    node1 *   node2 *   node3 *   node4 ;
+            
+            p_cat <- p_catx
+            
+            p_cat[ , revItem == 1, 5] <- p_catx[ , revItem == 1, 1]
+            p_cat[ , revItem == 1, 4] <- p_catx[ , revItem == 1, 2]
+            p_cat[ , revItem == 1, 3] <- p_catx[ , revItem == 1, 3]
+            p_cat[ , revItem == 1, 2] <- p_catx[ , revItem == 1, 4]
+            p_cat[ , revItem == 1, 1] <- p_catx[ , revItem == 1, 5]
+            
+            pp[, , rrr] <- p_cat %>%
+                apply(1:2, function(x) rmultinom(1, 1, x)) %>%
+                magrittr::equals(1) %>% 
+                apply(2:3, which)
+            
+            if (is.environment(p)) {
+                p$tick()$print()
+            } else {
+                setTxtProgressBar(pb, rrr)
+            }
+        }
+    } else if (fitModel == "pcm") {
+        ##### pp for 'pcm' #####
+        for (rrr in reps) {
             
             theta <- Sigma1[rrr, ] %>%
                 matrix(., S, S) %>% 
@@ -267,13 +332,18 @@ pp_irtree <- function(mcmc.objects,
                 magrittr::equals(1) %>% 
                 apply(2:3, which)
             
-            setTxtProgressBar(pb, rrr)
+            if (is.environment(p)) {
+                p$tick()$print()
+            } else {
+                setTxtProgressBar(pb, rrr)
+            }
         }
     }
     
-    close(pb)
+    if (!is.environment(p)) close(pb)
     
-    message("I drew posterior predictives, I need a little bit more time to restructure the results, I ask for your patience.")
+    message("I drew posterior predictives, I need a little bit more time to ",
+            "restructure the results, I ask for your patience.")
     
     tmp1 <- pp %>% 
         reshape2::melt() %>%
@@ -292,7 +362,8 @@ pp_irtree <- function(mcmc.objects,
                   pp = list(.data$value %>%
                                 factor(levels = 1:5) %>%
                                 table %>%
-                                prop.table)) %>%
+                                prop.table),
+                  Persons = dplyr::n_distinct(Person)) %>%
         # summarise(pp = list(quantile(value, probs = c(.025, .975, .16, .84))),
         #           Q = list(c("q025", "q975", "q16", "q84"))) %>%
         tidyr::unnest()
@@ -301,13 +372,16 @@ pp_irtree <- function(mcmc.objects,
         dplyr::group_by_("Item", "Categ") %>% 
         dplyr::summarise(pp = list(pp %>%
                                        quantile(., probs = probs)),
-                         Q = list(names(probs))) %>% 
+                         Q = list(names(probs)),
+                         Samples = dplyr::n_distinct(Iter),
+                         Persons = dplyr::first(Persons)) %>% 
         tidyr::unnest()
     
     # tmp3$Item <- factor(tmp3$Item, labels = levels(dat_obs1$Item))
     
     tmp4 <- tmp3 %>% 
-        reshape2::dcast(value.var = "pp", formula = Item + Categ ~ Q)
+        reshape2::dcast(value.var = "pp",
+                        formula = Item + Categ + Persons + Samples ~ Q)
     
     return(tmp4)
 }

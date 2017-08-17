@@ -4,10 +4,13 @@
 \alias{pp_irtree}
 \title{Draw posterior predictive values.}
 \usage{
-pp_irtree(mcmc.objects, iter = 100, probs = NULL, N = NULL,
-  traitItem = NULL, revItem = NULL, fitModel = NULL)
+pp_irtree(fit_sum = NULL, mcmc.objects = NULL, iter = 100, probs = NULL,
+  N = NULL, traitItem = NULL, revItem = NULL, fitModel = NULL)
 }
 \arguments{
+\item{fit_sum}{List. Output from either \code{\link{tidyup_irtree_fit}} or
+\code{\link{summarize_irtree_fit}} that contains \code{mcmc.objects}.}
+
 \item{mcmc.objects}{a list of MCMC or runjags objects, all with the same number of chains and matching variable names, or a single MCMC object/list or runjags object.  No default.}
 
 \item{iter}{Numeric. Number of iterations per chain to use for generating
@@ -31,7 +34,7 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
 acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-credit model).}
+credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).}
 }
 \value{
 Returns a data frame containing the specified quantiles of the
@@ -64,7 +67,6 @@ res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
 res2 <- summarize_irtree_fit(res1)
 
 # posterior predictives for 512 hypothetical persons
-res3 <- pp_irtree(res2$mcmc, iter = 10, N = 512, traitItem = dat$traitItem,
-                  revItem = dat$revItem, fitModel = res2$fitModel)
+res3 <- pp_irtree(res2, iter = 10, N = 512)
 }
 }

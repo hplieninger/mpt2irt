@@ -56,8 +56,7 @@ dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 # fit model
 res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200, warmup = 200)
 res2 <- summarize_irtree_fit(res1)
-res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-                          traitItem = dat$traitItem, fitModel = res1$fitModel)
+res3 <- tidyup_irtree_fit(res2)
 
 # plot expected and observed frequencies
 plot_expected(res3, X = dat$X)

@@ -4270,7 +4270,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_stan_pcm");
-    reader.add_event(152, 152, "end", "model_stan_pcm");
+    reader.add_event(159, 159, "end", "model_stan_pcm");
     return reader;
 }
 
@@ -4880,7 +4880,15 @@ public:
                     lp_accum__.add(categorical_log<propto__>(get_base1(get_base1(X,i,"X",1),j,"X",2), get_base1(get_base1(p_cat,i,"p_cat",1),j,"p_cat",2)));
                 }
                 current_statement_begin__ = 135;
-                lp_accum__.add(multi_normal_log<propto__>(get_base1(theta_raw,i,"theta_raw",1), theta_mu, Sigma_raw));
+                if (as_bool(logical_gt(S,1))) {
+
+                    current_statement_begin__ = 136;
+                    lp_accum__.add(multi_normal_log<propto__>(get_base1(theta_raw,i,"theta_raw",1), theta_mu, Sigma_raw));
+                } else {
+
+                    current_statement_begin__ = 138;
+                    lp_accum__.add(normal_log<propto__>(get_base1(theta_raw,i,"theta_raw",1), theta_mu, get_base1(Sigma_raw,1,1,"Sigma_raw",1)));
+                }
             }
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -4918,8 +4926,9 @@ public:
         names__.push_back("beta");
         names__.push_back("sigma_beta_raw");
         names__.push_back("p_cat");
-        names__.push_back("X_pred");
+        names__.push_back("Corr");
         names__.push_back("sigma_beta");
+        names__.push_back("X_pred");
     }
 
 
@@ -4968,11 +4977,15 @@ public:
         dims__.push_back(5);
         dimss__.push_back(dims__);
         dims__.resize(0);
-        dims__.push_back(N2);
-        dims__.push_back(J);
+        dims__.push_back(S);
+        dims__.push_back(S);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N2);
+        dims__.push_back(J);
         dimss__.push_back(dims__);
     }
 
@@ -5148,28 +5161,36 @@ public:
 
         if (!include_gqs__) return;
         // declare and define generated quantities
-        validate_non_negative_index("X_pred", "N2", N2);
-        validate_non_negative_index("X_pred", "J", J);
-        vector<vector<int> > X_pred(N2, (vector<int>(J, 0)));
-        stan::math::fill(X_pred, std::numeric_limits<int>::min());
+        validate_non_negative_index("Corr", "S", S);
+        matrix_d Corr(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        (void) Corr;  // dummy to suppress unused var warning
+
+        stan::math::initialize(Corr, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(Corr,DUMMY_VAR__);
         validate_non_negative_index("sigma_beta", "S", S);
         vector_d sigma_beta(static_cast<Eigen::VectorXd::Index>(S));
         (void) sigma_beta;  // dummy to suppress unused var warning
 
         stan::math::initialize(sigma_beta, std::numeric_limits<double>::quiet_NaN());
         stan::math::fill(sigma_beta,DUMMY_VAR__);
+        validate_non_negative_index("X_pred", "N2", N2);
+        validate_non_negative_index("X_pred", "J", J);
+        vector<vector<int> > X_pred(N2, (vector<int>(J, 0)));
+        stan::math::fill(X_pred, std::numeric_limits<int>::min());
 
 
         try {
-            current_statement_begin__ = 145;
+            current_statement_begin__ = 150;
+            stan::math::assign(Corr, multiply(multiply(diag_matrix(inv_sqrt(diagonal(Sigma))),Sigma),diag_matrix(inv_sqrt(diagonal(Sigma)))));
+            current_statement_begin__ = 152;
             stan::math::assign(sigma_beta, elt_multiply(rep_vector(1,S),sigma_beta_raw));
-            current_statement_begin__ = 147;
+            current_statement_begin__ = 154;
             for (int i = 1; i <= N2; ++i) {
 
-                current_statement_begin__ = 148;
+                current_statement_begin__ = 155;
                 for (int j = 1; j <= J; ++j) {
 
-                    current_statement_begin__ = 149;
+                    current_statement_begin__ = 156;
                     stan::math::assign(get_base1_lhs(get_base1_lhs(X_pred,i,"X_pred",1),j,"X_pred",2), categorical_rng(get_base1(get_base1(p_cat,i,"p_cat",1),j,"p_cat",2), base_rng__));
                 }
             }
@@ -5180,22 +5201,28 @@ public:
         }
 
         // validate generated quantities
+        stan::math::check_cov_matrix(function__,"Corr",Corr);
+        check_greater_or_equal(function__,"sigma_beta",sigma_beta,0);
         for (int k0__ = 0; k0__ < N2; ++k0__) {
             for (int k1__ = 0; k1__ < J; ++k1__) {
                 check_greater_or_equal(function__,"X_pred[k0__][k1__]",X_pred[k0__][k1__],1);
                 check_less_or_equal(function__,"X_pred[k0__][k1__]",X_pred[k0__][k1__],5);
             }
         }
-        check_greater_or_equal(function__,"sigma_beta",sigma_beta,0);
 
         // write generated quantities
-        for (int k_1__ = 0; k_1__ < J; ++k_1__) {
-            for (int k_0__ = 0; k_0__ < N2; ++k_0__) {
-                vars__.push_back(X_pred[k_0__][k_1__]);
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+                vars__.push_back(Corr(k_0__, k_1__));
             }
         }
         for (int k_0__ = 0; k_0__ < S; ++k_0__) {
             vars__.push_back(sigma_beta[k_0__]);
+        }
+        for (int k_1__ = 0; k_1__ < J; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N2; ++k_0__) {
+                vars__.push_back(X_pred[k_0__][k_1__]);
+            }
         }
 
     }
@@ -5302,10 +5329,10 @@ public:
         }
 
         if (!include_gqs__) return;
-        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
-            for (int k_0__ = 1; k_0__ <= N2; ++k_0__) {
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
                 param_name_stream__.str(std::string());
-                param_name_stream__ << "X_pred" << '.' << k_0__ << '.' << k_1__;
+                param_name_stream__ << "Corr" << '.' << k_0__ << '.' << k_1__;
                 param_names__.push_back(param_name_stream__.str());
             }
         }
@@ -5313,6 +5340,13 @@ public:
             param_name_stream__.str(std::string());
             param_name_stream__ << "sigma_beta" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N2; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "X_pred" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
         }
     }
 
@@ -5392,6 +5426,16 @@ public:
         }
 
         if (!include_gqs__) return;
+        for (int k_0__ = 1; k_0__ <= (S + ((S * (S - 1)) / 2)); ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "Corr" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "sigma_beta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
         for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
             for (int k_0__ = 1; k_0__ <= N2; ++k_0__) {
                 param_name_stream__.str(std::string());
@@ -5399,10 +5443,1415 @@ public:
                 param_names__.push_back(param_name_stream__.str());
             }
         }
+    }
+
+}; // model
+
+}
+
+
+
+
+// Code generated by Stan version 2.16.0
+
+#include <stan/model/model_header.hpp>
+
+namespace model_stan_steps_namespace {
+
+using std::istream;
+using std::string;
+using std::stringstream;
+using std::vector;
+using stan::io::dump;
+using stan::math::lgamma;
+using stan::model::prob_grad;
+using namespace stan::math;
+
+typedef Eigen::Matrix<double,Eigen::Dynamic,1> vector_d;
+typedef Eigen::Matrix<double,1,Eigen::Dynamic> row_vector_d;
+typedef Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> matrix_d;
+
+static int current_statement_begin__;
+
+stan::io::program_reader prog_reader__() {
+    stan::io::program_reader reader;
+    reader.add_event(0, 0, "start", "model_stan_steps");
+    reader.add_event(183, 183, "end", "model_stan_steps");
+    return reader;
+}
+
+class model_stan_steps : public prob_grad {
+private:
+    int N;
+    int J;
+    vector<vector<int> > X;
+    int S;
+    vector<int> revItem;
+    vector<int> traitItem;
+    int N2;
+    vector_d theta_mu;
+    int df;
+    matrix_d V;
+public:
+    model_stan_steps(stan::io::var_context& context__,
+        std::ostream* pstream__ = 0)
+        : prob_grad(0) {
+        ctor_body(context__, 0, pstream__);
+    }
+
+    model_stan_steps(stan::io::var_context& context__,
+        unsigned int random_seed__,
+        std::ostream* pstream__ = 0)
+        : prob_grad(0) {
+        ctor_body(context__, random_seed__, pstream__);
+    }
+
+    void ctor_body(stan::io::var_context& context__,
+                   unsigned int random_seed__,
+                   std::ostream* pstream__) {
+        boost::ecuyer1988 base_rng__ =
+          stan::services::util::create_rng(random_seed__, 0);
+        (void) base_rng__;  // suppress unused var warning
+
+        current_statement_begin__ = -1;
+
+        static const char* function__ = "model_stan_steps_namespace::model_stan_steps";
+        (void) function__;  // dummy to suppress unused var warning
+        size_t pos__;
+        (void) pos__;  // dummy to suppress unused var warning
+        std::vector<int> vals_i__;
+        std::vector<double> vals_r__;
+        double DUMMY_VAR__(std::numeric_limits<double>::quiet_NaN());
+        (void) DUMMY_VAR__;  // suppress unused var warning
+
+        // initialize member variables
+        context__.validate_dims("data initialization", "N", "int", context__.to_vec());
+        N = int(0);
+        vals_i__ = context__.vals_i("N");
+        pos__ = 0;
+        N = vals_i__[pos__++];
+        context__.validate_dims("data initialization", "J", "int", context__.to_vec());
+        J = int(0);
+        vals_i__ = context__.vals_i("J");
+        pos__ = 0;
+        J = vals_i__[pos__++];
+        validate_non_negative_index("X", "N", N);
+        validate_non_negative_index("X", "J", J);
+        context__.validate_dims("data initialization", "X", "int", context__.to_vec(N,J));
+        validate_non_negative_index("X", "N", N);
+        validate_non_negative_index("X", "J", J);
+        X = std::vector<std::vector<int> >(N,std::vector<int>(J,int(0)));
+        vals_i__ = context__.vals_i("X");
+        pos__ = 0;
+        size_t X_limit_1__ = J;
+        for (size_t i_1__ = 0; i_1__ < X_limit_1__; ++i_1__) {
+            size_t X_limit_0__ = N;
+            for (size_t i_0__ = 0; i_0__ < X_limit_0__; ++i_0__) {
+                X[i_0__][i_1__] = vals_i__[pos__++];
+            }
+        }
+        context__.validate_dims("data initialization", "S", "int", context__.to_vec());
+        S = int(0);
+        vals_i__ = context__.vals_i("S");
+        pos__ = 0;
+        S = vals_i__[pos__++];
+        validate_non_negative_index("revItem", "J", J);
+        context__.validate_dims("data initialization", "revItem", "int", context__.to_vec(J));
+        validate_non_negative_index("revItem", "J", J);
+        revItem = std::vector<int>(J,int(0));
+        vals_i__ = context__.vals_i("revItem");
+        pos__ = 0;
+        size_t revItem_limit_0__ = J;
+        for (size_t i_0__ = 0; i_0__ < revItem_limit_0__; ++i_0__) {
+            revItem[i_0__] = vals_i__[pos__++];
+        }
+        validate_non_negative_index("traitItem", "J", J);
+        context__.validate_dims("data initialization", "traitItem", "int", context__.to_vec(J));
+        validate_non_negative_index("traitItem", "J", J);
+        traitItem = std::vector<int>(J,int(0));
+        vals_i__ = context__.vals_i("traitItem");
+        pos__ = 0;
+        size_t traitItem_limit_0__ = J;
+        for (size_t i_0__ = 0; i_0__ < traitItem_limit_0__; ++i_0__) {
+            traitItem[i_0__] = vals_i__[pos__++];
+        }
+        context__.validate_dims("data initialization", "N2", "int", context__.to_vec());
+        N2 = int(0);
+        vals_i__ = context__.vals_i("N2");
+        pos__ = 0;
+        N2 = vals_i__[pos__++];
+        validate_non_negative_index("theta_mu", "S", S);
+        context__.validate_dims("data initialization", "theta_mu", "vector_d", context__.to_vec(S));
+        validate_non_negative_index("theta_mu", "S", S);
+        theta_mu = vector_d(static_cast<Eigen::VectorXd::Index>(S));
+        vals_r__ = context__.vals_r("theta_mu");
+        pos__ = 0;
+        size_t theta_mu_i_vec_lim__ = S;
+        for (size_t i_vec__ = 0; i_vec__ < theta_mu_i_vec_lim__; ++i_vec__) {
+            theta_mu[i_vec__] = vals_r__[pos__++];
+        }
+        context__.validate_dims("data initialization", "df", "int", context__.to_vec());
+        df = int(0);
+        vals_i__ = context__.vals_i("df");
+        pos__ = 0;
+        df = vals_i__[pos__++];
+        validate_non_negative_index("V", "S", S);
+        validate_non_negative_index("V", "S", S);
+        context__.validate_dims("data initialization", "V", "matrix_d", context__.to_vec(S,S));
+        validate_non_negative_index("V", "S", S);
+        validate_non_negative_index("V", "S", S);
+        V = matrix_d(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        vals_r__ = context__.vals_r("V");
+        pos__ = 0;
+        size_t V_k_mat_lim__ = S;
+        for (size_t n_mat__ = 0; n_mat__ < V_k_mat_lim__; ++n_mat__) {
+            for (size_t m_mat__ = 0; m_mat__ < V_k_mat_lim__; ++m_mat__) {
+                V(m_mat__,n_mat__) = vals_r__[pos__++];
+            }
+        }
+
+        // validate, data variables
+        check_greater_or_equal(function__,"N",N,1);
+        check_greater_or_equal(function__,"J",J,1);
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"X[k0__][k1__]",X[k0__][k1__],1);
+                check_less_or_equal(function__,"X[k0__][k1__]",X[k0__][k1__],5);
+            }
+        }
+        check_greater_or_equal(function__,"S",S,1);
+        for (int k0__ = 0; k0__ < J; ++k0__) {
+            check_greater_or_equal(function__,"revItem[k0__]",revItem[k0__],0);
+            check_less_or_equal(function__,"revItem[k0__]",revItem[k0__],1);
+        }
+        for (int k0__ = 0; k0__ < J; ++k0__) {
+            check_greater_or_equal(function__,"traitItem[k0__]",traitItem[k0__],1);
+        }
+        check_greater_or_equal(function__,"N2",N2,1);
+        check_greater_or_equal(function__,"df",df,(S + 1));
+        stan::math::check_cov_matrix(function__,"V",V);
+        // initialize data variables
+
+        try {
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
+            // Next line prevents compiler griping about no return
+            throw std::runtime_error("*** IF YOU SEE THIS, PLEASE REPORT A BUG ***");
+        }
+
+        // validate transformed data
+
+        // validate, set parameter ranges
+        num_params_r__ = 0U;
+        param_ranges_i__.clear();
+        validate_non_negative_index("theta_raw", "S", S);
+        validate_non_negative_index("theta_raw", "N", N);
+        num_params_r__ += S * N;
+        validate_non_negative_index("xi_theta", "S", S);
+        num_params_r__ += S;
+        validate_non_negative_index("Sigma_raw", "S", S);
+        num_params_r__ += ((S * (S - 1)) / 2 + S);
+        validate_non_negative_index("beta_raw", "J", J);
+        validate_non_negative_index("beta_raw", "4", 4);
+        num_params_r__ += J * 4;
+        validate_non_negative_index("mu_beta", "S", S);
+        num_params_r__ += S;
+        validate_non_negative_index("sigma2_beta_raw", "S", S);
+        num_params_r__ += S;
+    }
+
+    ~model_stan_steps() { }
+
+
+    void transform_inits(const stan::io::var_context& context__,
+                         std::vector<int>& params_i__,
+                         std::vector<double>& params_r__,
+                         std::ostream* pstream__) const {
+        stan::io::writer<double> writer__(params_r__,params_i__);
+        size_t pos__;
+        (void) pos__; // dummy call to supress warning
+        std::vector<double> vals_r__;
+        std::vector<int> vals_i__;
+
+        if (!(context__.contains_r("theta_raw")))
+            throw std::runtime_error("variable theta_raw missing");
+        vals_r__ = context__.vals_r("theta_raw");
+        pos__ = 0U;
+        validate_non_negative_index("theta_raw", "N", N);
+        validate_non_negative_index("theta_raw", "S", S);
+        context__.validate_dims("initialization", "theta_raw", "vector_d", context__.to_vec(N,S));
+        // generate_declaration theta_raw
+        std::vector<vector_d> theta_raw(N,vector_d(static_cast<Eigen::VectorXd::Index>(S)));
+        for (int j1__ = 0U; j1__ < S; ++j1__)
+            for (int i0__ = 0U; i0__ < N; ++i0__)
+                theta_raw[i0__](j1__) = vals_r__[pos__++];
+        for (int i0__ = 0U; i0__ < N; ++i0__)
+            try {
+            writer__.vector_unconstrain(theta_raw[i0__]);
+        } catch (const std::exception& e) { 
+            throw std::runtime_error(std::string("Error transforming variable theta_raw: ") + e.what());
+        }
+
+        if (!(context__.contains_r("xi_theta")))
+            throw std::runtime_error("variable xi_theta missing");
+        vals_r__ = context__.vals_r("xi_theta");
+        pos__ = 0U;
+        validate_non_negative_index("xi_theta", "S", S);
+        context__.validate_dims("initialization", "xi_theta", "vector_d", context__.to_vec(S));
+        // generate_declaration xi_theta
+        vector_d xi_theta(static_cast<Eigen::VectorXd::Index>(S));
+        for (int j1__ = 0U; j1__ < S; ++j1__)
+            xi_theta(j1__) = vals_r__[pos__++];
+        try {
+            writer__.vector_lub_unconstrain(0,100,xi_theta);
+        } catch (const std::exception& e) { 
+            throw std::runtime_error(std::string("Error transforming variable xi_theta: ") + e.what());
+        }
+
+        if (!(context__.contains_r("Sigma_raw")))
+            throw std::runtime_error("variable Sigma_raw missing");
+        vals_r__ = context__.vals_r("Sigma_raw");
+        pos__ = 0U;
+        validate_non_negative_index("Sigma_raw", "S", S);
+        validate_non_negative_index("Sigma_raw", "S", S);
+        context__.validate_dims("initialization", "Sigma_raw", "matrix_d", context__.to_vec(S,S));
+        // generate_declaration Sigma_raw
+        matrix_d Sigma_raw(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        for (int j2__ = 0U; j2__ < S; ++j2__)
+            for (int j1__ = 0U; j1__ < S; ++j1__)
+                Sigma_raw(j1__,j2__) = vals_r__[pos__++];
+        try {
+            writer__.cov_matrix_unconstrain(Sigma_raw);
+        } catch (const std::exception& e) { 
+            throw std::runtime_error(std::string("Error transforming variable Sigma_raw: ") + e.what());
+        }
+
+        if (!(context__.contains_r("beta_raw")))
+            throw std::runtime_error("variable beta_raw missing");
+        vals_r__ = context__.vals_r("beta_raw");
+        pos__ = 0U;
+        validate_non_negative_index("beta_raw", "J", J);
+        validate_non_negative_index("beta_raw", "4", 4);
+        context__.validate_dims("initialization", "beta_raw", "matrix_d", context__.to_vec(J,4));
+        // generate_declaration beta_raw
+        matrix_d beta_raw(static_cast<Eigen::VectorXd::Index>(J),static_cast<Eigen::VectorXd::Index>(4));
+        for (int j2__ = 0U; j2__ < 4; ++j2__)
+            for (int j1__ = 0U; j1__ < J; ++j1__)
+                beta_raw(j1__,j2__) = vals_r__[pos__++];
+        try {
+            writer__.matrix_lub_unconstrain(-(5),5,beta_raw);
+        } catch (const std::exception& e) { 
+            throw std::runtime_error(std::string("Error transforming variable beta_raw: ") + e.what());
+        }
+
+        if (!(context__.contains_r("mu_beta")))
+            throw std::runtime_error("variable mu_beta missing");
+        vals_r__ = context__.vals_r("mu_beta");
+        pos__ = 0U;
+        validate_non_negative_index("mu_beta", "S", S);
+        context__.validate_dims("initialization", "mu_beta", "vector_d", context__.to_vec(S));
+        // generate_declaration mu_beta
+        vector_d mu_beta(static_cast<Eigen::VectorXd::Index>(S));
+        for (int j1__ = 0U; j1__ < S; ++j1__)
+            mu_beta(j1__) = vals_r__[pos__++];
+        try {
+            writer__.vector_lub_unconstrain(-(5),5,mu_beta);
+        } catch (const std::exception& e) { 
+            throw std::runtime_error(std::string("Error transforming variable mu_beta: ") + e.what());
+        }
+
+        if (!(context__.contains_r("sigma2_beta_raw")))
+            throw std::runtime_error("variable sigma2_beta_raw missing");
+        vals_r__ = context__.vals_r("sigma2_beta_raw");
+        pos__ = 0U;
+        validate_non_negative_index("sigma2_beta_raw", "S", S);
+        context__.validate_dims("initialization", "sigma2_beta_raw", "vector_d", context__.to_vec(S));
+        // generate_declaration sigma2_beta_raw
+        vector_d sigma2_beta_raw(static_cast<Eigen::VectorXd::Index>(S));
+        for (int j1__ = 0U; j1__ < S; ++j1__)
+            sigma2_beta_raw(j1__) = vals_r__[pos__++];
+        try {
+            writer__.vector_lb_unconstrain(0,sigma2_beta_raw);
+        } catch (const std::exception& e) { 
+            throw std::runtime_error(std::string("Error transforming variable sigma2_beta_raw: ") + e.what());
+        }
+
+        params_r__ = writer__.data_r();
+        params_i__ = writer__.data_i();
+    }
+
+    void transform_inits(const stan::io::var_context& context,
+                         Eigen::Matrix<double,Eigen::Dynamic,1>& params_r,
+                         std::ostream* pstream__) const {
+      std::vector<double> params_r_vec;
+      std::vector<int> params_i_vec;
+      transform_inits(context, params_i_vec, params_r_vec, pstream__);
+      params_r.resize(params_r_vec.size());
+      for (int i = 0; i < params_r.size(); ++i)
+        params_r(i) = params_r_vec[i];
+    }
+
+
+    template <bool propto__, bool jacobian__, typename T__>
+    T__ log_prob(vector<T__>& params_r__,
+                 vector<int>& params_i__,
+                 std::ostream* pstream__ = 0) const {
+
+        T__ DUMMY_VAR__(std::numeric_limits<double>::quiet_NaN());
+        (void) DUMMY_VAR__;  // suppress unused var warning
+
+        T__ lp__(0.0);
+        stan::math::accumulator<T__> lp_accum__;
+
+        // model parameters
+        stan::io::reader<T__> in__(params_r__,params_i__);
+
+        vector<Eigen::Matrix<T__,Eigen::Dynamic,1> > theta_raw;
+        size_t dim_theta_raw_0__ = N;
+        theta_raw.reserve(dim_theta_raw_0__);
+        for (size_t k_0__ = 0; k_0__ < dim_theta_raw_0__; ++k_0__) {
+            if (jacobian__)
+                theta_raw.push_back(in__.vector_constrain(S,lp__));
+            else
+                theta_raw.push_back(in__.vector_constrain(S));
+        }
+
+        Eigen::Matrix<T__,Eigen::Dynamic,1>  xi_theta;
+        (void) xi_theta;  // dummy to suppress unused var warning
+        if (jacobian__)
+            xi_theta = in__.vector_lub_constrain(0,100,S,lp__);
+        else
+            xi_theta = in__.vector_lub_constrain(0,100,S);
+
+        Eigen::Matrix<T__,Eigen::Dynamic,Eigen::Dynamic>  Sigma_raw;
+        (void) Sigma_raw;  // dummy to suppress unused var warning
+        if (jacobian__)
+            Sigma_raw = in__.cov_matrix_constrain(S,lp__);
+        else
+            Sigma_raw = in__.cov_matrix_constrain(S);
+
+        Eigen::Matrix<T__,Eigen::Dynamic,Eigen::Dynamic>  beta_raw;
+        (void) beta_raw;  // dummy to suppress unused var warning
+        if (jacobian__)
+            beta_raw = in__.matrix_lub_constrain(-(5),5,J,4,lp__);
+        else
+            beta_raw = in__.matrix_lub_constrain(-(5),5,J,4);
+
+        Eigen::Matrix<T__,Eigen::Dynamic,1>  mu_beta;
+        (void) mu_beta;  // dummy to suppress unused var warning
+        if (jacobian__)
+            mu_beta = in__.vector_lub_constrain(-(5),5,S,lp__);
+        else
+            mu_beta = in__.vector_lub_constrain(-(5),5,S);
+
+        Eigen::Matrix<T__,Eigen::Dynamic,1>  sigma2_beta_raw;
+        (void) sigma2_beta_raw;  // dummy to suppress unused var warning
+        if (jacobian__)
+            sigma2_beta_raw = in__.vector_lb_constrain(0,S,lp__);
+        else
+            sigma2_beta_raw = in__.vector_lb_constrain(0,S);
+
+
+        // transformed parameters
+        validate_non_negative_index("theta", "N", N);
+        validate_non_negative_index("theta", "S", S);
+        Eigen::Matrix<T__,Eigen::Dynamic,Eigen::Dynamic>  theta(static_cast<Eigen::VectorXd::Index>(N),static_cast<Eigen::VectorXd::Index>(S));
+        (void) theta;  // dummy to suppress unused var warning
+
+        stan::math::initialize(theta, DUMMY_VAR__);
+        stan::math::fill(theta,DUMMY_VAR__);
+        validate_non_negative_index("Sigma", "S", S);
+        Eigen::Matrix<T__,Eigen::Dynamic,Eigen::Dynamic>  Sigma(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        (void) Sigma;  // dummy to suppress unused var warning
+
+        stan::math::initialize(Sigma, DUMMY_VAR__);
+        stan::math::fill(Sigma,DUMMY_VAR__);
+        validate_non_negative_index("beta", "J", J);
+        validate_non_negative_index("beta", "4", 4);
+        Eigen::Matrix<T__,Eigen::Dynamic,Eigen::Dynamic>  beta(static_cast<Eigen::VectorXd::Index>(J),static_cast<Eigen::VectorXd::Index>(4));
+        (void) beta;  // dummy to suppress unused var warning
+
+        stan::math::initialize(beta, DUMMY_VAR__);
+        stan::math::fill(beta,DUMMY_VAR__);
+        validate_non_negative_index("sigma_beta_raw", "S", S);
+        Eigen::Matrix<T__,Eigen::Dynamic,1>  sigma_beta_raw(static_cast<Eigen::VectorXd::Index>(S));
+        (void) sigma_beta_raw;  // dummy to suppress unused var warning
+
+        stan::math::initialize(sigma_beta_raw, DUMMY_VAR__);
+        stan::math::fill(sigma_beta_raw,DUMMY_VAR__);
+        validate_non_negative_index("p_cat", "5", 5);
+        validate_non_negative_index("p_cat", "N", N);
+        validate_non_negative_index("p_cat", "J", J);
+        vector<vector<Eigen::Matrix<T__,Eigen::Dynamic,1> > > p_cat(N, (vector<Eigen::Matrix<T__,Eigen::Dynamic,1> >(J, (Eigen::Matrix<T__,Eigen::Dynamic,1> (static_cast<Eigen::VectorXd::Index>(5))))));
+        stan::math::initialize(p_cat, DUMMY_VAR__);
+        stan::math::fill(p_cat,DUMMY_VAR__);
+        validate_non_negative_index("node1", "N", N);
+        validate_non_negative_index("node1", "J", J);
+        vector<vector<T__> > node1(N, (vector<T__>(J)));
+        stan::math::initialize(node1, DUMMY_VAR__);
+        stan::math::fill(node1,DUMMY_VAR__);
+        validate_non_negative_index("node2", "N", N);
+        validate_non_negative_index("node2", "J", J);
+        vector<vector<T__> > node2(N, (vector<T__>(J)));
+        stan::math::initialize(node2, DUMMY_VAR__);
+        stan::math::fill(node2,DUMMY_VAR__);
+        validate_non_negative_index("node3", "N", N);
+        validate_non_negative_index("node3", "J", J);
+        vector<vector<T__> > node3(N, (vector<T__>(J)));
+        stan::math::initialize(node3, DUMMY_VAR__);
+        stan::math::fill(node3,DUMMY_VAR__);
+        validate_non_negative_index("node4", "N", N);
+        validate_non_negative_index("node4", "J", J);
+        vector<vector<T__> > node4(N, (vector<T__>(J)));
+        stan::math::initialize(node4, DUMMY_VAR__);
+        stan::math::fill(node4,DUMMY_VAR__);
+
+
+        try {
+            current_statement_begin__ = 86;
+            stan::math::assign(Sigma, multiply(multiply(diag_matrix(xi_theta),Sigma_raw),diag_matrix(xi_theta)));
+            current_statement_begin__ = 89;
+            for (int s = 1; s <= S; ++s) {
+
+                current_statement_begin__ = 90;
+                stan::math::assign(get_base1_lhs(sigma_beta_raw,s,"sigma_beta_raw",1), sqrt(get_base1(sigma2_beta_raw,s,"sigma2_beta_raw",1)));
+            }
+            current_statement_begin__ = 92;
+            for (int j = 1; j <= J; ++j) {
+
+                current_statement_begin__ = 93;
+                stan::model::assign(beta, 
+                            stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_min_max(1, 4), stan::model::nil_index_list())), 
+                            add(get_base1(mu_beta,get_base1(traitItem,j,"traitItem",1),"mu_beta",1),stan::model::rvalue(beta_raw, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_min_max(1, 4), stan::model::nil_index_list())), "beta_raw")), 
+                            "assigning variable beta");
+            }
+            current_statement_begin__ = 96;
+            for (int i = 1; i <= N; ++i) {
+
+                current_statement_begin__ = 98;
+                for (int s = 1; s <= S; ++s) {
+
+                    current_statement_begin__ = 99;
+                    stan::math::assign(get_base1_lhs(theta,i,s,"theta",1), (get_base1(get_base1(theta_raw,i,"theta_raw",1),s,"theta_raw",2) * get_base1(xi_theta,s,"xi_theta",1)));
+                }
+                current_statement_begin__ = 103;
+                for (int j = 1; j <= J; ++j) {
+
+                    current_statement_begin__ = 111;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node1,i,"node1",1),j,"node1",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,1,"beta",1))));
+                    current_statement_begin__ = 112;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node2,i,"node2",1),j,"node2",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,2,"beta",1))));
+                    current_statement_begin__ = 113;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node3,i,"node3",1),j,"node3",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,3,"beta",1))));
+                    current_statement_begin__ = 114;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node4,i,"node4",1),j,"node4",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,4,"beta",1))));
+                    current_statement_begin__ = 117;
+                    if (as_bool(logical_eq(get_base1(revItem,j,"revItem",1),0))) {
+
+                        current_statement_begin__ = 118;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), (1 - get_base1(get_base1(node1,i,"node1",1),j,"node1",2)));
+                        current_statement_begin__ = 119;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), (get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * (1 - get_base1(get_base1(node2,i,"node2",1),j,"node2",2))));
+                        current_statement_begin__ = 120;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * (1 - get_base1(get_base1(node3,i,"node3",1),j,"node3",2))));
+                        current_statement_begin__ = 121;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * (1 - get_base1(get_base1(node4,i,"node4",1),j,"node4",2))));
+                        current_statement_begin__ = 122;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),5,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * get_base1(get_base1(node4,i,"node4",1),j,"node4",2)));
+                    } else {
+
+                        current_statement_begin__ = 124;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),5,"p_cat",3), (1 - get_base1(get_base1(node1,i,"node1",1),j,"node1",2)));
+                        current_statement_begin__ = 125;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * (1 - get_base1(get_base1(node2,i,"node2",1),j,"node2",2))));
+                        current_statement_begin__ = 126;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * (1 - get_base1(get_base1(node3,i,"node3",1),j,"node3",2))));
+                        current_statement_begin__ = 127;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * (1 - get_base1(get_base1(node4,i,"node4",1),j,"node4",2))));
+                        current_statement_begin__ = 128;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * get_base1(get_base1(node4,i,"node4",1),j,"node4",2)));
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
+            // Next line prevents compiler griping about no return
+            throw std::runtime_error("*** IF YOU SEE THIS, PLEASE REPORT A BUG ***");
+        }
+
+        // validate transformed parameters
+        for (int i0__ = 0; i0__ < N; ++i0__) {
+            for (int i1__ = 0; i1__ < S; ++i1__) {
+                if (stan::math::is_uninitialized(theta(i0__,i1__))) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: theta" << '[' << i0__ << ']' << '[' << i1__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
+        }
+        for (int i0__ = 0; i0__ < S; ++i0__) {
+            for (int i1__ = 0; i1__ < S; ++i1__) {
+                if (stan::math::is_uninitialized(Sigma(i0__,i1__))) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: Sigma" << '[' << i0__ << ']' << '[' << i1__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
+        }
+        for (int i0__ = 0; i0__ < J; ++i0__) {
+            for (int i1__ = 0; i1__ < 4; ++i1__) {
+                if (stan::math::is_uninitialized(beta(i0__,i1__))) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: beta" << '[' << i0__ << ']' << '[' << i1__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
+        }
+        for (int i0__ = 0; i0__ < S; ++i0__) {
+            if (stan::math::is_uninitialized(sigma_beta_raw(i0__))) {
+                std::stringstream msg__;
+                msg__ << "Undefined transformed parameter: sigma_beta_raw" << '[' << i0__ << ']';
+                throw std::runtime_error(msg__.str());
+            }
+        }
+        for (int i0__ = 0; i0__ < N; ++i0__) {
+            for (int i1__ = 0; i1__ < J; ++i1__) {
+                for (int i2__ = 0; i2__ < 5; ++i2__) {
+                    if (stan::math::is_uninitialized(p_cat[i0__][i1__](i2__))) {
+                        std::stringstream msg__;
+                        msg__ << "Undefined transformed parameter: p_cat" << '[' << i0__ << ']' << '[' << i1__ << ']' << '[' << i2__ << ']';
+                        throw std::runtime_error(msg__.str());
+                    }
+                }
+            }
+        }
+        for (int i0__ = 0; i0__ < N; ++i0__) {
+            for (int i1__ = 0; i1__ < J; ++i1__) {
+                if (stan::math::is_uninitialized(node1[i0__][i1__])) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: node1" << '[' << i0__ << ']' << '[' << i1__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
+        }
+        for (int i0__ = 0; i0__ < N; ++i0__) {
+            for (int i1__ = 0; i1__ < J; ++i1__) {
+                if (stan::math::is_uninitialized(node2[i0__][i1__])) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: node2" << '[' << i0__ << ']' << '[' << i1__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
+        }
+        for (int i0__ = 0; i0__ < N; ++i0__) {
+            for (int i1__ = 0; i1__ < J; ++i1__) {
+                if (stan::math::is_uninitialized(node3[i0__][i1__])) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: node3" << '[' << i0__ << ']' << '[' << i1__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
+        }
+        for (int i0__ = 0; i0__ < N; ++i0__) {
+            for (int i1__ = 0; i1__ < J; ++i1__) {
+                if (stan::math::is_uninitialized(node4[i0__][i1__])) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: node4" << '[' << i0__ << ']' << '[' << i1__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
+        }
+
+        const char* function__ = "validate transformed params";
+        (void) function__;  // dummy to suppress unused var warning
+        stan::math::check_cov_matrix(function__,"Sigma",Sigma);
+        check_greater_or_equal(function__,"sigma_beta_raw",sigma_beta_raw,0);
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                stan::math::check_simplex(function__,"p_cat[k0__][k1__]",p_cat[k0__][k1__]);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node1[k0__][k1__]",node1[k0__][k1__],0);
+                check_less_or_equal(function__,"node1[k0__][k1__]",node1[k0__][k1__],1);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node2[k0__][k1__]",node2[k0__][k1__],0);
+                check_less_or_equal(function__,"node2[k0__][k1__]",node2[k0__][k1__],1);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node3[k0__][k1__]",node3[k0__][k1__],0);
+                check_less_or_equal(function__,"node3[k0__][k1__]",node3[k0__][k1__],1);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node4[k0__][k1__]",node4[k0__][k1__],0);
+                check_less_or_equal(function__,"node4[k0__][k1__]",node4[k0__][k1__],1);
+            }
+        }
+
+        // model body
+        try {
+
+            current_statement_begin__ = 139;
+            for (int j = 1; j <= J; ++j) {
+
+                current_statement_begin__ = 140;
+                lp_accum__.add(normal_log<propto__>(stan::model::rvalue(beta_raw, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_min_max(1, 4), stan::model::nil_index_list())), "beta_raw"), 0, get_base1(sigma_beta_raw,get_base1(traitItem,j,"traitItem",1),"sigma_beta_raw",1)));
+            }
+            current_statement_begin__ = 146;
+            lp_accum__.add(normal_log<propto__>(mu_beta, 0, 1));
+            current_statement_begin__ = 147;
+            lp_accum__.add(inv_gamma_log<propto__>(sigma2_beta_raw, 1, 1));
+            current_statement_begin__ = 148;
+            lp_accum__.add(inv_wishart_log<propto__>(Sigma_raw, df, V));
+            current_statement_begin__ = 150;
+            for (int i = 1; i <= N; ++i) {
+
+                current_statement_begin__ = 151;
+                for (int j = 1; j <= J; ++j) {
+
+                    current_statement_begin__ = 153;
+                    lp_accum__.add(categorical_log<propto__>(get_base1(get_base1(X,i,"X",1),j,"X",2), get_base1(get_base1(p_cat,i,"p_cat",1),j,"p_cat",2)));
+                }
+                current_statement_begin__ = 158;
+                if (as_bool(logical_gt(S,1))) {
+
+                    current_statement_begin__ = 159;
+                    lp_accum__.add(multi_normal_log<propto__>(get_base1(theta_raw,i,"theta_raw",1), theta_mu, Sigma_raw));
+                } else {
+
+                    current_statement_begin__ = 161;
+                    lp_accum__.add(normal_log<propto__>(get_base1(theta_raw,i,"theta_raw",1), theta_mu, get_base1(Sigma_raw,1,1,"Sigma_raw",1)));
+                }
+            }
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
+            // Next line prevents compiler griping about no return
+            throw std::runtime_error("*** IF YOU SEE THIS, PLEASE REPORT A BUG ***");
+        }
+
+        lp_accum__.add(lp__);
+        return lp_accum__.sum();
+
+    } // log_prob()
+
+    template <bool propto, bool jacobian, typename T_>
+    T_ log_prob(Eigen::Matrix<T_,Eigen::Dynamic,1>& params_r,
+               std::ostream* pstream = 0) const {
+      std::vector<T_> vec_params_r;
+      vec_params_r.reserve(params_r.size());
+      for (int i = 0; i < params_r.size(); ++i)
+        vec_params_r.push_back(params_r(i));
+      std::vector<int> vec_params_i;
+      return log_prob<propto,jacobian,T_>(vec_params_r, vec_params_i, pstream);
+    }
+
+
+    void get_param_names(std::vector<std::string>& names__) const {
+        names__.resize(0);
+        names__.push_back("theta_raw");
+        names__.push_back("xi_theta");
+        names__.push_back("Sigma_raw");
+        names__.push_back("beta_raw");
+        names__.push_back("mu_beta");
+        names__.push_back("sigma2_beta_raw");
+        names__.push_back("theta");
+        names__.push_back("Sigma");
+        names__.push_back("beta");
+        names__.push_back("sigma_beta_raw");
+        names__.push_back("p_cat");
+        names__.push_back("node1");
+        names__.push_back("node2");
+        names__.push_back("node3");
+        names__.push_back("node4");
+        names__.push_back("Corr");
+        names__.push_back("sigma_beta");
+        names__.push_back("X_pred");
+    }
+
+
+    void get_dims(std::vector<std::vector<size_t> >& dimss__) const {
+        dimss__.resize(0);
+        std::vector<size_t> dims__;
+        dims__.resize(0);
+        dims__.push_back(N);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(J);
+        dims__.push_back(4);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(J);
+        dims__.push_back(4);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dims__.push_back(J);
+        dims__.push_back(5);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dims__.push_back(J);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dims__.push_back(J);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dims__.push_back(J);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dims__.push_back(J);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(S);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N2);
+        dims__.push_back(J);
+        dimss__.push_back(dims__);
+    }
+
+    template <typename RNG>
+    void write_array(RNG& base_rng__,
+                     std::vector<double>& params_r__,
+                     std::vector<int>& params_i__,
+                     std::vector<double>& vars__,
+                     bool include_tparams__ = true,
+                     bool include_gqs__ = true,
+                     std::ostream* pstream__ = 0) const {
+        vars__.resize(0);
+        stan::io::reader<double> in__(params_r__,params_i__);
+        static const char* function__ = "model_stan_steps_namespace::write_array";
+        (void) function__;  // dummy to suppress unused var warning
+        // read-transform, write parameters
+        vector<vector_d> theta_raw;
+        size_t dim_theta_raw_0__ = N;
+        for (size_t k_0__ = 0; k_0__ < dim_theta_raw_0__; ++k_0__) {
+            theta_raw.push_back(in__.vector_constrain(S));
+        }
+        vector_d xi_theta = in__.vector_lub_constrain(0,100,S);
+        matrix_d Sigma_raw = in__.cov_matrix_constrain(S);
+        matrix_d beta_raw = in__.matrix_lub_constrain(-(5),5,J,4);
+        vector_d mu_beta = in__.vector_lub_constrain(-(5),5,S);
+        vector_d sigma2_beta_raw = in__.vector_lb_constrain(0,S);
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N; ++k_0__) {
+                vars__.push_back(theta_raw[k_0__][k_1__]);
+            }
+        }
+        for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+            vars__.push_back(xi_theta[k_0__]);
+        }
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+                vars__.push_back(Sigma_raw(k_0__, k_1__));
+            }
+        }
+        for (int k_1__ = 0; k_1__ < 4; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < J; ++k_0__) {
+                vars__.push_back(beta_raw(k_0__, k_1__));
+            }
+        }
+        for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+            vars__.push_back(mu_beta[k_0__]);
+        }
+        for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+            vars__.push_back(sigma2_beta_raw[k_0__]);
+        }
+
+        if (!include_tparams__) return;
+        // declare and define transformed parameters
+        double lp__ = 0.0;
+        (void) lp__;  // dummy to suppress unused var warning
+        stan::math::accumulator<double> lp_accum__;
+
+        double DUMMY_VAR__(std::numeric_limits<double>::quiet_NaN());
+        (void) DUMMY_VAR__;  // suppress unused var warning
+
+        validate_non_negative_index("theta", "N", N);
+        validate_non_negative_index("theta", "S", S);
+        matrix_d theta(static_cast<Eigen::VectorXd::Index>(N),static_cast<Eigen::VectorXd::Index>(S));
+        (void) theta;  // dummy to suppress unused var warning
+
+        stan::math::initialize(theta, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(theta,DUMMY_VAR__);
+        validate_non_negative_index("Sigma", "S", S);
+        matrix_d Sigma(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        (void) Sigma;  // dummy to suppress unused var warning
+
+        stan::math::initialize(Sigma, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(Sigma,DUMMY_VAR__);
+        validate_non_negative_index("beta", "J", J);
+        validate_non_negative_index("beta", "4", 4);
+        matrix_d beta(static_cast<Eigen::VectorXd::Index>(J),static_cast<Eigen::VectorXd::Index>(4));
+        (void) beta;  // dummy to suppress unused var warning
+
+        stan::math::initialize(beta, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(beta,DUMMY_VAR__);
+        validate_non_negative_index("sigma_beta_raw", "S", S);
+        vector_d sigma_beta_raw(static_cast<Eigen::VectorXd::Index>(S));
+        (void) sigma_beta_raw;  // dummy to suppress unused var warning
+
+        stan::math::initialize(sigma_beta_raw, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(sigma_beta_raw,DUMMY_VAR__);
+        validate_non_negative_index("p_cat", "5", 5);
+        validate_non_negative_index("p_cat", "N", N);
+        validate_non_negative_index("p_cat", "J", J);
+        vector<vector<vector_d> > p_cat(N, (vector<vector_d>(J, (vector_d(static_cast<Eigen::VectorXd::Index>(5))))));
+        stan::math::initialize(p_cat, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(p_cat,DUMMY_VAR__);
+        validate_non_negative_index("node1", "N", N);
+        validate_non_negative_index("node1", "J", J);
+        vector<vector<double> > node1(N, (vector<double>(J, 0.0)));
+        stan::math::initialize(node1, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(node1,DUMMY_VAR__);
+        validate_non_negative_index("node2", "N", N);
+        validate_non_negative_index("node2", "J", J);
+        vector<vector<double> > node2(N, (vector<double>(J, 0.0)));
+        stan::math::initialize(node2, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(node2,DUMMY_VAR__);
+        validate_non_negative_index("node3", "N", N);
+        validate_non_negative_index("node3", "J", J);
+        vector<vector<double> > node3(N, (vector<double>(J, 0.0)));
+        stan::math::initialize(node3, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(node3,DUMMY_VAR__);
+        validate_non_negative_index("node4", "N", N);
+        validate_non_negative_index("node4", "J", J);
+        vector<vector<double> > node4(N, (vector<double>(J, 0.0)));
+        stan::math::initialize(node4, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(node4,DUMMY_VAR__);
+
+
+        try {
+            current_statement_begin__ = 86;
+            stan::math::assign(Sigma, multiply(multiply(diag_matrix(xi_theta),Sigma_raw),diag_matrix(xi_theta)));
+            current_statement_begin__ = 89;
+            for (int s = 1; s <= S; ++s) {
+
+                current_statement_begin__ = 90;
+                stan::math::assign(get_base1_lhs(sigma_beta_raw,s,"sigma_beta_raw",1), sqrt(get_base1(sigma2_beta_raw,s,"sigma2_beta_raw",1)));
+            }
+            current_statement_begin__ = 92;
+            for (int j = 1; j <= J; ++j) {
+
+                current_statement_begin__ = 93;
+                stan::model::assign(beta, 
+                            stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_min_max(1, 4), stan::model::nil_index_list())), 
+                            add(get_base1(mu_beta,get_base1(traitItem,j,"traitItem",1),"mu_beta",1),stan::model::rvalue(beta_raw, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_min_max(1, 4), stan::model::nil_index_list())), "beta_raw")), 
+                            "assigning variable beta");
+            }
+            current_statement_begin__ = 96;
+            for (int i = 1; i <= N; ++i) {
+
+                current_statement_begin__ = 98;
+                for (int s = 1; s <= S; ++s) {
+
+                    current_statement_begin__ = 99;
+                    stan::math::assign(get_base1_lhs(theta,i,s,"theta",1), (get_base1(get_base1(theta_raw,i,"theta_raw",1),s,"theta_raw",2) * get_base1(xi_theta,s,"xi_theta",1)));
+                }
+                current_statement_begin__ = 103;
+                for (int j = 1; j <= J; ++j) {
+
+                    current_statement_begin__ = 111;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node1,i,"node1",1),j,"node1",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,1,"beta",1))));
+                    current_statement_begin__ = 112;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node2,i,"node2",1),j,"node2",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,2,"beta",1))));
+                    current_statement_begin__ = 113;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node3,i,"node3",1),j,"node3",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,3,"beta",1))));
+                    current_statement_begin__ = 114;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(node4,i,"node4",1),j,"node4",2), Phi_approx((get_base1(theta,i,get_base1(traitItem,j,"traitItem",1),"theta",1) - get_base1(beta,j,4,"beta",1))));
+                    current_statement_begin__ = 117;
+                    if (as_bool(logical_eq(get_base1(revItem,j,"revItem",1),0))) {
+
+                        current_statement_begin__ = 118;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), (1 - get_base1(get_base1(node1,i,"node1",1),j,"node1",2)));
+                        current_statement_begin__ = 119;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), (get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * (1 - get_base1(get_base1(node2,i,"node2",1),j,"node2",2))));
+                        current_statement_begin__ = 120;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * (1 - get_base1(get_base1(node3,i,"node3",1),j,"node3",2))));
+                        current_statement_begin__ = 121;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * (1 - get_base1(get_base1(node4,i,"node4",1),j,"node4",2))));
+                        current_statement_begin__ = 122;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),5,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * get_base1(get_base1(node4,i,"node4",1),j,"node4",2)));
+                    } else {
+
+                        current_statement_begin__ = 124;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),5,"p_cat",3), (1 - get_base1(get_base1(node1,i,"node1",1),j,"node1",2)));
+                        current_statement_begin__ = 125;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),4,"p_cat",3), (get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * (1 - get_base1(get_base1(node2,i,"node2",1),j,"node2",2))));
+                        current_statement_begin__ = 126;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),3,"p_cat",3), ((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * (1 - get_base1(get_base1(node3,i,"node3",1),j,"node3",2))));
+                        current_statement_begin__ = 127;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),2,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * (1 - get_base1(get_base1(node4,i,"node4",1),j,"node4",2))));
+                        current_statement_begin__ = 128;
+                        stan::math::assign(get_base1_lhs(get_base1_lhs(get_base1_lhs(p_cat,i,"p_cat",1),j,"p_cat",2),1,"p_cat",3), (((get_base1(get_base1(node1,i,"node1",1),j,"node1",2) * get_base1(get_base1(node2,i,"node2",1),j,"node2",2)) * get_base1(get_base1(node3,i,"node3",1),j,"node3",2)) * get_base1(get_base1(node4,i,"node4",1),j,"node4",2)));
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
+            // Next line prevents compiler griping about no return
+            throw std::runtime_error("*** IF YOU SEE THIS, PLEASE REPORT A BUG ***");
+        }
+
+        // validate transformed parameters
+        stan::math::check_cov_matrix(function__,"Sigma",Sigma);
+        check_greater_or_equal(function__,"sigma_beta_raw",sigma_beta_raw,0);
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                stan::math::check_simplex(function__,"p_cat[k0__][k1__]",p_cat[k0__][k1__]);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node1[k0__][k1__]",node1[k0__][k1__],0);
+                check_less_or_equal(function__,"node1[k0__][k1__]",node1[k0__][k1__],1);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node2[k0__][k1__]",node2[k0__][k1__],0);
+                check_less_or_equal(function__,"node2[k0__][k1__]",node2[k0__][k1__],1);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node3[k0__][k1__]",node3[k0__][k1__],0);
+                check_less_or_equal(function__,"node3[k0__][k1__]",node3[k0__][k1__],1);
+            }
+        }
+        for (int k0__ = 0; k0__ < N; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"node4[k0__][k1__]",node4[k0__][k1__],0);
+                check_less_or_equal(function__,"node4[k0__][k1__]",node4[k0__][k1__],1);
+            }
+        }
+
+        // write transformed parameters
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N; ++k_0__) {
+                vars__.push_back(theta(k_0__, k_1__));
+            }
+        }
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+                vars__.push_back(Sigma(k_0__, k_1__));
+            }
+        }
+        for (int k_1__ = 0; k_1__ < 4; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < J; ++k_0__) {
+                vars__.push_back(beta(k_0__, k_1__));
+            }
+        }
+        for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+            vars__.push_back(sigma_beta_raw[k_0__]);
+        }
+        for (int k_2__ = 0; k_2__ < 5; ++k_2__) {
+            for (int k_1__ = 0; k_1__ < J; ++k_1__) {
+                for (int k_0__ = 0; k_0__ < N; ++k_0__) {
+                    vars__.push_back(p_cat[k_0__][k_1__][k_2__]);
+                }
+            }
+        }
+        for (int k_1__ = 0; k_1__ < J; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N; ++k_0__) {
+                vars__.push_back(node1[k_0__][k_1__]);
+            }
+        }
+        for (int k_1__ = 0; k_1__ < J; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N; ++k_0__) {
+                vars__.push_back(node2[k_0__][k_1__]);
+            }
+        }
+        for (int k_1__ = 0; k_1__ < J; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N; ++k_0__) {
+                vars__.push_back(node3[k_0__][k_1__]);
+            }
+        }
+        for (int k_1__ = 0; k_1__ < J; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N; ++k_0__) {
+                vars__.push_back(node4[k_0__][k_1__]);
+            }
+        }
+
+        if (!include_gqs__) return;
+        // declare and define generated quantities
+        validate_non_negative_index("Corr", "S", S);
+        matrix_d Corr(static_cast<Eigen::VectorXd::Index>(S),static_cast<Eigen::VectorXd::Index>(S));
+        (void) Corr;  // dummy to suppress unused var warning
+
+        stan::math::initialize(Corr, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(Corr,DUMMY_VAR__);
+        validate_non_negative_index("sigma_beta", "S", S);
+        vector_d sigma_beta(static_cast<Eigen::VectorXd::Index>(S));
+        (void) sigma_beta;  // dummy to suppress unused var warning
+
+        stan::math::initialize(sigma_beta, std::numeric_limits<double>::quiet_NaN());
+        stan::math::fill(sigma_beta,DUMMY_VAR__);
+        validate_non_negative_index("X_pred", "N2", N2);
+        validate_non_negative_index("X_pred", "J", J);
+        vector<vector<int> > X_pred(N2, (vector<int>(J, 0)));
+        stan::math::fill(X_pred, std::numeric_limits<int>::min());
+
+
+        try {
+            current_statement_begin__ = 174;
+            stan::math::assign(Corr, multiply(multiply(diag_matrix(inv_sqrt(diagonal(Sigma))),Sigma),diag_matrix(inv_sqrt(diagonal(Sigma)))));
+            current_statement_begin__ = 176;
+            stan::math::assign(sigma_beta, elt_multiply(rep_vector(1,S),sigma_beta_raw));
+            current_statement_begin__ = 178;
+            for (int i = 1; i <= N2; ++i) {
+
+                current_statement_begin__ = 179;
+                for (int j = 1; j <= J; ++j) {
+
+                    current_statement_begin__ = 180;
+                    stan::math::assign(get_base1_lhs(get_base1_lhs(X_pred,i,"X_pred",1),j,"X_pred",2), categorical_rng(get_base1(get_base1(p_cat,i,"p_cat",1),j,"p_cat",2), base_rng__));
+                }
+            }
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
+            // Next line prevents compiler griping about no return
+            throw std::runtime_error("*** IF YOU SEE THIS, PLEASE REPORT A BUG ***");
+        }
+
+        // validate generated quantities
+        stan::math::check_cov_matrix(function__,"Corr",Corr);
+        check_greater_or_equal(function__,"sigma_beta",sigma_beta,0);
+        for (int k0__ = 0; k0__ < N2; ++k0__) {
+            for (int k1__ = 0; k1__ < J; ++k1__) {
+                check_greater_or_equal(function__,"X_pred[k0__][k1__]",X_pred[k0__][k1__],1);
+                check_less_or_equal(function__,"X_pred[k0__][k1__]",X_pred[k0__][k1__],5);
+            }
+        }
+
+        // write generated quantities
+        for (int k_1__ = 0; k_1__ < S; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+                vars__.push_back(Corr(k_0__, k_1__));
+            }
+        }
+        for (int k_0__ = 0; k_0__ < S; ++k_0__) {
+            vars__.push_back(sigma_beta[k_0__]);
+        }
+        for (int k_1__ = 0; k_1__ < J; ++k_1__) {
+            for (int k_0__ = 0; k_0__ < N2; ++k_0__) {
+                vars__.push_back(X_pred[k_0__][k_1__]);
+            }
+        }
+
+    }
+
+    template <typename RNG>
+    void write_array(RNG& base_rng,
+                     Eigen::Matrix<double,Eigen::Dynamic,1>& params_r,
+                     Eigen::Matrix<double,Eigen::Dynamic,1>& vars,
+                     bool include_tparams = true,
+                     bool include_gqs = true,
+                     std::ostream* pstream = 0) const {
+      std::vector<double> params_r_vec(params_r.size());
+      for (int i = 0; i < params_r.size(); ++i)
+        params_r_vec[i] = params_r(i);
+      std::vector<double> vars_vec;
+      std::vector<int> params_i_vec;
+      write_array(base_rng,params_r_vec,params_i_vec,vars_vec,include_tparams,include_gqs,pstream);
+      vars.resize(vars_vec.size());
+      for (int i = 0; i < vars.size(); ++i)
+        vars(i) = vars_vec[i];
+    }
+
+    static std::string model_name() {
+        return "model_stan_steps";
+    }
+
+
+    void constrained_param_names(std::vector<std::string>& param_names__,
+                                 bool include_tparams__ = true,
+                                 bool include_gqs__ = true) const {
+        std::stringstream param_name_stream__;
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "theta_raw" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "xi_theta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "Sigma_raw" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= 4; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= J; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "beta_raw" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "mu_beta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "sigma2_beta_raw" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+
+        if (!include_gqs__ && !include_tparams__) return;
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "theta" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "Sigma" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= 4; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= J; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "beta" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "sigma_beta_raw" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_2__ = 1; k_2__ <= 5; ++k_2__) {
+            for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+                for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                    param_name_stream__.str(std::string());
+                    param_name_stream__ << "p_cat" << '.' << k_0__ << '.' << k_1__ << '.' << k_2__;
+                    param_names__.push_back(param_name_stream__.str());
+                }
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node1" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node2" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node3" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node4" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+
+        if (!include_gqs__) return;
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "Corr" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
         for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "sigma_beta" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N2; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "X_pred" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+    }
+
+
+    void unconstrained_param_names(std::vector<std::string>& param_names__,
+                                   bool include_tparams__ = true,
+                                   bool include_gqs__ = true) const {
+        std::stringstream param_name_stream__;
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "theta_raw" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "xi_theta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= (S + ((S * (S - 1)) / 2)); ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "Sigma_raw" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_1__ = 1; k_1__ <= 4; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= J; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "beta_raw" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "mu_beta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "sigma2_beta_raw" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+
+        if (!include_gqs__ && !include_tparams__) return;
+        for (int k_1__ = 1; k_1__ <= S; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "theta" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_0__ = 1; k_0__ <= (S + ((S * (S - 1)) / 2)); ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "Sigma" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_1__ = 1; k_1__ <= 4; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= J; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "beta" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "sigma_beta_raw" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_2__ = 1; k_2__ <= (5 - 1); ++k_2__) {
+            for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+                for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                    param_name_stream__.str(std::string());
+                    param_name_stream__ << "p_cat" << '.' << k_0__ << '.' << k_1__ << '.' << k_2__;
+                    param_names__.push_back(param_name_stream__.str());
+                }
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node1" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node2" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node3" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "node4" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+        }
+
+        if (!include_gqs__) return;
+        for (int k_0__ = 1; k_0__ <= (S + ((S * (S - 1)) / 2)); ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "Corr" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_0__ = 1; k_0__ <= S; ++k_0__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "sigma_beta" << '.' << k_0__;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        for (int k_1__ = 1; k_1__ <= J; ++k_1__) {
+            for (int k_0__ = 1; k_0__ <= N2; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "X_pred" << '.' << k_0__ << '.' << k_1__;
+                param_names__.push_back(param_name_stream__.str());
+            }
         }
     }
 

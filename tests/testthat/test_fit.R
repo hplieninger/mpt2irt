@@ -49,7 +49,7 @@ while (cond2 == FALSE) {
         cond2 <- dat2$X %>% cor %>% sign %>% magrittr::equals(-1) %>% any
     }
 }
-rm(cond1, cond2)
+suppressWarnings(rm(cond1, cond2))
 
 test_that("gen_betas() returns matrix", {
     expect_is(betas1, "matrix")
@@ -79,10 +79,10 @@ invisible(capture.output(
     res2 <- fit_irtree(dat1$X, revItem = dat1$revItem,
                        M = M, warmup = warmup, n.chains = 1,
                        fitModel = "ext", fitMethod = "stan"),
-    res3 <- fit_irtree(dat2$X, revItem = dat1$revItem,
+    res3 <- fit_irtree(dat2$X, revItem = dat2$revItem,
                        M = M, warmup = warmup, n.chains = 1,
                        fitModel = "ext", fitMethod = "jags"),
-    res4 <- fit_irtree(dat2$X, revItem = dat1$revItem,
+    res4 <- fit_irtree(dat2$X, revItem = dat2$revItem,
                        M = M, warmup = warmup, n.chains = 1,
                        fitModel = "2012", fitMethod = "stan")
 ))
@@ -112,43 +112,29 @@ test_that("fit_irtree() returns MCMC list", {
 
 context("Summarizing fitted models")
 
+iter <- 10
+
 res1b <- summarize_irtree_fit(res1)
-res1c <- tidyup_irtree_fit(res1b, N = N, J = J, revItem = dat1$revItem,
-                           traitItem = dat1$traitItem, fitModel = res1$fitModel,
-                           fitMethod = res1$fitMethod)
-res1d <- suppressMessages(
-    pp_irtree(res1b$mcmc, iter = 10, N = N, traitItem = dat1$traitItem,
-              revItem = dat1$revItem, fitModel = res1$fitModel))
+res1c <- tidyup_irtree_fit(res1b)
+res1d <- suppressMessages(pp_irtree(res1b, iter = iter, N = N))
 
 res2b <- summarize_irtree_fit(res2)
-res2c <- tidyup_irtree_fit(res2b, N = N, J = J, revItem = dat1$revItem,
-                           traitItem = dat1$traitItem, fitModel = res2$fitModel,
-                           fitMethod = res2$fitMethod)
-res2d <- suppressMessages(
-    pp_irtree(res2b$mcmc, iter = 10, N = N, traitItem = dat1$traitItem,
-              revItem = dat1$revItem, fitModel = res2$fitModel))
+res2c <- tidyup_irtree_fit(res2b)
+res2d <- suppressMessages(pp_irtree(res2b, iter = iter, N = N))
 
 res3b <- summarize_irtree_fit(res3)
-res3c <- tidyup_irtree_fit(res3b, N = N, J = J, revItem = dat2$revItem,
-                           traitItem = dat2$traitItem, fitModel = res3$fitModel,
-                           fitMethod = res3$fitMethod)
-res3d <- suppressMessages(
-    pp_irtree(res3b$mcmc, iter = 10, N = N, traitItem = dat1$traitItem,
-              revItem = dat1$revItem, fitModel = res3$fitModel))
+res3c <- tidyup_irtree_fit(res3b)
+res3d <- suppressMessages(pp_irtree(res3b, iter = iter, N = N))
 
 res4b <- summarize_irtree_fit(res4)
-res4c <- tidyup_irtree_fit(res4b, N = N, J = J, revItem = dat2$revItem,
-                           traitItem = dat2$traitItem, fitModel = res4$fitModel,
-                           fitMethod = res4$fitMethod)
-res4d <- suppressMessages(
-    pp_irtree(res4b$mcmc, iter = 10, N = N, traitItem = dat1$traitItem,
-              revItem = dat1$revItem, fitModel = res4$fitModel))
+res4c <- tidyup_irtree_fit(res4b)
+res4d <- suppressMessages(pp_irtree(res4b, iter = iter, N = N))
 
 test_that("tidyup_irtree_fit() returns correlations", {
-    expect_equal(length(res1c$Corr), 4)
-    expect_equal(length(res2c$Corr), 4)
-    expect_equal(length(res3c$Corr), 4)
-    expect_equal(length(res4c$Corr), 4)
+    expect_equal(unique(as.vector(sapply(res1c$Corr, dim))), 3)
+    expect_equal(unique(as.vector(sapply(res2c$Corr, dim))), 4)
+    expect_equal(unique(as.vector(sapply(res3c$Corr, dim))), 4)
+    expect_equal(unique(as.vector(sapply(res4c$Corr, dim))), 3)
     expect_equal(unique(as.vector(sapply(res1c$Sigma, dim))), 3)
     expect_equal(unique(as.vector(sapply(res2c$Sigma, dim))), 4)
     expect_equal(unique(as.vector(sapply(res3c$Sigma, dim))), 4)
@@ -182,20 +168,30 @@ test_that("pp_irtree() returns valid values", {
     expect_equal(as.numeric(levels(res3d$Categ)), 1:5)
     expect_equal(as.numeric(levels(res4d$Categ)), 1:5)
     
-    expect_equal(ncol(res1d), 6)
-    expect_equal(ncol(res2d), 6)
-    expect_equal(ncol(res3d), 6)
-    expect_equal(ncol(res4d), 6)
+    expect_equal(ncol(res1d), 8)
+    expect_equal(ncol(res2d), 8)
+    expect_equal(ncol(res3d), 8)
+    expect_equal(ncol(res4d), 8)
     
-    expect_gte(min(res1d[, 3:6]), 0)
-    expect_gte(min(res2d[, 3:6]), 0)
-    expect_gte(min(res3d[, 3:6]), 0)
-    expect_gte(min(res4d[, 3:6]), 0)
+    expect_equal(unique(res1d$Persons), N)
+    expect_equal(unique(res2d$Persons), N)
+    expect_equal(unique(res3d$Persons), N)
+    expect_equal(unique(res4d$Persons), N)
     
-    expect_lte(min(res1d[, 3:6]), 1)
-    expect_lte(min(res2d[, 3:6]), 1)
-    expect_lte(min(res3d[, 3:6]), 1)
-    expect_lte(min(res4d[, 3:6]), 1)
+    expect_equal(unique(res1d$Samples), iter)
+    expect_equal(unique(res2d$Samples), iter)
+    expect_equal(unique(res3d$Samples), iter)
+    expect_equal(unique(res4d$Samples), iter)
+    
+    expect_gte(min(subset(res1d, select = -(Item:Samples))), 0)
+    expect_gte(min(subset(res2d, select = -(Item:Samples))), 0)
+    expect_gte(min(subset(res3d, select = -(Item:Samples))), 0)
+    expect_gte(min(subset(res4d, select = -(Item:Samples))), 0)
+    
+    expect_lte(min(subset(res1d, select = -(Item:Samples))), 1)
+    expect_lte(min(subset(res2d, select = -(Item:Samples))), 1)
+    expect_lte(min(subset(res3d, select = -(Item:Samples))), 1)
+    expect_lte(min(subset(res4d, select = -(Item:Samples))), 1)
 })
 
 

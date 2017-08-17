@@ -1,4 +1,4 @@
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
+if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 
 #' Summarize and tidy up a fitted model.
 #' 
@@ -24,9 +24,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' # fit model
 #' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
 #' res2 <- summarize_irtree_fit(res1)
-#' res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-#'                           traitItem = dat$traitItem, fitModel = res1$fitModel)
-#' str(res3)
+#' res3 <- tidyup_irtree_fit(res2)
+#' names(res3)
 #' res3$plot
 #' cor(res3$theta$Median, dat$theta)
 #' cor(res3$beta$Median, dat$betas)
@@ -38,41 +37,41 @@ tidyup_irtree_fit <- function(fit,
                               J = NULL,
                               revItem = NULL,
                               traitItem = NULL,
-                              fitModel = c("ext", "2012", "pcm"),
-                              fitMethod = c("stan", "jags"), 
+                              fitModel = NULL,
+                              fitMethod = NULL, 
                               measure = c("Median", "Mean"),
-                              tt_names = NULL, 
-                              # rs_names = c("m", "e", "a", "t"), trait = NULL,
+                              # tt_names = NULL, 
+                              # rs_names = c("m", "e", "a", "t"), 
+                              # trait = NULL,
                               plot = TRUE, ...){
-    fitModel <- match.arg(fitModel)
-    fitMethod <- match.arg(fitMethod)
     measure <- match.arg(measure)
     
+    checkmate::qassert(fit, "L+")
     checkmate::assert_int(S, lower = 1, null.ok = TRUE)
-    checkmate::assert_numeric(N, lower = 1, upper = Inf, finite = TRUE,
-                              any.missing = FALSE, len = 1,
-                              null.ok = FALSE)
-    checkmate::assert_numeric(J, lower = 1, upper = Inf, finite = TRUE,
-                              any.missing = FALSE, len = 1,
-                              null.ok = FALSE)
-    checkmate::assert_numeric(traitItem, lower = 1, upper = Inf, finite = TRUE,
-                              any.missing = FALSE, min.len = 1,
-                              null.ok = FALSE)
+    checkmate::assert_int(N, lower = 1, null.ok = TRUE)
+    checkmate::assert_int(J, lower = 1, null.ok = TRUE)
+    checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = TRUE)
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = TRUE)
+    checkmate::assert_character(fitModel, min.chars = 1, any.missing = FALSE,
+                                len = 1, null.ok = TRUE)
+    checkmate::assert_character(fitMethod, min.chars = 1, any.missing = FALSE,
+                                len = 1, null.ok = TRUE)
+    checkmate::qassert(plot, "B1")
     
-    if (!("V" %in% names(fit))) {
+    if (!any(names(fit) %in% c("args", "V"))) {
         fit <- list("samples" = fit)
     }
-    if (is.null(fitMethod)) {
-        if ("samples" %in% names(fit)) {
-            if (is.list(fit$samples)) {
-                fitMethod <- "jags"
-            } else {
-                fitMethod <- "stan"
-            }
-        } else if ("dic" %in% names(fit)) {
-            fitMethod <- "jags"
-        }
-    }
+    
+    if (is.null(S)) S <- fit$args$S
+    if (is.null(J)) J <- fit$args$J
+    if (is.null(N)) N <- fit$args$N
+    if (is.null(revItem)) revItem <- fit$args$revItem
+    if (is.null(traitItem)) traitItem <- fit$args$traitItem
+    if (is.null(fitMethod)) fitMethod <- fit$args$fitMethod
+    if (is.null(fitModel)) fitModel <- fit$args$fitModel
+    
     
     if (!("summary" %in% names(fit))) {
         if (!("mcmc" %in% names(fit))) {
@@ -82,24 +81,17 @@ tidyup_irtree_fit <- function(fit,
                 fit$mcmc <- rstan::As.mcmc.list(fit$samples)
             }
         }
-        if(class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
+        if (class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
         # fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
         fit$summary <- summary(fit$mcmc)
     }
     
-    if (!is.null(S)) {
-        S2 <- S - 1 + length(unique(traitItem))
-    } else if (fitModel == "ext") {
-        S <- 4
-        S2 <- S - 1 + length(unique(traitItem))
-    } else if (fitModel == "2012") {
-        S <- 3
+    if (fitModel %in% c("ext", "2012")) {
         S2 <- S - 1 + length(unique(traitItem))
     } else if (fitModel == "ext5") {
-        S <- 5
         S2 <- 3 + length(unique(traitItem))
-    } else if (fitModel == "pcm") {
-        S <- 4
+    } else if (fitModel %in% c("pcm", "steps")) {
+        S  <- 4
         S2 <- length(unique(traitItem))
     }
     
@@ -121,8 +113,8 @@ tidyup_irtree_fit <- function(fit,
                        "sigma_vec" = rep(NA_real_, sum(upper.tri(diag(S2), diag = T))),
                        "Sigma" = matrix(NA_real_, S2, S2),
                        "Corr" = matrix(NA_real_, S2, S2),
-                       "mu_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S2+1, S2)),
-                       "sigma_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S2+1, S2)),
+                       "mu_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S2 + 1, S2)),
+                       "sigma_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S2 + 1, S2)),
                        "beta_ARS_extreme" = NA_real_)
         return_list[[iii]] <- setNames(list(tmp1, tmp1, tmp1, tmp1),
                                        nm = c("Mean", "Median", "Q_025", "Q_975"))
@@ -130,13 +122,13 @@ tidyup_irtree_fit <- function(fit,
     
     ### Retrive estimates and save them in 'return_list'
     
-    for(i in 1:S2){
+    for (i in 1:S2){
         return_list$theta$Mean[, i] <- fit$summary$statistics[paste0("theta[",1:N,",",i,"]"), "Mean"]
         return_list$theta$Median[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "50%"]
         return_list$theta$Q_025[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "2.5%"]
         return_list$theta$Q_975[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "97.5%"]
     }
-    for(i in 1:S){
+    for (i in 1:S){
         return_list$beta$Mean[, i] <- fit$summary$statistics[paste0("beta[",1:J,",",i,"]"), "Mean"]
         return_list$beta$Median[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "50%"]
         return_list$beta$Q_025[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "2.5%"]
@@ -204,14 +196,14 @@ tidyup_irtree_fit <- function(fit,
     } else {
         return_list$beta_ARS_extreme <- NULL
     }
-
+    
     ### Save further settings in 'return_list'
     
     return_list$fitMethod = fitMethod
     return_list$fitModel = fitModel
     return_list$revItem = revItem
     return_list$traitItem = traitItem
-
+    
     try(return_list$dic <- fit$samples$dic, silent = TRUE)
     return_list$setup <- list("V" = fit$V,
                               "df" = fit$df,
@@ -241,7 +233,7 @@ tidyup_irtree_fit <- function(fit,
         return_list$plot <- invisible(plot_irtree(fit, S = S, J = J, revItem = revItem,
                                                   traitItem = traitItem,
                                                   # trait = trait, rs_names = rs_names,
-                                                  return_data = FALSE, tt_names = tt_names,
+                                                  return_data = FALSE, # tt_names = tt_names,
                                                   measure = measure,
                                                   fitMethod = fitMethod, ...))
     }
@@ -289,30 +281,31 @@ summarize_irtree_fit <- function(fit,
     
     if (interact == TRUE & object.size(fit) > 1000000000) {
         proceed <- switch(menu(c("Yes, proceed", "No, thank you."),
-                    title = paste0("The object 'fit' is larger than ",
-                                   format(object.size(fit), "Gb"),
-                                   ", you may run out of memory. Do you want to proceed?")) + 1,
-               FALSE, TRUE, FALSE)
+                               title = paste0("The object 'fit' is larger than ",
+                                              format(object.size(fit), "Gb"),
+                                              ", you may run out of memory. Do you want to proceed?")) + 1,
+                          FALSE, TRUE, FALSE)
         if (proceed == FALSE) {
             message("I'm terminating the function call and invisibly returning 'fit'.")
             return(invisible(fit))
         }
     }
     
-    if (!("V" %in% names(fit))) {
+    if (!any((names(fit) %in% c("V", "args")))) {
         fit <- list("samples" = fit)
     }
     
     if (is.null(fitMethod)) {
-        if ("samples" %in% names(fit)) {
-            if (is.list(fit$samples)) {
-                fitMethod <- "jags"
-            } else {
-                fitMethod <- "stan"
-            }
-        } else if ("dic" %in% names(fit)) {
-            fitMethod <- "jags"
-        }
+        fitMethod <- fit$args$fitMethod
+        # if ("samples" %in% names(fit)) {
+        #     if (is.list(fit$samples)) {
+        #         fitMethod <- "jags"
+        #     } else {
+        #         fitMethod <- "stan"
+        #     }
+        # } else if ("dic" %in% names(fit)) {
+        #     fitMethod <- "jags"
+        # }
     }
     if (!("mcmc" %in% names(fit))) {
         if (fitMethod == "stan") {

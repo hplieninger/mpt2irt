@@ -5,11 +5,11 @@
 \title{Fit an mpt2irt model.}
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
-  V = NULL, fitModel = c("ext", "2012", "pcm", "tutz"),
+  V = NULL, fitModel = c("ext", "2012", "pcm", "steps"),
   fitMethod = c("stan", "jags"), outFormat = NULL, startSmall = TRUE,
   M = 1000, warmup = 1000, n.chains = 2, thin = 1,
-  method = "parallel", return_defaults = TRUE, add2varlist = NULL,
-  cores = NULL, summarise = FALSE, N2 = 2, ...)
+  method = "parallel", add2varlist = NULL, cores = NULL,
+  summarise = FALSE, N2 = 2, ...)
 }
 \arguments{
 \item{X}{an N x J matrix of observed responses for categories 1...5 (use
@@ -31,7 +31,7 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
 acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-credit model).}
+credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).}
 
 \item{fitMethod}{whether to use JAGS or Stan}
 
@@ -53,8 +53,6 @@ for burnin)}
 \item{thin}{thinning of MCMC samples}
 
 \item{method}{the method with which to call JAGS; probably a character vector specifying one of 'rjags', 'simple', 'interruptible', 'parallel', 'rjparallel', 'background', 'bgparallel' or 'snow'. The 'rjags' and 'rjparallel' methods run JAGS using the rjags package, whereas other options do not require the rjags package and call JAGS as an external executable.  The advantage of the 'rjags' method is that the model will not need to be recompiled between successive calls to extend.jags, all other methods require a re-compilation (and adaptation if necessary) step at every call to extend.jags.  Note that the 'rjparallel' and 'snow' methods may leave behind zombie JAGS processes if the user interrupts the R session used to start the simulations - for this reason the 'parallel' method is recommended for interactive use with parallel chains. The 'background' and 'bgparallel' return a filename for the started simulation, which can be read using \code{\link{results.jags}}.  The 'parallel' and 'interruptible' methods for Windows require XP Professional, Vista or later (or any Unix-alike).  For more information refer to the userguide vignette.}
-
-\item{return_defaults}{Logical. Whether to return input specifications or not.}
 
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
@@ -110,9 +108,8 @@ dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 # fit model
 res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
 res2 <- summarize_irtree_fit(res1)
-res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-                          traitItem = dat$traitItem, fitModel = res1$fitModel)
-str(res3)
+res3 <- tidyup_irtree_fit(res2)
+names(res3)
 res3$plot
 }
 }

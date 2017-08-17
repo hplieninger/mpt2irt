@@ -75,8 +75,7 @@ plot_responses <- function(X,
 #' # fit model
 #' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200, warmup = 200)
 #' res2 <- summarize_irtree_fit(res1)
-#' res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-#'                           traitItem = dat$traitItem, fitModel = res1$fitModel)
+#' res3 <- tidyup_irtree_fit(res2)
 #' 
 #' # expected frequencies
 #' boeck_predict(res3)
@@ -92,30 +91,48 @@ boeck_predict <- function(fit_sum = NULL,
                           J = NULL,
                           revItem = NULL,
                           traitItem = NULL,
-                          fitModel = NULL){
+                          fitModel = NULL) {
     
     measure <- match.arg(measure)
+    
+    flag1 <- ifelse(args %in% names(fit_sum), TRUE, FALSE)
+    checkmate::qassert(fit_sum, "L+")
+    checkmate::assert_int(S, lower = 1, null.ok = flag1)
+    checkmate::qassert(N, "X1[1, )")
+    checkmate::assert_int(J, lower = 1, null.ok = flag1)
+    checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = flag1)
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = flag1)
+    checkmate::assert_character(fitModel, min.chars = 1, any.missing = FALSE,
+                                len = 1, null.ok = flag1)
+    # checkmate::assert_character(fitMethod, min.chars = 1, any.missing = FALSE,
+    #                             len = 1, null.ok = flag1)
+    checkmate::qassert(plot, "B1")
+    
+    
     if (is.null(betas))
         betas <- fit_sum$beta[[measure]]
     if (is.null(fitModel))
-        fitModel <- fit_sum$fitModel
+        fitModel <- fit_sum$args$fitModel
     if (is.null(beta_ARS_extreme) & fitModel == "ext")
         beta_ARS_extreme <- fit_sum$beta_ARS_extreme[[measure]]
     if (is.null(J))
-        J <- nrow(fit_sum$beta[[measure]])
+        J <- fit_sum$args$J
     if (is.null(revItem))
-        revItem <- fit_sum$revItem
+        revItem <- fit_sum$args$revItem
     if (is.null(traitItem))
-        traitItem <- fit_sum$traitItem
+        traitItem <- fit_sum$args$traitItem
+    if (is.null(S))
+        S <- fit_sum$args$S
     
+    # if (is.null(S)) S <- fit_sum$args$S
+    # if (is.null(J)) J <- fit_sum$args$J
+    # if (is.null(N)) N <- fit_sum$args$N
+    # if (is.null(revItem)) revItem <- fit_sum$args$revItem
+    # if (is.null(traitItem)) traitItem <- fit_sum$args$traitItem
+    # if (is.null(fitMethod)) fitMethod <- fit_sum$args$fitMethod
     
-    if (is.null(S)) {
-        if (fitModel == "ext") {
-            S <- 4
-        } else if (fitModel == "2012") {
-            S <- 3
-        }
-    }
     S2 <- S - 1 + length(unique(traitItem))
     
     p <- array(NA, c(N, J, 5))
@@ -123,9 +140,9 @@ boeck_predict <- function(fit_sum = NULL,
     if (fitModel == "2012") {
         a <- matrix(1, N, J)
     }
-
-    for(i in 1:N){
-        for(j in 1:J){      
+    
+    for (i in 1:N) {
+        for (j in 1:J) {      
             m[i, j] <- pnorm(theta[i, 1] - betas[j, 1])
             e[i, j] <- pnorm(theta[i, 2] - betas[j, 2])
             if (fitModel != "2012") {
@@ -196,8 +213,7 @@ boeck_predict <- function(fit_sum = NULL,
 #' # fit model
 #' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200, warmup = 200)
 #' res2 <- summarize_irtree_fit(res1)
-#' res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-#'                           traitItem = dat$traitItem, fitModel = res1$fitModel)
+#' res3 <- tidyup_irtree_fit(res2)
 #' 
 #' # plot expected and observed frequencies
 #' plot_expected(res3, X = dat$X)
@@ -212,47 +228,57 @@ plot_expected <- function(fit_sum,
                           col = "cyan",
                           lwd = 2,
                           ylim = NULL,
-                          measure = c("Median", "Mean"), ...){
+                          measure = c("Median", "Mean"), ...) {
+    measure <- match.arg(measure)
+    
+    flag1 <- ifelse(args %in% names(fit_sum), TRUE, FALSE)
+    checkmate::qassert(fit_sum, "L+")
     checkmate::assert_matrix(X, mode = "integerish", any.missing = FALSE,
                              min.rows = 2, min.cols = 2)
     J <- ncol(X)
     checkmate::assert_integerish(X, lower = 1, upper = 5, any.missing = FALSE)
     checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
-                                 len = J, null.ok = TRUE)
+                                 min.len = 1, null.ok = flag1)
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
-                                 len = J, null.ok = TRUE)
+                                 min.len = 1, null.ok = flag1)
     checkmate::qassert(points, "X1[1,]")
+    
+    if (is.null(revItem))
+        revItem <- fit_sum$args$revItem
+    if (is.null(traitItem))
+        traitItem <- fit_sum$args$traitItem
+    
     
     tmp1 <- boeck_predict(fit_sum, measure = measure, revItem = revItem,
                           traitItem = traitItem)
     pred <- reshape2::dcast(tmp1, Categ ~ Item, value.var = "Pred")
     
-    if(is.null(revItem))
-        revItem <-fit_sum$revItem
-    if(is.null(revItem))
-        revItem <-fit_sum$traitItem
+    if (is.null(revItem))
+        revItem <- fit_sum$revItem
+    if (is.null(revItem))
+        revItem <- fit_sum$traitItem
     n1 <- floor(sqrt(J) )
     n2 <- ceiling(J/n1)
     
     mfrow <- par()$mfrow
     mar <- par()$mar
-    par(mfrow=c(n1,n2), mar=c(4, 3, 3, 1))
-    if (is.null(ylim)){
+    par(mfrow = c(n1, n2), mar = c(4, 3, 3, 1))
+    if (is.null(ylim)) {
         ymax1 <- max(apply(X, 2, function(x) max(prop.table(table(x)))))
         ymax2 <- max(pred[, -1])
         ylim <- c(0, max(ymax1, ymax2))
     }
     
-    for(j in 1:J){
-        barplot(prop.table(table(factor(X[,j], levels=1:points))),
+    for (j in 1:J) {
+        barplot(prop.table(table(factor(X[, j], levels = 1:points))),
                 main = paste("Trait", traitItem[j], "(rev:",revItem[j],")"),
-                col = revItem[j]+1,
+                col = revItem[j] + 1,
                 ylim = ylim)
         lines(x = unclass(pred$Categ) - .5 + .2*unclass(pred$Categ),
-              y = pred[, 1+j], col = col, type = type, lwd = lwd, ...)
+              y = pred[, 1 + j], col = col, type = type, lwd = lwd, ...)
     }
     
-    par(mfrow=mfrow, mar=mar)
+    par(mfrow = mfrow, mar = mar)
     
     return()
 }

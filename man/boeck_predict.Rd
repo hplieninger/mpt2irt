@@ -39,7 +39,7 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
 acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-credit model).}
+credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).}
 }
 \value{
 Function returns a data frame in long format with predicted response probability for each person-item combination.
@@ -58,8 +58,7 @@ dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 # fit model
 res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200, warmup = 200)
 res2 <- summarize_irtree_fit(res1)
-res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-                          traitItem = dat$traitItem, fitModel = res1$fitModel)
+res3 <- tidyup_irtree_fit(res2)
 
 # expected frequencies
 boeck_predict(res3)

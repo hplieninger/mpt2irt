@@ -42,7 +42,9 @@ generate_irtree_ext <- function(N = NULL,
                              nrows = J, ncols = 4)
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
                                  len = J)
-    checkmate::qassert(prop.rev, "N1[0,1]")
+    # checkmate::qassert(prop.rev, "N1[0,1]")
+    checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
+                              len = length(unique(traitItem)))
     checkmate::assert_number(beta_ARS_extreme, finite = TRUE)
     
     # multiple traits
@@ -154,7 +156,9 @@ generate_irtree_2012 <- function(N = NULL,
                              nrows = J, ncols = 3)
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
                                  len = J)
-    checkmate::qassert(prop.rev, "N1[0,1]")
+    # checkmate::qassert(prop.rev, "N1[0,1]")
+    checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
+                              len = length(unique(traitItem)))
     
     
     n.trait <- length(unique(traitItem))
@@ -205,12 +209,96 @@ generate_irtree_2012 <- function(N = NULL,
             X[i,j,] <- rmultinom(1, 1, p[i,j,1:5])
         }
     }
-    if(cat){
+    if (cat) {
         X <- mult_to_cat(X)
     }
     
     return(list(X=X, revItem=revItem, traitItem=traitItem, theta=theta, betas=betas, theta_vcov=theta_vcov,
                 p=p, middle=m, trait=y, extreme=e))
+}
+
+#' Generate data for Steps Model.
+#'
+#' Function generates categorical data 1...5 for \code{N} persons and \code{J}
+#' items with paramters from \code{rnorm()}.
+#' 
+#' @section References:
+#' 
+#' Tutz, G. (1997). Sequential models for ordered responses. In W. J. van der
+#' Linden \& R. K. Hambleton (Eds.), Handbook of Modern Item Response Theory (pp.
+#' 139-152). doi:10.1007/978-1-4757-2691-6_8
+#' 
+#' Verhelst, N. D., Glas, C. A. W., \& de Vries, H. H. (1997). A steps model to 
+#' analyze partial credit. In W. J. van der Linden \& R. K. Hambleton (Eds.), 
+#' Handbook of modern item response theory (pp. 123-138).
+#' doi:10.1007/978-1-4757-2691-6_7
+#' 
+#' @param N number of persons
+#' @param J number of items
+#' @inheritParams fit_irtree
+#' @return The function returns a list containing the generated matrix of
+#'   responses X, a vector revItem indicating reversed items and true, latent
+#'   values of the parameters.
+#' @examples
+#' N <- 20
+#' J <- 10
+#' dat <- generate_irtree_steps(N = N, J = J)
+#' @export
+generate_irtree_steps <- function(N = NULL,
+                                  J = NULL,
+                                  revItem = NULL,
+                                  traitItem = NULL) {
+    
+    checkmate::qassert(N, "X1[1,)")
+    checkmate::qassert(J, "X1[1,)")
+    checkmate::assert_integerish(revItem, lower = 0, upper = 1,
+                                 any.missing = FALSE, len = J, null.ok = TRUE)
+    checkmate::assert_integerish(traitItem, lower = 1, upper = 1,
+                                 any.missing = FALSE, len = J, null.ok = TRUE)
+    if (is.null(revItem)) revItem <- rbinom(J, 1, .33)
+    if (is.null(traitItem)) traitItem <- rep(1, J)
+    
+    thres <- matrix(rnorm(J*4), J, 4) %>%
+        apply(1, sort) %>%
+        t
+    theta <- matrix(rnorm(N*max(traitItem)), N, max(traitItem))
+    
+    p_catx <- array(NA, dim = c(N, J, 5))
+    dat <- node1 <- node2 <- node3 <- node4 <- matrix(NA, N, J)
+    
+    for (i in 1:N) {	
+        for (j in 1:J) {
+            node1[i, j] = pnorm(theta[i, traitItem[j]] - thres[j, 1]);
+            node2[i, j] = pnorm(theta[i, traitItem[j]] - thres[j, 2]);
+            node3[i, j] = pnorm(theta[i, traitItem[j]] - thres[j, 3]);
+            node4[i, j] = pnorm(theta[i, traitItem[j]] - thres[j, 4]);
+            
+            p_catx[i,j,1] = (1-node1[i, j]);
+            p_catx[i,j,2] =    node1[i, j] *(1-node2[i, j]);
+            p_catx[i,j,3] =    node1[i, j] *   node2[i, j] *(1-node3[i, j]);
+            p_catx[i,j,4] =    node1[i, j] *   node2[i, j] *   node3[i, j] *(1-node4[i, j]);
+            p_catx[i,j,5] =    node1[i, j] *   node2[i, j] *   node3[i, j] *   node4[i, j] ;
+        }
+    }
+    
+    p_cat <- p_catx
+    
+    p_cat[ , revItem == 1, 5] <- p_catx[ , revItem == 1, 1]
+    p_cat[ , revItem == 1, 4] <- p_catx[ , revItem == 1, 2]
+    p_cat[ , revItem == 1, 3] <- p_catx[ , revItem == 1, 3]
+    p_cat[ , revItem == 1, 2] <- p_catx[ , revItem == 1, 4]
+    p_cat[ , revItem == 1, 1] <- p_catx[ , revItem == 1, 5]
+    
+    dat[, ] <- p_cat %>%
+        apply(1:2, function(x) rmultinom(1, 1, x)) %>%
+        magrittr::equals(1) %>% 
+        apply(2:3, which)
+    
+    return(list(X = dat,
+                theta = theta,
+                thres = thres,
+                revItem = revItem,
+                traitItem = traitItem))
 }
 
 #' Generate item parameters.

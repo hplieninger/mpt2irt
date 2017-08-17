@@ -5,9 +5,8 @@
 \title{Summarize and tidy up a fitted model.}
 \usage{
 tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
-  traitItem = NULL, fitModel = c("ext", "2012", "pcm"),
-  fitMethod = c("stan", "jags"), measure = c("Median", "Mean"),
-  tt_names = NULL, plot = TRUE, ...)
+  traitItem = NULL, fitModel = NULL, fitMethod = NULL,
+  measure = c("Median", "Mean"), plot = TRUE, ...)
 }
 \arguments{
 \item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{summarize_irtree_fit}}.}
@@ -30,15 +29,12 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
 acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-credit model).}
+credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).}
 
 \item{fitMethod}{whether to use JAGS or Stan}
 
 \item{measure}{Character vector that indicates whether the mean (default) or
 the median of the posterior distribution should be plotted.}
-
-\item{tt_names}{Optional character vector with the name(s) of the target
-trait(s).}
 
 \item{plot}{Logical. Whether a plot should be produced using \code{\link{plot_irtree}} and returned.}
 
@@ -62,9 +58,8 @@ dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
 # fit model
 res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
 res2 <- summarize_irtree_fit(res1)
-res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-                          traitItem = dat$traitItem, fitModel = res1$fitModel)
-str(res3)
+res3 <- tidyup_irtree_fit(res2)
+names(res3)
 res3$plot
 cor(res3$theta$Median, dat$theta)
 cor(res3$beta$Median, dat$betas)

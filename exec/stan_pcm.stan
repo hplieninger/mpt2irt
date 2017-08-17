@@ -118,16 +118,23 @@ model {
     	
     	// Hierarchical model for participant parameters
     	// fix person mean to zero for weak identification
-    	theta_raw[i] ~ multi_normal(theta_mu, Sigma_raw); 
+    	if (S > 1) {
+    	    theta_raw[i] ~ multi_normal(theta_mu, Sigma_raw); 
+    	} else {
+    	    theta_raw[i] ~ normal(theta_mu, Sigma_raw[1, 1]); 
+    	}
     }
 }
 
 // ----- posterior predictive // -----
 
 generated quantities {
-    int<lower=1, upper=5> X_pred[N2, J];	    // predicted responses of partipants
-
+    cov_matrix[S] Corr;                         // Correlation matrix
 	vector<lower=0>[S] sigma_beta;	            // item SD
+    int<lower=1, upper=5> X_pred[N2, J];	    // predicted responses of partipants
+    
+    Corr = diag_matrix(inv_sqrt(diagonal(Sigma))) * Sigma * diag_matrix(inv_sqrt(diagonal(Sigma)));
+    
     sigma_beta = rep_vector(1, S) .* sigma_beta_raw;
 
     for(i in 1:N2){

@@ -4,9 +4,9 @@
 \alias{plot_irtree}
 \title{Plot item parameters of an mpt2irt model.}
 \usage{
-plot_irtree(fit, S = 4, J = NULL, revItem = rep(0, J),
-  traitItem = rep(1, J), return_data = FALSE, tt_names = NULL,
-  measure = c("Median", "Mean"), rs_names = NULL, fitMethod = NULL)
+plot_irtree(fit, S = NULL, J = NULL, revItem = NULL, traitItem = NULL,
+  return_data = FALSE, tt_names = NULL, measure = c("Median", "Mean"),
+  rs_names = NULL, fitMethod = NULL)
 }
 \arguments{
 \item{fit}{a fitted object from \link{fit_irtree} (either Boeckenholt 2012 or extended)}
@@ -53,6 +53,6 @@ dat <- generate_irtree_ext(N = 20, J = J, betas = betas, beta_ARS_extreme = .5)
 
 # fit model
 res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
-plot_irtree(res1, J = J, revItem = dat$revItem)
+plot_irtree(res1)
 }
 }

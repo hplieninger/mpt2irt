@@ -38,85 +38,88 @@
 #' @export
 plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp, 
                            true.par, traitItem=rep(1,J), revItem=rep(1,J)){
-  model <- as.character(model)
-  
-  if(model == "ext"){
-    S.beta <- 4
-    parnames <- c("middle","extremity", "acquies", paste0("trait", 1:(S-3)))
-  }else if(model == "2012"){
-    S.beta <- 3
-    parnames <- c("middle","extremity", paste0("trait", 1:(S-2)))
-  }else{
-    warning("check model name!")
-  }
-  n.trait <- S-S.beta
-  
-  ###################### correlation to expected values
-  theta.jags <- theta.stan <- matrix(NA, N, S); 
-  beta.jags <- beta.stan <- betaSE.jags <- betaSE.stan <- matrix(NA, J, S.beta)
-  plotsel <- rep(F, 3)
-  
-  if(!missing(true.par)){
-    plotsel[1] <- T
-    theta.true <- true.par$theta
-    beta.true <- true.par$beta 
-  }
-  
-  if(!missing(jags.samp)){
-    plotsel[2] <- T
-    for(i in 1:S){
-      theta.jags[,i] <- summary(jags.samp[,paste0("theta[",1:N,",",i,"]")])$stat[,"Mean"]
+    model <- as.character(model)
+    
+    if (model == "ext") {
+        S.beta <- 4
+        parnames <- c("middle", "extremity", "acquies", paste0("trait", 1:(S - 3)))
+    } else if (model == "2012") {
+        S.beta <- 3
+        parnames <- c("middle","extremity", paste0("trait", 1:(S - 2)))
+    } else {
+        warning("check model name!")
     }
-    for(i in 1:S.beta){
-      beta.jags[,i] <- summary(jags.samp[,paste0("beta[",1:J,",",i,"]")])$stat[,"Mean"]
+    n.trait <- S - S.beta
+    
+    ###################### correlation to expected values
+    theta.jags <- theta.stan <- matrix(NA, N, S); 
+    beta.jags <- beta.stan <- betaSE.jags <- betaSE.stan <- matrix(NA, J, S.beta)
+    plotsel <- rep(F, 3)
+    
+    if (!missing(true.par)) {
+        plotsel[1] <- T
+        theta.true <- true.par$theta
+        beta.true <- true.par$beta 
     }
-  }
-  
-  if(!missing(stan.samp)){
-    plotsel[3] <- T
-    for(i in 1:S){
-      theta.stan[,i] <- summary(stan.samp)$summ[paste0("theta[",1:N,",",i,"]"),1]
+    
+    if (!missing(jags.samp)) {
+        plotsel[2] <- T
+        for (i in 1:S) {
+            theta.jags[, i] <- summary(jags.samp[,paste0("theta[",1:N,",",i,"]")])$stat[,"Mean"]
+        }
+        for (i in 1:S.beta) {
+            beta.jags[, i] <- summary(jags.samp[,paste0("beta[",1:J,",",i,"]")])$stat[,"Mean"]
+        }
     }
-    for(i in 1:S.beta){
-      beta.stan[,i] <- summary(stan.samp)$summ[paste0("beta[",1:J,",",i,"]"),1]
+    
+    if (!missing(stan.samp)) {
+        plotsel[3] <- T
+        for (i in 1:S) {
+            theta.stan[,i] <- summary(stan.samp)$summ[paste0("theta[",1:N,",",i,"]"),1]
+        }
+        for (i in 1:S.beta) {
+            beta.stan[,i] <- summary(stan.samp)$summ[paste0("beta[",1:J,",",i,"]"),1]
+        }
     }
-  }
-  if(sum(plotsel) != 2)
-    warning("please provide only two objects for plotting")
-  
-  if(plotsel[1]){
-    x1 <- theta.true; x2 <- beta.true
-    xl <- "true"
-    if(plotsel[2]){
-      y1 <- theta.jags; y2 <- beta.jags;
-      yl <- "JAGS"
-    }else{
-      y1 <- theta.stan; y2 <- beta.stan;
-      yl <- "Stan"
-    }}else{
-      x1 <- theta.jags; x2 <- beta.jags;
-      y1 <- theta.stan; y2 <- beta.stan;
-      xl <- "JAGS"; yl <- "Stan"
+    if (sum(plotsel) != 2)
+        warning("please provide only two objects for plotting")
+    
+    if (plotsel[1]) {
+        x1 <- theta.true; x2 <- beta.true
+        xl <- "true"
+        if (plotsel[2]) {
+            y1 <- theta.jags; y2 <- beta.jags;
+            yl <- "JAGS"
+        } else {
+            y1 <- theta.stan; y2 <- beta.stan;
+            yl <- "Stan"
+        }
+    } else {
+            x1 <- theta.jags; x2 <- beta.jags;
+            y1 <- theta.stan; y2 <- beta.stan;
+            xl <- "JAGS"; yl <- "Stan"
+        }
+    mfrow <- par()$mfrow
+    thetacol <- c(rep(1, S.beta - 1), (1:n.trait) + 1)
+    par(mfrow = c(2, S))
+    for (i in 1:S) {
+        plot(x1[,i],y1[1:N,i], main = paste("Theta",parnames[i]),
+             xlab = xl, ylab = yl, col = thetacol[i])
+        abline(0,1, pch = 5)
     }
-  mfrow <- par()$mfrow
-  thetacol <- c(rep(1, S.beta-1), (1:n.trait)+1 )
-  par(mfrow=c(2,S))
-  for(i in 1:S){
-    plot(x1[,i],y1[1:N,i], main=paste("Theta",parnames[i]), xlab=xl, ylab=yl, col=thetacol[i])
-    abline(0,1, pch=5)
-  }
-  for(i in 1:S.beta){
-    plot(x2[,i],y2[1:J,i], col=traitItem+1, pch=revItem+1, main=paste("Beta",parnames[i]), xlab=xl, ylab=yl)
-    abline(0,1, pch=5)
-    if(i==2 & length(unique(revItem)) != 1)
-      legend("topleft", c("","rev."), pch=1:2, col=1)
-    #     if(S.beta==i)
-    #         legend("topleft", paste0("trait", 1:(S-S.beta+1)), col=unique(traitItem+1), pch=1)
-  }
-  par(mfrow=mfrow)
-  
-  par(mfrow=c(1,1))
-  
+    for (i in 1:S.beta) {
+        plot(x2[,i],y2[1:J,i], col = traitItem + 1,
+             pch = revItem + 1, main = paste("Beta", parnames[i]), xlab = xl, ylab = yl)
+        abline(0,1, pch = 5)
+        if (i == 2 & length(unique(revItem)) != 1)
+            legend("topleft", c("","rev."), pch = 1:2, col = 1)
+        #     if(S.beta==i)
+        #         legend("topleft", paste0("trait", 1:(S-S.beta+1)), col=unique(traitItem+1), pch=1)
+    }
+    par(mfrow = mfrow)
+    
+    par(mfrow = c(1,1))
+    
 }
 
 
@@ -155,55 +158,67 @@ plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp,
 #' 
 #' # fit model
 #' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
-#' plot_irtree(res1, J = J, revItem = dat$revItem)
+#' plot_irtree(res1)
 #' }
 #' @export
 plot_irtree <- function(fit,
-                        S = 4,
+                        S = NULL,
                         J = NULL,
-                        revItem = rep(0, J),
-                        traitItem = rep(1, J),
+                        revItem = NULL,
+                        traitItem = NULL,
                         # trait = "sample",
                         return_data = FALSE,
                         tt_names = NULL,
                         measure = c("Median", "Mean"),
                         rs_names = NULL,
-                        fitMethod = NULL){
-    checkmate::qassert(S, "X1[1,]")
-    checkmate::qassert(J, "X1[1,]")
-    checkmate::qassert(revItem, "X+[0,1]")
-    checkmate::qassert(traitItem, "X+[1,]")
+                        fitMethod = NULL) {
+    measure <- match.arg(measure)
+    
+    checkmate::qassert(fit, "L+")
+    # checkmate::qassert(S, "X1[1,]")
+    checkmate::assert_int(S, lower = 1, null.ok = TRUE)
+    # checkmate::qassert(J, "X1[1,]")
+    checkmate::assert_int(J, lower = 1, null.ok = TRUE)
+    # checkmate::qassert(revItem, "X+[0,1]")
+    checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = TRUE)
+    # checkmate::qassert(traitItem, "X+[1,]")
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 min.len = 1, null.ok = TRUE)
+    if (is.null(traitItem)) traitItem <- fit$args$traitItem
     checkmate::assert_character(tt_names, len = length(unique(traitItem)),
                                 null.ok = TRUE)
     checkmate::assert_character(rs_names, len = S, null.ok = TRUE)
     
+    if (is.null(S)) S <- fit$args$S
+    if (is.null(J)) J <- fit$args$J
+    if (is.null(revItem)) revItem <- fit$args$revItem
+    if (is.null(fitMethod)) fitMethod <- fit$args$fitMethod
+    
     if (is.null(rs_names)) {
         if (S == 3) {
             rs_names <- c("m", "e", "t")
-        } else {
+        } else if (S == 4) {
             rs_names <- c("m", "e", "a", "t")
+        } else if (fit$args$fitModel %in% c("pcm", "steps")) {
+            rs_names <- paste("Threshold", 1:4)
         }
     }
-  
-#   if(missing(traitItem))
-#     traitItem
-#   J <- length(grep("beta", colnames(fit[[1]])))/(S+1)
     
-    measure <- match.arg(measure)
-    if (!("V" %in% names(fit))) {
+    if (!any(names(fit) %in% c("args", "V"))) {
         fit <- list("samples" = fit)
     }
-    if (is.null(fitMethod)) {
-        if ("samples" %in% names(fit)) {
-            if (is.list(fit$samples)) {
-                fitMethod <- "jags"
-            } else {
-                fitMethod <- "stan"
-            }
-        } else if ("dic" %in% names(fit)) {
-            fitMethod <- "jags"
-        }
-    }
+    # if (is.null(fitMethod)) {
+    #     if ("samples" %in% names(fit)) {
+    #         if (is.list(fit$samples)) {
+    #             fitMethod <- "jags"
+    #         } else {
+    #             fitMethod <- "stan"
+    #         }
+    #     } else if ("dic" %in% names(fit)) {
+    #         fitMethod <- "jags"
+    #     }
+    # }
     
     if (!("summary" %in% names(fit))) {
         if (!("mcmc" %in% names(fit))) {
@@ -213,7 +228,7 @@ plot_irtree <- function(fit,
                 fit$mcmc <- rstan::As.mcmc.list(fit$samples)
             }
         }
-        if(class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
+        if (class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
         # fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
         fit$summary <- summary(fit$mcmc)
     }
@@ -236,7 +251,7 @@ plot_irtree <- function(fit,
     # if (missing(traitItem) | is.null(traitItem))
     #     traitItem <- rep(1,J)
     ss$revItem <- factor(rep(revItem, each = S))
-    ss$traitItem <- factor(rep(traitItem, each = S), levels=1:max(traitItem))
+    ss$traitItem <- factor(rep(traitItem, each = S), levels = 1:max(traitItem))
     if (!is.null(tt_names))
         ss$traitItem <- factor(ss$traitItem, labels = tt_names)
     
@@ -275,7 +290,7 @@ plot_irtree <- function(fit,
     #     ss$traitItem <- factor(ss$traitItem, labels = tt_names)
     #     try(levels(ss$traitItem) <- levels(tt_names), silent = T)
     # }
-  
+    
     # library("ggplot2")
     # loadNamespace("ggplot2")
     
@@ -290,12 +305,12 @@ plot_irtree <- function(fit,
         labs(y = expression(Phi(-beta)),
              title = paste0("Estimated Item Parameters (", measure, ", 95% CI)"))
     # plot(gg)
-  
-  if (return_data == TRUE) {
-      return(ss)
-  } else {
-      return(gg)
-  }
+    
+    if (return_data == TRUE) {
+        return(ss)
+    } else {
+        return(gg)
+    }
 }
 
 #' Plot Gelman-Rubin statistic.
@@ -317,34 +332,34 @@ plot_irtree <- function(fit,
 #' @export
 plot_GRS <- function(fit, parameter = "beta", estimate = "point", plot = TRUE,
                      return.odd = TRUE, ...){
-  param <- substr(parameter, 1, 4)
-  cols <- grep(param, substr(dimnames(fit[[1]])[[2]], 1, 4))
-  n.chains <- length(fit)
-  fit.name <- substitute(fit)
-  
-  fit <- fit[][, cols]
-  
-  grs <- coda::gelman.diag(fit, multivariate = F)
-  if (plot == TRUE) {
-    hist(grs$psrf[, ifelse(estimate=="point", 1, 2)],
-         main = paste0("Gelman-Rubin Statistic for ", parameter, " Parameters"),
-         xlab = "", ...)
-    grs.l <- c(1.05, 1.1, 1.2)
-    grs.p <- numeric(3)
-    for (ii in 1:3) {
-      grs.p[ii] <- sum(grs$psrf[, ifelse(estimate=="point", 1, 2)] >= grs.l[ii])/
-        ncol(fit[[1]])
+    param <- substr(parameter, 1, 4)
+    cols <- grep(param, substr(dimnames(fit[[1]])[[2]], 1, 4))
+    n.chains <- length(fit)
+    fit.name <- substitute(fit)
+    
+    fit <- fit[][, cols]
+    
+    grs <- coda::gelman.diag(fit, multivariate = F)
+    if (plot == TRUE) {
+        hist(grs$psrf[, ifelse(estimate == "point", 1, 2)],
+             main = paste0("Gelman-Rubin Statistic for ", parameter, " Parameters"),
+             xlab = "", ...)
+        grs.l <- c(1.05, 1.1, 1.2)
+        grs.p <- numeric(3)
+        for (ii in 1:3) {
+            grs.p[ii] <- sum(grs$psrf[, ifelse(estimate == "point", 1, 2)] >= grs.l[ii]) /
+                ncol(fit[[1]])
+        }
+        legend("topright", legend = paste0("Prop. >= ", format(grs.l, digits = 3), ": ", round(grs.p, 2)),
+               bty = "n")
+        if (return.odd == TRUE) {
+            grs2 <- grs
+            grs2$psrf <- grs$psrf[grs$psrf[, ifelse(estimate == "point", 1, 2)] >= 1.05, ]
+            return(grs2)
+        }
+    } else {
+        return(grs)
     }
-    legend("topright", legend = paste0("Prop. >= ", format(grs.l, digits = 3), ": ", round(grs.p, 2)),
-           bty = "n")
-    if (return.odd == TRUE) {
-      grs2 <- grs
-      grs2$psrf <- grs$psrf[grs$psrf[, ifelse(estimate=="point", 1, 2)] >= 1.05, ]
-      return(grs2)
-    }
-  } else {
-    return(grs)
-  }
 }
 
 
@@ -368,58 +383,58 @@ plot_GRS <- function(fit, parameter = "beta", estimate = "point", plot = TRUE,
 #' @export
 plot_Geweke <- function(fit, parameter = "beta", D = 1, frac1=0.1, frac2=0.5,
                         plot = TRUE, ...){
-  param <- substr(parameter, 1, 4)
-  cols <- grep(param, substr(dimnames(fit[[1]])[[2]], 1, 4))
-  J <- length(cols) / D
-  n.chains <- length(fit)
-  
-  fit <- fit[][, cols]
-  
-  gew <- coda::geweke.diag(fit, frac1 = frac1, frac2 = frac2)
-  if (plot == TRUE) {
-    # col.1 <- rainbow(n.chains, alpha = .25)
-    col.1 <- heat.colors(n.chains, alpha = .25)
+    param <- substr(parameter, 1, 4)
+    cols <- grep(param, substr(dimnames(fit[[1]])[[2]], 1, 4))
+    J <- length(cols) / D
+    n.chains <- length(fit)
     
-    # First, two loops with plot=FALSE are done in order to calculate the break
-    # points and the heigth/ylim for the histograms
-    plot.1 <- sapply(vector(length=n.chains*D), function(x) NULL)
-    kk <- 1
-    for (ii in 1:n.chains) {
-      for (jj in 1:D) {
-        plot.1[[kk]] <- hist(gew[[ii]][[1]][(J*(jj - 1)):(J*jj)], plot = F)
-        kk <- kk + 1
-      }
-    }
-    breaks.1 <- min(unlist(lapply(plot.1, "[[", "breaks")))
-    breaks.2 <- max(unlist(lapply(plot.1, "[[", "breaks")))
-    kk <- 1
-    for (ii in 1:n.chains) {
-      for (jj in 1:D) {
-        plot.1[[kk]] <- hist(gew[[ii]][[1]][(J*(jj - 1)):(J*jj)], 
-                             breaks = seq(breaks.1, breaks.2, 0.5), plot = F)
-        kk <- kk + 1
-      }
-    }
-    y.max <- max(unlist(lapply(plot.1, "[[", "counts")))
+    fit <- fit[][, cols]
     
-    par(mfrow = c(ceiling(sqrt(D)), round(sqrt(D))))
-    for (jj in 1:D) {
-      hist(gew[[1]][[1]][(J*(jj - 1)):(J*jj)], breaks = seq(breaks.1, breaks.2, 0.5),
-           ylim = c(0, y.max), col = col.1[1],
-           main = paste0("Geweke Statistic: ", parameter, ifelse(D > 1, jj, "")),
-           xlab = "", ...)
-      for(ii in 2:n.chains){
-        hist(gew[[ii]][[1]][(J*(jj - 1)):(J*jj)], breaks = seq(breaks.1, breaks.2, 0.5),
-             ylim = c(0, y.max), col = col.1[ii], add = TRUE)
-      }
-      prop.1 <- unlist(lapply(lapply(
-        lapply(gew, "[[", "z"), "[", (J*(jj - 1)):(J*jj)
-      ), function(x) sum(abs(x) > qnorm(.975))))/J
-      legend("topleft", legend = round(prop.1, 2), col = col.1,
-             title = "Proportion > +/- 1.96", pch = 15, bty = "n",
-             y.intersp = .8, cex = 1/D^.1)
+    gew <- coda::geweke.diag(fit, frac1 = frac1, frac2 = frac2)
+    if (plot == TRUE) {
+        # col.1 <- rainbow(n.chains, alpha = .25)
+        col.1 <- heat.colors(n.chains, alpha = .25)
+        
+        # First, two loops with plot=FALSE are done in order to calculate the break
+        # points and the heigth/ylim for the histograms
+        plot.1 <- sapply(vector(length = n.chains*D), function(x) NULL)
+        kk <- 1
+        for (ii in 1:n.chains) {
+            for (jj in 1:D) {
+                plot.1[[kk]] <- hist(gew[[ii]][[1]][(J*(jj - 1)):(J*jj)], plot = F)
+                kk <- kk + 1
+            }
+        }
+        breaks.1 <- min(unlist(lapply(plot.1, "[[", "breaks")))
+        breaks.2 <- max(unlist(lapply(plot.1, "[[", "breaks")))
+        kk <- 1
+        for (ii in 1:n.chains) {
+            for (jj in 1:D) {
+                plot.1[[kk]] <- hist(gew[[ii]][[1]][(J*(jj - 1)):(J*jj)], 
+                                     breaks = seq(breaks.1, breaks.2, 0.5), plot = F)
+                kk <- kk + 1
+            }
+        }
+        y.max <- max(unlist(lapply(plot.1, "[[", "counts")))
+        
+        par(mfrow = c(ceiling(sqrt(D)), round(sqrt(D))))
+        for (jj in 1:D) {
+            hist(gew[[1]][[1]][(J*(jj - 1)):(J*jj)], breaks = seq(breaks.1, breaks.2, 0.5),
+                 ylim = c(0, y.max), col = col.1[1],
+                 main = paste0("Geweke Statistic: ", parameter, ifelse(D > 1, jj, "")),
+                 xlab = "", ...)
+            for (ii in 2:n.chains) {
+                hist(gew[[ii]][[1]][(J*(jj - 1)):(J*jj)], breaks = seq(breaks.1, breaks.2, 0.5),
+                     ylim = c(0, y.max), col = col.1[ii], add = TRUE)
+            }
+            prop.1 <- unlist(lapply(lapply(
+                lapply(gew, "[[", "z"), "[", (J*(jj - 1)):(J*jj)
+                ), function(x) sum(abs(x) > qnorm(.975))))/J
+            legend("topleft", legend = round(prop.1, 2), col = col.1,
+                   title = "Proportion > +/- 1.96", pch = 15, bty = "n",
+                   y.intersp = .8, cex = 1/D^.1)
+        }
+    } else {
+        return(gew)
     }
-  } else {
-    return(gew)
-  }
-}
+}  

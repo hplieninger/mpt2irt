@@ -36,7 +36,7 @@
 #' @param V prior for wishart distribution (standard: diagonal matrix)
 #' @param fitModel Character. Either \code{"2012"} (Boeckenholt Model without
 #'   acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-#'   credit model).
+#'   credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).
 #  or \code{"ext2"} (separate probability of choosing category 5 in case of ARS; requires at least two trait scales) or \code{"ext3"} (separate person-estimates theta[i,S] for latent tendency to choose cat.4/5 in case of ARS).
 #' @param fitMethod whether to use JAGS or Stan
 #' @param outFormat either "mcmc.list" (can be analyzed with coda package) or
@@ -74,9 +74,8 @@
 #' # fit model
 #' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
 #' res2 <- summarize_irtree_fit(res1)
-#' res3 <- tidyup_irtree_fit(res2, N = N, J = J, revItem = dat$revItem,
-#'                           traitItem = dat$traitItem, fitModel = res1$fitModel)
-#' str(res3)
+#' res3 <- tidyup_irtree_fit(res2)
+#' names(res3)
 #' res3$plot
 #' }
 # @importFrom magrittr %>%
@@ -90,7 +89,7 @@ fit_irtree <- function(X,
                        traitItem = rep(1, ncol(X)),
                        df = NULL,
                        V = NULL, 
-                       fitModel = c("ext", "2012", "pcm"),
+                       fitModel = c("ext", "2012", "pcm", "steps"),
                        fitMethod = c("stan", "jags"), 
                        outFormat = NULL,
                        startSmall = TRUE,
@@ -100,16 +99,25 @@ fit_irtree <- function(X,
                        thin = 1,
                        # mail = NULL,
                        method = "parallel",
-                       return_defaults = TRUE,
+                       # return_defaults = TRUE,
                        add2varlist = NULL,
                        cores = NULL,
                        summarise = FALSE,
                        N2 = 2, ...){
+    fitMethod <- match.arg(fitMethod)
+    if (fitMethod == "stan") {
+        fitModel <- match.arg(fitModel)
+    } else {
+        # PCM and Steps not yet implemented in JAGS
+        fitModel <- match.arg(fitModel, choices = c("ext", "2012"))
+    }
+    
+    args <- c(as.list(environment()), list(...))
     
     checkmate::assert_matrix(X, mode = "integerish", any.missing = FALSE,
                              min.rows = 2, min.cols = 2)
-    N <- nrow(X)
-    J <- ncol(X)
+    N <- args$N <- nrow(X)
+    J <- args$J <- ncol(X)
     checkmate::assert_integerish(X, lower = 1, upper = 5, any.missing = FALSE)
     checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
                                  len = J)
@@ -118,8 +126,6 @@ fit_irtree <- function(X,
     checkmate::assert_number(df, lower = 0, null.ok = TRUE)
     checkmate::assert_matrix(V, mode = "numeric", any.missing = FALSE,
                              min.rows = 2, min.cols = 2, null.ok = TRUE)
-    fitModel <- match.arg(fitModel)
-    fitMethod <- match.arg(fitMethod)
     checkmate::qassert(M, "X1")
     checkmate::qassert(warmup, "X1")
     checkmate::qassert(n.chains, "X1")
@@ -128,26 +134,44 @@ fit_irtree <- function(X,
     checkmate::assert_int(cores, lower = 1, null.ok = TRUE)
     checkmate::assert_int(N2, lower = 0, upper = N)
     
-    
     n.trait <- length(table(traitItem))
-    if(max(traitItem) != n.trait){
+    if (max(traitItem) != n.trait) {
         stop("Check definition of traitItem")
     }
     
-    tmp1 <- split(data.frame(t(X)), traitItem) %>% 
+    # tmp1 <- split(data.frame(t(X)), traitItem) %>% 
+    #     lapply(t) %>% 
+    #     lapply(cor) %>% 
+    #     lapply(function(x) x[lower.tri(x)]) %>% 
+    #     sapply(. %>% sign %>% unique %>% length)
+    # 
+    # tmp2 <- split(revItem, traitItem) %>% 
+    #     sapply(. %>% unique %>% length)
+    # 
+    # if (sum(tmp2 == 2) > 0) {
+    #     if (tmp1[tmp2 == 2] < 2) {
+    #         stop("Items have only positive bivariate correlations;",
+    #              "however, data should be provided in raw format such that",
+    #              "reverse-coded and regular items correlate negatively.")
+    #     }
+    # }
+    tmp_test_X <- data.frame(traitItem = levels(factor(traitItem)),
+                             # n = as.vector(table(tmp1)),
+                             revItem = NA,
+                             cors = NA)
+    tmp_test_X$cors <- split(data.frame(t(X)), traitItem) %>% 
         lapply(t) %>% 
         lapply(cor) %>% 
         lapply(function(x) x[lower.tri(x)]) %>% 
-        sapply(. %>% sign %>% unique %>% length)
-    
-    tmp2 <- split(revItem, traitItem) %>% 
+        # sapply(. %>% {.[. != 0]} %>% sign %>% unique %>% length)
+        sapply(. %>% magrittr::is_less_than(0) %>% any)
+    tmp_test_X$revItem <- split(revItem, traitItem) %>% 
         sapply(. %>% unique %>% length)
-    
-    if (tmp1[tmp2 == 2] < 2) {
-        stop("Items have only positive bivariate correlations;",
-             "however, data should be provided in raw format such that",
+    if (nrow(subset(tmp_test_X, revItem > 1 & cors == FALSE)) > 0) {
+        stop("Data should be provided in raw format such that",
              "reverse-coded and regular items correlate negatively.")
     }
+    
     if (any(grepl("X_pred", add2varlist)) + (N2 > 2) == 1) {
         stop("If you want to draw posterior predictives for all persons,",
              "add 'X_pred' to argument 'add2varlist' and change argument 'N2'.")
@@ -161,16 +185,17 @@ fit_irtree <- function(X,
                 # "ext4" = 3,
                 # "ext5" = 3,
                 "2012" = 2,
-                "pcm" = 0) + 1
-    S <- dimen - 1 + n.trait
+                "pcm"  = 0,
+                "steps" = 0) + 1
+    S <- args$S <- dimen - 1 + n.trait
     # if (!is.null(model2) & model2 == "HH") {
     #     S <- S + 1
     # }
     if (is.null(df)) {
-        df <- S + 1
+        df <- args$df <- S + 1
     }
     if (is.null(V)) {
-        V <- diag(S)
+        V <- args$V <- diag(S)
     }
     
     # adjust starting values
@@ -197,6 +222,11 @@ fit_irtree <- function(X,
                                                                      a = -2, b = 2),
                                                nrow = J, ncol = 4)
                 inits[[iii]]$beta_ARS_extreme <- NULL
+            } else if (fitModel == "steps") {
+                inits[[iii]]$beta_raw = matrix(truncnorm::rtruncnorm(J*4, mean = 0, sd = 1,
+                                                                     a = -2, b = 2),
+                                               nrow = J, ncol = 4)
+                inits[[iii]]$beta_ARS_extreme <- NULL
             } else if (fitModel == "ext5") {
                 inits[[iii]]$beta_ARS_extreme <- NULL
                 inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S + 1, mean = 0, sd = 1,
@@ -208,7 +238,7 @@ fit_irtree <- function(X,
         }
     }
     
-    datalist <- list(X = X, S = S, df = df, V = V, J = J, N = N, theta_mu = rep(0, S),
+    datalist <- list(X = X, S = S, df = df, V = V, J = J, N = N, theta_mu = array(rep(0, S)),
                      revItem = revItem, traitItem = traitItem)
     if (fitMethod == "stan") {
         datalist <- c(datalist, list(N2 = N2))
@@ -271,7 +301,13 @@ fit_irtree <- function(X,
         if (fitModel == "ext") {
             stanExe <- stanmodels$stan_boeck_ext
         } else if (fitModel == "pcm") {
+            # better (?): http://mc-stan.org/users/documentation/case-studies/pcm_and_gpcm.html
+            message("Current Stan implementation of the PCM may be suboptimal. ",
+                    "Treat the results with caution unless you checked the recovery ",
+                    "through simulations.")
             stanExe <- stanmodels$stan_pcm
+        } else if (fitModel == "steps") {
+            stanExe <- stanmodels$stan_steps
         } else if (fitModel == "ext2") {
             # stanExe <- boeck_stan_ext2
             stop("Model 'ext2' currently not implemented")
@@ -287,7 +323,7 @@ fit_irtree <- function(X,
         } else {
             stanExe <- stanmodels$stan_boeck_2012
         }
-        if (is.null(cores)) cores <- min(n.chains, parallel::detectCores() - 1)
+        if (is.null(cores)) cores <- args$cores <- min(n.chains, parallel::detectCores() - 1)
         boeck.samp <- rstan::sampling(stanExe,
                                       data = datalist, pars = varlist, 
                                       chains = n.chains, iter = warmup + M*thin, 
@@ -326,15 +362,15 @@ get_inits <- function(N, J, S, n.trait, fitMethod, fitModel){
                Tau.theta.raw = rWishart(1, S + 3, diag(S))[, , 1],
                xi_theta = runif(S, 3/4, 4/3))
   } else {
-    ll <- list(mu_beta         = rnorm(S, 0, .5)
+    ll <- list(  mu_beta         = array(rnorm(S, 0, .5))
                , beta_raw        = matrix(rnorm(J*min(4, S - n.trait + 1), 0, 1), J)
                , theta_raw       = matrix(rnorm(N*S, 0, 1), N)
                , Sigma_raw       = solve(rWishart(1, S + 3, diag(S))[, , 1])
-               , sigma2_beta_raw = runif(S, 3/4, 4/3)
-               # , xi_beta         = runif(S, 3/4, 4/3)
-               , xi_theta        = runif(S, 3/4, 4/3)
+               , sigma2_beta_raw = array(runif(S, 3/4, 4/3))
+               # , xi_beta         = array(runif(S, 3/4, 4/3))
+               , xi_theta        = array(runif(S, 3/4, 4/3))
                )
-    if (fitModel == "pcm") {
+    if (fitModel %in% c("pcm", "steps")) {
         ll$beta_raw <- matrix(rnorm(J*4, 0, 1), J, 4)
     }
   }
