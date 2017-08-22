@@ -33,11 +33,11 @@ items with paramters from \code{rnorm()}.
 
 
 Tutz, G. (1997). Sequential models for ordered responses. In W. J. van der
-Linden \& R. K. Hambleton (Eds.), Handbook of Modern Item Response Theory (pp.
+Linden & R. K. Hambleton (Eds.), Handbook of Modern Item Response Theory (pp.
 139-152). doi:10.1007/978-1-4757-2691-6_8
 
-Verhelst, N. D., Glas, C. A. W., \& de Vries, H. H. (1997). A steps model to 
-analyze partial credit. In W. J. van der Linden \& R. K. Hambleton (Eds.), 
+Verhelst, N. D., Glas, C. A. W., & de Vries, H. H. (1997). A steps model to 
+analyze partial credit. In W. J. van der Linden & R. K. Hambleton (Eds.), 
 Handbook of modern item response theory (pp. 123-138).
 doi:10.1007/978-1-4757-2691-6_7
 }

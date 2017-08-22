@@ -254,31 +254,17 @@ test_that("pp_irtree() returns valid values", {
 
 test_that("Check that true model parameters are correctly recovered", {
     cor1 <- cor(dat1$theta, res2c$theta$Median)
-    tryCatch(expect_gt(cor1, .8),
-             expectation_failure = function(x) {
-                 message(x)
-                 message(sprintf(c("Model 'pcm' -- theta -- r=%.2f, N=%i, J=%i"),
-                                 cor1, N, J))
-             })
+    # expect_gt(cor1, .7)
     cor2 <- cor(dat2$theta, res4c$theta$Median)
-    tryCatch(expect_gt(cor2, .8),
-             expectation_failure = function(x) {
-                 message(x)
-                 message(sprintf(c("Model 'steps' -- theta -- r=%.2f, N=%i, J=%i"),
-                                 cor2, N, J))
-             })
+    expect_gt(cor2, .8)
+    # tryCatch(expect_gt(cor2, .8),
+    #          expectation_failure = function(x) {
+    #              message(x)
+    #              message(sprintf(c("Model 'steps' -- theta -- r=%.2f, N=%i, J=%i"),
+    #                              cor2, N, J))
+    #          })
     cor3 <- cor(as.vector(t(dat1$thres)), as.vector(res2c$beta$Median))
-    tryCatch(expect_gt(cor3, .6),
-             expectation_failure = function(x) {
-                 message(x)
-                 message(sprintf(c("Model 'pcm' -- betas -- r=%.2f, N=%i, J=%i"),
-                                 cor3, N, J))
-             })
+    # expect_gt(cor3, .6)
     cor4 <- cor(as.vector(dat2$thres), as.vector(res4c$beta$Median))
-    tryCatch(expect_gt(cor3, .7),
-             expectation_failure = function(x) {
-                 message(x)
-                 message(sprintf(c("Model 'pcm' -- betas -- r=%.2f, N=%i, J=%i"),
-                                 cor4, N, J))
-             })
+    expect_gt(cor3, .65)
 })
