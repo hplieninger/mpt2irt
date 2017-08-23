@@ -5,8 +5,7 @@
 \title{Summarize and tidy up a fitted model.}
 \usage{
 tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
-  traitItem = NULL, fitModel = NULL, fitMethod = NULL,
-  measure = c("Median", "Mean"), plot = TRUE, ...)
+  traitItem = NULL, fitModel = NULL, fitMethod = NULL, plot = TRUE, ...)
 }
 \arguments{
 \item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{summarize_irtree_fit}}.}
@@ -27,14 +26,12 @@ indexed from 1...5). Standard: only a single trait is measured by all
 items. If the Big5 are measures, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
-acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).}
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without 
+acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
+(partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
+or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
 
 \item{fitMethod}{whether to use JAGS or Stan}
-
-\item{measure}{Character vector that indicates whether the mean (default) or
-the median of the posterior distribution should be plotted.}
 
 \item{plot}{Logical. Whether a plot should be produced using \code{\link{plot_irtree}} and returned.}
 

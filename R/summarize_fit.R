@@ -39,7 +39,8 @@ tidyup_irtree_fit <- function(fit,
                               traitItem = NULL,
                               fitModel = NULL,
                               fitMethod = NULL, 
-                              plot = TRUE, ...){
+                              plot = TRUE,
+                              ...){
     
     checkmate::qassert(fit, "L+")
     checkmate::assert_int(S, lower = 1, null.ok = TRUE)
@@ -84,17 +85,18 @@ tidyup_irtree_fit <- function(fit,
         flag1 <- TRUE
     }
     
+    S_b <- S_t <- S
+    
     if (fitModel %in% c("ext", "2012")) {
-        S2 <- S - 1 + length(unique(traitItem))
-    } else if (fitModel == "ext5") {
-        S2 <- 3 + length(unique(traitItem))
+        S_t <- S - 1 + length(unique(traitItem))
+    # } else if (fitModel == "ext5") {
+        # S_t <- 3 + length(unique(traitItem))
     } else if (fitModel %in% c("pcm", "steps")) {
-        S  <- 4
-        S2 <- length(unique(traitItem))
+        S_b  <- 4
+        S_t <- length(unique(traitItem))
     } else if (fitModel == "shift") {
-        S  <- 3
-        S2 <- S + length(unique(traitItem))
-        S2 <- 3
+        S_b  <- S - 2 + length(unique(traitItem))
+        S_t <- S - 1 + length(unique(traitItem))
     }
     
     ### Initialize list of empty lists to store estimates in
@@ -111,13 +113,13 @@ tidyup_irtree_fit <- function(fit,
     
     for (iii in seq_along(return_list)) {
         tmp1 <- switch(names(return_list)[iii],
-                       "beta" = matrix(NA_real_, J, S),
-                       "theta" = matrix(NA_real_, N, S2),
-                       "sigma_vec" = rep(NA_real_, sum(upper.tri(diag(S2), diag = T))),
-                       "Sigma" = matrix(NA_real_, S2, S2),
-                       "Corr" = matrix(NA_real_, S2, S2),
-                       "mu_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S2 + 1, S2)),
-                       "sigma_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S2 + 1, S2)),
+                       "beta" = matrix(NA_real_, J, S_b),
+                       "theta" = matrix(NA_real_, N, S_t),
+                       "sigma_vec" = rep(NA_real_, sum(upper.tri(diag(S_t), diag = T))),
+                       "Sigma" = matrix(NA_real_, S_t, S_t),
+                       "Corr" = matrix(NA_real_, S_t, S_t),
+                       "mu_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S_t + 1, S_t)),
+                       "sigma_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S_t + 1, S_t)),
                        "beta_ARS_extreme" = NA_real_)
         return_list[[iii]] <- setNames(list(tmp1, tmp1, tmp1, tmp1),
                                        nm = c("Mean", "Median", "Q_025", "Q_975"))
@@ -125,33 +127,33 @@ tidyup_irtree_fit <- function(fit,
     
     ### Retrive estimates and save them in 'return_list'
     
-    for (i in 1:S2){
+    for (i in 1:S_t){
         return_list$theta$Mean[, i] <- fit$summary$statistics[paste0("theta[",1:N,",",i,"]"), "Mean"]
         return_list$theta$Median[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "50%"]
         return_list$theta$Q_025[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "2.5%"]
         return_list$theta$Q_975[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "97.5%"]
     }
-    for (i in 1:S){
+    for (i in 1:S_b){
         return_list$beta$Mean[, i] <- fit$summary$statistics[paste0("beta[",1:J,",",i,"]"), "Mean"]
         return_list$beta$Median[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "50%"]
         return_list$beta$Q_025[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "2.5%"]
         return_list$beta$Q_975[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "97.5%"]
     }
-    sigma_idx <- which(upper.tri(diag(S2), diag = T) == TRUE, arr.ind = T)
+    sigma_idx <- which(upper.tri(diag(S_t), diag = T) == TRUE, arr.ind = T)
     return_list$sigma_vec$Mean <- fit$summary$statistics[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "Mean"]
     return_list$sigma_vec$Median <- fit$summary$quantiles[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "50%"]
     return_list$sigma_vec$Q_025 <- fit$summary$quantiles[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "2.5%"]
     return_list$sigma_vec$Q_975 <- fit$summary$quantiles[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "97.5%"]
     # rm(sigma_idx)
     
-    return_list$Sigma$Mean[upper.tri(diag(S2), T)] <- return_list$sigma_vec$Mean
-    return_list$Sigma$Mean[lower.tri(diag(S2))] <- t(return_list$Sigma$Mean)[lower.tri(diag(S2))]
-    return_list$Sigma$Median[upper.tri(diag(S2), T)] <- return_list$sigma_vec$Median
-    return_list$Sigma$Median[lower.tri(diag(S2))] <- t(return_list$Sigma$Median)[lower.tri(diag(S2))]
-    return_list$Sigma$Q_025[upper.tri(diag(S2), T)] <- return_list$sigma_vec$Q_025
-    return_list$Sigma$Q_025[lower.tri(diag(S2))] <- t(return_list$Sigma$Q_025)[lower.tri(diag(S2))]
-    return_list$Sigma$Q_975[upper.tri(diag(S2), T)] <- return_list$sigma_vec$Q_975
-    return_list$Sigma$Q_975[lower.tri(diag(S2))] <- t(return_list$Sigma$Q_975)[lower.tri(diag(S2))]
+    return_list$Sigma$Mean[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Mean
+    return_list$Sigma$Mean[lower.tri(diag(S_t))] <- t(return_list$Sigma$Mean)[lower.tri(diag(S_t))]
+    return_list$Sigma$Median[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Median
+    return_list$Sigma$Median[lower.tri(diag(S_t))] <- t(return_list$Sigma$Median)[lower.tri(diag(S_t))]
+    return_list$Sigma$Q_025[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Q_025
+    return_list$Sigma$Q_025[lower.tri(diag(S_t))] <- t(return_list$Sigma$Q_025)[lower.tri(diag(S_t))]
+    return_list$Sigma$Q_975[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Q_975
+    return_list$Sigma$Q_975[lower.tri(diag(S_t))] <- t(return_list$Sigma$Q_975)[lower.tri(diag(S_t))]
     return_list$sigma_vec <- NULL
     
     # Correlations
@@ -162,14 +164,14 @@ tidyup_irtree_fit <- function(fit,
         return_list$corr_vec$Q_025 <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "2.5%"]
         rm(sigma_idx)
         
-        return_list$Corr$Mean[upper.tri(diag(S2), T)] <- return_list$corr_vec$Mean
-        return_list$Corr$Mean[lower.tri(diag(S2))] <- t(return_list$Corr$Mean)[lower.tri(diag(S2))]
-        return_list$Corr$Median[upper.tri(diag(S2), T)] <- return_list$corr_vec$Median
-        return_list$Corr$Median[lower.tri(diag(S2))] <- t(return_list$Corr$Median)[lower.tri(diag(S2))]
-        return_list$Corr$Q_025[upper.tri(diag(S2), T)] <- return_list$corr_vec$Q_025
-        return_list$Corr$Q_025[lower.tri(diag(S2))] <- t(return_list$Corr$Q_025)[lower.tri(diag(S2))]
-        return_list$Corr$Q_975[upper.tri(diag(S2), T)] <- return_list$corr_vec$Q_975
-        return_list$Corr$Q_975[lower.tri(diag(S2))] <- t(return_list$Corr$Q_975)[lower.tri(diag(S2))]
+        return_list$Corr$Mean[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Mean
+        return_list$Corr$Mean[lower.tri(diag(S_t))] <- t(return_list$Corr$Mean)[lower.tri(diag(S_t))]
+        return_list$Corr$Median[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Median
+        return_list$Corr$Median[lower.tri(diag(S_t))] <- t(return_list$Corr$Median)[lower.tri(diag(S_t))]
+        return_list$Corr$Q_025[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Q_025
+        return_list$Corr$Q_025[lower.tri(diag(S_t))] <- t(return_list$Corr$Q_025)[lower.tri(diag(S_t))]
+        return_list$Corr$Q_975[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Q_975
+        return_list$Corr$Q_975[lower.tri(diag(S_t))] <- t(return_list$Corr$Q_975)[lower.tri(diag(S_t))]
         return_list$corr_vec <- NULL
     } else {
         message("Output will not contain latent correlations but only covariances.\n",
@@ -177,23 +179,23 @@ tidyup_irtree_fit <- function(fit,
     }
     
     if (fitModel == "ext5") {
-        return_list$sigma_beta$Mean <- fit$summary$statistics[paste0("sigma_beta[", 1:(S2+1) ,"]"), "Mean"]
-        return_list$sigma_beta$Median <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S2+1) ,"]"), "50%"]
-        return_list$sigma_beta$Q_025 <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S2+1) ,"]"), "2.5%"]
-        return_list$sigma_beta$Q_975 <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S2+1) ,"]"), "97.5%"]
-        return_list$mu_beta$Mean <- fit$summary$statistics[paste0("mu_beta[", 1:(S2+1) ,"]"), "Mean"]
-        return_list$mu_beta$Median <- fit$summary$quantiles[paste0("mu_beta[", 1:(S2+1) ,"]"), "50%"]
-        return_list$mu_beta$Q_025 <- fit$summary$quantiles[paste0("mu_beta[", 1:(S2+1) ,"]"), "2.5%"]
-        return_list$mu_beta$Q_975 <- fit$summary$quantiles[paste0("mu_beta[", 1:(S2+1) ,"]"), "97.5%"]
+        return_list$sigma_beta$Mean <- fit$summary$statistics[paste0("sigma_beta[", 1:(S_b+1) ,"]"), "Mean"]
+        return_list$sigma_beta$Median <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S_b+1) ,"]"), "50%"]
+        return_list$sigma_beta$Q_025 <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S_b+1) ,"]"), "2.5%"]
+        return_list$sigma_beta$Q_975 <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S_b+1) ,"]"), "97.5%"]
+        return_list$mu_beta$Mean <- fit$summary$statistics[paste0("mu_beta[", 1:(S_b+1) ,"]"), "Mean"]
+        return_list$mu_beta$Median <- fit$summary$quantiles[paste0("mu_beta[", 1:(S_b+1) ,"]"), "50%"]
+        return_list$mu_beta$Q_025 <- fit$summary$quantiles[paste0("mu_beta[", 1:(S_b+1) ,"]"), "2.5%"]
+        return_list$mu_beta$Q_975 <- fit$summary$quantiles[paste0("mu_beta[", 1:(S_b+1) ,"]"), "97.5%"]
     } else {
-        return_list$sigma_beta$Mean <- fit$summary$statistics[paste0("sigma_beta[", 1:S2 ,"]"), "Mean"]
-        return_list$sigma_beta$Median <- fit$summary$quantiles[paste0("sigma_beta[", 1:S2 ,"]"), "50%"]
-        return_list$sigma_beta$Q_025 <- fit$summary$quantiles[paste0("sigma_beta[", 1:S2 ,"]"), "2.5%"]
-        return_list$sigma_beta$Q_975 <- fit$summary$quantiles[paste0("sigma_beta[", 1:S2 ,"]"), "97.5%"]
-        return_list$mu_beta$Mean <- fit$summary$statistics[paste0("mu_beta[", 1:S2 ,"]"), "Mean"]
-        return_list$mu_beta$Median <- fit$summary$quantiles[paste0("mu_beta[", 1:S2 ,"]"), "50%"]
-        return_list$mu_beta$Q_025 <- fit$summary$quantiles[paste0("mu_beta[", 1:S2 ,"]"), "2.5%"]
-        return_list$mu_beta$Q_975 <- fit$summary$quantiles[paste0("mu_beta[", 1:S2 ,"]"), "97.5%"]
+        return_list$sigma_beta$Mean <- fit$summary$statistics[paste0("sigma_beta[", 1:S_b ,"]"), "Mean"]
+        return_list$sigma_beta$Median <- fit$summary$quantiles[paste0("sigma_beta[", 1:S_b ,"]"), "50%"]
+        return_list$sigma_beta$Q_025 <- fit$summary$quantiles[paste0("sigma_beta[", 1:S_b ,"]"), "2.5%"]
+        return_list$sigma_beta$Q_975 <- fit$summary$quantiles[paste0("sigma_beta[", 1:S_b ,"]"), "97.5%"]
+        return_list$mu_beta$Mean <- fit$summary$statistics[paste0("mu_beta[", 1:S_b ,"]"), "Mean"]
+        return_list$mu_beta$Median <- fit$summary$quantiles[paste0("mu_beta[", 1:S_b ,"]"), "50%"]
+        return_list$mu_beta$Q_025 <- fit$summary$quantiles[paste0("mu_beta[", 1:S_b ,"]"), "2.5%"]
+        return_list$mu_beta$Q_975 <- fit$summary$quantiles[paste0("mu_beta[", 1:S_b ,"]"), "97.5%"]
     }
     
     if (grepl("ext", fitModel) & fitModel != "ext5") {
