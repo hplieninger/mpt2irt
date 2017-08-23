@@ -70,6 +70,8 @@ pp_irtree <- function(fit_sum = NULL,
                  "must be specified.")
         }
         flag1 <- ifelse("args" %in% names(fit_sum), TRUE, FALSE)
+    } else {
+        flag1 <- FALSE
     }
     
     checkmate::qassert(iter, "X1[1,)")
