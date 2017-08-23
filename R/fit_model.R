@@ -34,9 +34,10 @@
 #'   (standard/minimum: number of processes + 1)
 # param items either "fixed" or "random" (with hierarchical normal-wishart structure estimated from the data)
 #' @param V prior for wishart distribution (standard: diagonal matrix)
-#' @param fitModel Character. Either \code{"2012"} (Boeckenholt Model without
-#'   acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-#'   credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).
+#' @param fitModel Character. Either \code{"2012"} (Boeckenholt Model without 
+#'   acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
+#'   (partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
+#'   or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).
 #  or \code{"ext2"} (separate probability of choosing category 5 in case of ARS; requires at least two trait scales) or \code{"ext3"} (separate person-estimates theta[i,S] for latent tendency to choose cat.4/5 in case of ARS).
 #' @param fitMethod whether to use JAGS or Stan
 #' @param outFormat either "mcmc.list" (can be analyzed with coda package) or
@@ -89,7 +90,7 @@ fit_irtree <- function(X,
                        traitItem = rep(1, ncol(X)),
                        df = NULL,
                        V = NULL, 
-                       fitModel = c("ext", "2012", "pcm", "steps"),
+                       fitModel = c("ext", "2012", "pcm", "steps", "shift"),
                        fitMethod = c("stan", "jags"), 
                        outFormat = NULL,
                        startSmall = TRUE,
@@ -103,7 +104,8 @@ fit_irtree <- function(X,
                        add2varlist = NULL,
                        cores = NULL,
                        summarise = FALSE,
-                       N2 = 2, ...){
+                       N2 = 2,
+                       ...){
     fitMethod <- match.arg(fitMethod)
     if (fitMethod == "stan") {
         fitModel <- match.arg(fitModel)
@@ -186,7 +188,8 @@ fit_irtree <- function(X,
                 # "ext5" = 3,
                 "2012" = 2,
                 "pcm"  = 0,
-                "steps" = 0) + 1
+                "steps" = 0,
+                "shift" = 3) + 1
     S <- args$S <- dimen - 1 + n.trait
     # if (!is.null(model2) & model2 == "HH") {
     #     S <- S + 1
@@ -226,6 +229,14 @@ fit_irtree <- function(X,
                 inits[[iii]]$beta_raw = matrix(truncnorm::rtruncnorm(J*4, mean = 0, sd = 1,
                                                                      a = -2, b = 2),
                                                nrow = J, ncol = 4)
+                inits[[iii]]$beta_ARS_extreme <- NULL
+            } else if (fitModel == "shift") {
+                inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*3, mean = 0, sd = 1,
+                                                                      a = -2, b = 2),
+                                                nrow = J, ncol = 3)
+                inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S - 1, mean = 0, sd = 1,
+                                                              a = -2, b = 2)
+                inits[[iii]]$sigma2_beta_raw <-  array(runif(S - 1, 3/4, 4/3))
                 inits[[iii]]$beta_ARS_extreme <- NULL
             } else if (fitModel == "ext5") {
                 inits[[iii]]$beta_ARS_extreme <- NULL
@@ -320,6 +331,8 @@ fit_irtree <- function(X,
         } else if (fitModel == "ext5") {
             # stanExe <- boeck_stan_ext5
             stop("Model 'ext5' currently not implemented")
+        } else if (fitModel == "shift") {
+            # stanExe <- stanmodels$stan_boeck_shift
         } else {
             stanExe <- stanmodels$stan_boeck_2012
         }
@@ -329,7 +342,9 @@ fit_irtree <- function(X,
                                       chains = n.chains, iter = warmup + M*thin, 
                                       warmup = warmup, thin = thin,
                                       cores = cores,
-                                      init = inits, ...)
+                                      init = inits
+                                      , ...
+                                      )
         try( unlink(paste0(getwd(), "\\_StanProgress.txt")), silent = T)
         if (is.null(outFormat)) {
             boeck.samp <- boeck.samp

@@ -93,6 +93,10 @@ tidyup_irtree_fit <- function(fit,
     } else if (fitModel %in% c("pcm", "steps")) {
         S  <- 4
         S2 <- length(unique(traitItem))
+    } else if (fitModel == "shift") {
+        S  <- 3
+        S2 <- S + length(unique(traitItem))
+        S2 <- 3
     }
     
     ### Initialize list of empty lists to store estimates in
