@@ -39,12 +39,7 @@ tidyup_irtree_fit <- function(fit,
                               traitItem = NULL,
                               fitModel = NULL,
                               fitMethod = NULL, 
-                              measure = c("Median", "Mean"),
-                              # tt_names = NULL, 
-                              # rs_names = c("m", "e", "a", "t"), 
-                              # trait = NULL,
                               plot = TRUE, ...){
-    measure <- match.arg(measure)
     
     checkmate::qassert(fit, "L+")
     checkmate::assert_int(S, lower = 1, null.ok = TRUE)
@@ -84,6 +79,9 @@ tidyup_irtree_fit <- function(fit,
         if (class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
         # fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
         fit$summary <- summary(fit$mcmc)
+        flag1 <- FALSE
+    } else {
+        flag1 <- TRUE
     }
     
     if (fitModel %in% c("ext", "2012")) {
@@ -108,7 +106,8 @@ tidyup_irtree_fit <- function(fit,
                         "Corr" = list(),
                         "mu_beta" = list(),
                         "sigma_beta" = list(),
-                        "beta_ARS_extreme" = list())
+                        "beta_ARS_extreme" = list(),
+                        "args" = fit$args)
     
     for (iii in seq_along(return_list)) {
         tmp1 <- switch(names(return_list)[iii],
@@ -156,21 +155,26 @@ tidyup_irtree_fit <- function(fit,
     return_list$sigma_vec <- NULL
     
     # Correlations
-    return_list$corr_vec$Mean <- fit$summary$statistics[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "Mean"]
-    return_list$corr_vec$Median <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "50%"]
-    return_list$corr_vec$Q_975 <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "97.5%"]
-    return_list$corr_vec$Q_025 <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "2.5%"]
-    rm(sigma_idx)
-    
-    return_list$Corr$Mean[upper.tri(diag(S2), T)] <- return_list$corr_vec$Mean
-    return_list$Corr$Mean[lower.tri(diag(S2))] <- t(return_list$Corr$Mean)[lower.tri(diag(S2))]
-    return_list$Corr$Median[upper.tri(diag(S2), T)] <- return_list$corr_vec$Median
-    return_list$Corr$Median[lower.tri(diag(S2))] <- t(return_list$Corr$Median)[lower.tri(diag(S2))]
-    return_list$Corr$Q_025[upper.tri(diag(S2), T)] <- return_list$corr_vec$Q_025
-    return_list$Corr$Q_025[lower.tri(diag(S2))] <- t(return_list$Corr$Q_025)[lower.tri(diag(S2))]
-    return_list$Corr$Q_975[upper.tri(diag(S2), T)] <- return_list$corr_vec$Q_975
-    return_list$Corr$Q_975[lower.tri(diag(S2))] <- t(return_list$Corr$Q_975)[lower.tri(diag(S2))]
-    return_list$corr_vec <- NULL
+    if (flag1 == TRUE) {
+        return_list$corr_vec$Mean <- fit$summary$statistics[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "Mean"]
+        return_list$corr_vec$Median <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "50%"]
+        return_list$corr_vec$Q_975 <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "97.5%"]
+        return_list$corr_vec$Q_025 <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "2.5%"]
+        rm(sigma_idx)
+        
+        return_list$Corr$Mean[upper.tri(diag(S2), T)] <- return_list$corr_vec$Mean
+        return_list$Corr$Mean[lower.tri(diag(S2))] <- t(return_list$Corr$Mean)[lower.tri(diag(S2))]
+        return_list$Corr$Median[upper.tri(diag(S2), T)] <- return_list$corr_vec$Median
+        return_list$Corr$Median[lower.tri(diag(S2))] <- t(return_list$Corr$Median)[lower.tri(diag(S2))]
+        return_list$Corr$Q_025[upper.tri(diag(S2), T)] <- return_list$corr_vec$Q_025
+        return_list$Corr$Q_025[lower.tri(diag(S2))] <- t(return_list$Corr$Q_025)[lower.tri(diag(S2))]
+        return_list$Corr$Q_975[upper.tri(diag(S2), T)] <- return_list$corr_vec$Q_975
+        return_list$Corr$Q_975[lower.tri(diag(S2))] <- t(return_list$Corr$Q_975)[lower.tri(diag(S2))]
+        return_list$corr_vec <- NULL
+    } else {
+        message("Output will not contain latent correlations but only covariances.\n",
+                "You may run summarize_irtree_fit() first.")
+    }
     
     if (fitModel == "ext5") {
         return_list$sigma_beta$Mean <- fit$summary$statistics[paste0("sigma_beta[", 1:(S2+1) ,"]"), "Mean"]
@@ -202,43 +206,25 @@ tidyup_irtree_fit <- function(fit,
     }
     
     ### Save further settings in 'return_list'
-    
-    return_list$fitMethod = fitMethod
-    return_list$fitModel = fitModel
-    return_list$revItem = revItem
-    return_list$traitItem = traitItem
-    
+
     try(return_list$dic <- fit$samples$dic, silent = TRUE)
-    return_list$setup <- list("V" = fit$V,
-                              "df" = fit$df,
-                              "startSmall" = fit$startSmall)
-    if (fitMethod == "stan") {
-        return_list$setup$warmup <- fit$samples@stan_args[[1]]$warmup
-        return_list$setup$M <- fit$samples@stan_args[[1]]$iter - fit$samples@stan_args[[1]]$warmup
-        return_list$setup$thin <- fit$samples@stan_args[[1]]$thin
-        return_list$setup$chains <- length(fit$samples@stan_args)
-        return_list$date <- fit$samples@date
-    } else {
-        return_list$setup$warmup <- unique(c(fit$samples$burnin,
-                                             fit$summary$start - 1))
-        return_list$setup$M <- unique(c(fit$samples$sample,
-                                        length(seq(fit$summary$start, fit$summary$end, fit$summary$thin))))
-        return_list$setup$thin <- unique(c(fit$samples$thin,
-                                           fit$summary$thin))
-        return_list$setup$chains <- fit$summary$nchain
-        if ("date" %in% names(fit$samples)) {
-            return_list$date <- fit$samples$date
-        } else {
-            return_list$date <- fit$date
-        }
-    }
+    return_list$date <- switch(fitMethod,
+                               "stan" = fit$samples@date,
+                               "jags" = fit$samples$date)
+    # if (fitMethod == "stan") {
+    #     return_list$date <- fit$samples@date
+    # } else {
+    #     if ("date" %in% names(fit$samples)) {
+    #         return_list$date <- fit$samples$date
+    #     } else {
+    #         return_list$date <- fit$date
+    #     }
+    # }
     
     if (plot == TRUE) {
         return_list$plot <- invisible(plot_irtree(fit, S = S, J = J, revItem = revItem,
                                                   traitItem = traitItem,
-                                                  # trait = trait, rs_names = rs_names,
-                                                  return_data = FALSE, # tt_names = tt_names,
-                                                  measure = measure,
+                                                  return_data = FALSE, 
                                                   fitMethod = fitMethod, ...))
     }
     
