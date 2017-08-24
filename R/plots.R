@@ -198,11 +198,11 @@ plot_irtree <- function(fit,
     if (is.null(rs_names)) {
         if (S == 3) {
             rs_names <- c("m", "e", "t")
-        } else if (S == 4) {
-            rs_names <- c("m", "e", "a", "t")
         } else if (fit$args$fitModel %in% c("pcm", "steps")) {
             rs_names <- paste("Threshold", 1:4)
-        }
+        } else if (S == 4) {
+            rs_names <- c("m", "e", "a", "t")
+        } 
     }
     
     if (!any(names(fit) %in% c("args", "V"))) {
@@ -236,7 +236,7 @@ plot_irtree <- function(fit,
     ss <- merge(data.frame("id" = rownames(fit$summary$statistics), "Mean" = fit$summary$statistics[, "Mean"]),
                 cbind("id" = rownames(fit$summary$quantiles), as.data.frame(fit$summary$quantiles)))
     
-    ss <- ss[grep("beta\\[[[:digit:]]+\\,[[:digit:]]]", ss$id), ]
+    ss <- ss[grep("^beta\\[[[:digit:]]+\\,[[:digit:]]]", ss$id), ]
     names(ss)[names(ss) %in% c("2.5%", "50%", "97.5%")] <- c("q025", "Median", "q975")
     ss[-1] <- apply(ss[-1], 2, function(x) pnorm(-x))
     ss$Type <- sapply(strsplit(as.character(ss$id), "[,]"), function(x) as.numeric(substr(x[2], 1, 1)))
