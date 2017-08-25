@@ -28,7 +28,6 @@ data {
 	int<lower=1> S;						// number of theta-parameters (2012-version: S=3
 	int<lower=0, upper=1> revItem[J];   // index for reversed items (=1)
 	int<lower=1> traitItem[J];   		// index for trait items (1,...,n.trait)
-	// real<lower=0> T1_CONST;             // constant added to mean-expected frequencies of zero
 	int<lower=1> N2;  					// number of persons for whom to draw posterior predictives
 	
 	// hyperpriors
@@ -49,8 +48,10 @@ parameters {
   matrix<lower=-5, upper=5>[J, 4] beta_raw;   // raw item difficulties
   // vector<lower=0, upper=100>[S] xi_beta;      // scaling parameters items
   // vector[S] mu_beta;      				      // item means
-  vector<lower=-5, upper=5>[S] mu_beta;       // item means
-  vector<lower=0>[S] sigma2_beta_raw;    	  // raw item variance
+  // vector<lower=-5, upper=5>[S] mu_beta;       // item means
+  vector<lower=-5, upper=5>[S*4] mu_beta_vec;       // item means
+  // vector<lower=0>[S] sigma2_beta_raw;    	  // raw item variance
+  vector<lower=0>[S*4] sigma2_beta_raw;    	  // raw item variance
   
 } 
 
@@ -60,7 +61,8 @@ transformed parameters {
     cov_matrix[S] Sigma;                 // covariance matrix of traits
     
     matrix[J, 4] beta;     			     // item difficulties
-    vector<lower=0>[S] sigma_beta_raw;   // raw item variance
+    // vector<lower=0>[S] sigma_beta_raw;   // raw item variance
+    vector<lower=0>[S*4] sigma_beta_raw;   // raw item variance
     
     simplex[5] p_cat[N, J];              // response category probabilities
     real<lower=0, upper=1> node1[N,J];   // item-person probability for 1st node
@@ -69,14 +71,17 @@ transformed parameters {
     real<lower=0, upper=1> node4[N,J];   // item-person probability for 4th node
 
     // scaling of variance
-    Sigma = diag_matrix(xi_theta) * Sigma_raw* diag_matrix(xi_theta);
+    Sigma = diag_matrix(xi_theta) * Sigma_raw * diag_matrix(xi_theta);
     
     // ----- rescaling of item parameters
-    for(s in 1:S){
+    // for(s in 1:S){
+    for(s in 1:(S*4)){
     	sigma_beta_raw[s] = sqrt(sigma2_beta_raw[s]);
     }
     for(j in 1:J){
-    	beta[j, 1:4] =  mu_beta[traitItem[j]] + beta_raw[j, 1:4];
+    	// beta[j, 1:4] = mu_beta[traitItem[j]] + beta_raw[j, 1:4];
+	    beta[j, 1:4] = to_row_vector(mu_beta_vec[(1+4*(traitItem[j]-1)):(4+4*(traitItem[j]-1))]) +
+	        beta_raw[j, 1:4];
     }
     
     for(i in 1:N){	
@@ -119,47 +124,55 @@ transformed parameters {
 
 // ----------------------------------------
 model {
-
-
-// ----- independent univariate normals for item difficulties: 
-for(j in 1:J){
-    beta_raw[j, 1:4] ~ normal(0, sigma_beta_raw[traitItem[j]]);
-}
-
-// ----- hyperpriors:
-// implicit uniform on scaling parameters
-// xi_theta, xi_beta ~ uniform (0, 100);     
-mu_beta ~ normal(0, 1);            // raw item mean
-sigma2_beta_raw ~ inv_gamma(1,1);  // raw item variance
-Sigma_raw ~ inv_wishart(df, V);    // person hyperprior
-
-for(i in 1:N){
-	for(j in 1:J){
-		// distribution of observed frequencies
-		X[i,j] ~ categorical(p_cat[i,j]);      // categorical data dim(X)= N x J
-	}
-	
-	// Hierarchical model for participant parameters
-	// fix person mean to zero for weak identification
-	if (S > 1) {
-	    theta_raw[i] ~ multi_normal(theta_mu, Sigma_raw); 
-	} else {
-	    theta_raw[i] ~ normal(theta_mu, Sigma_raw[1, 1]); 
-	}
-	
-}
-
+    // ----- independent univariate normals for item difficulties: 
+    for(j in 1:J){
+        // beta_raw[j, 1:4] ~ normal(0, sigma_beta_raw[traitItem[j]]);
+        beta_raw[j, 1:4] ~ normal(0, 
+                                  sigma_beta_raw[(1+4*(traitItem[j]-1)):(4+4*(traitItem[j]-1))]
+                                  );
+    }
+    
+    // ----- hyperpriors:
+    // implicit uniform on scaling parameters
+    // xi_theta, xi_beta ~ uniform (0, 100);     
+    mu_beta_vec ~ normal(0, 1);            // raw item mean
+    sigma2_beta_raw ~ inv_gamma(1,1);  // raw item variance
+    Sigma_raw ~ inv_wishart(df, V);    // person hyperprior
+    
+    for(i in 1:N){
+    	for(j in 1:J){
+    		// distribution of observed frequencies
+    		X[i,j] ~ categorical(p_cat[i,j]);      // categorical data dim(X)= N x J
+    	}
+    	
+    	// Hierarchical model for participant parameters
+    	// fix person mean to zero for weak identification
+    	if (S > 1) {
+    	    theta_raw[i] ~ multi_normal(theta_mu, Sigma_raw); 
+    	} else {
+    	    theta_raw[i] ~ normal(theta_mu, Sigma_raw[1, 1]); 
+    	}
+    }
 }
 
 // ----- posterior predictive
 generated quantities {
     cov_matrix[S] Corr;                     // Correlation matrix
-    vector<lower=0>[S] sigma_beta;	        // item SD
+    // vector<lower=0>[S] sigma_beta;	        // item SD
+    // vector<lower=0>[S*4] sigma_beta;	        // item SD
+    matrix<lower=0>[S,4] sigma_beta;	        // item SD
+    matrix[S,4] mu_beta;	        // item SD
     int<lower=1, upper=5> X_pred[N2, J];    // predicted responses of partipants
     
     Corr = diag_matrix(inv_sqrt(diagonal(Sigma))) * Sigma * diag_matrix(inv_sqrt(diagonal(Sigma)));
 
-    sigma_beta = rep_vector(1, S) .* sigma_beta_raw;
+    // sigma_beta = rep_vector(1, S) .* sigma_beta_raw;
+    // sigma_beta = rep_vector(1, S*4) .* sigma_beta_raw;
+    for(s in 1:S){
+        sigma_beta[s, 1:4] = to_row_vector(rep_vector(1, 4)) .*
+            to_row_vector(sigma_beta_raw[(1+(s-1)*4):(4+(s-1)*4)]);
+        mu_beta[s, 1:4] = to_row_vector(mu_beta_vec[(1+(s-1)*4):(4+(s-1)*4)]);
+    }
     
     for(i in 1:N2){
         for(j in 1:J){

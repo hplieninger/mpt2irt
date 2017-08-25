@@ -7,3 +7,13 @@ and/or Stan
 * Recovery simulations using `recovery_irtree()`
 
 * Functions to plot and summarize a fitted model
+
+# Version 0.1.1
+
+* Implementation of the Steps Model (Verhelst; Tutz) as well as a shift model
+(both only in Stan)
+
+* Bug fix with respect to the priors for the item parameters in the PCM
+
+* Core functions now coherently return a list of arguments and setup parameters
+in a list called `args`.

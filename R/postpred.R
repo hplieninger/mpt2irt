@@ -66,7 +66,7 @@ pp_irtree <- function(fit_sum = NULL,
         if ("mcmc" %in% names(fit_sum)) {
             mcmc.objects <- fit_sum$mcmc
         } else {
-            stop("'fit_sum' must contain an element 'mcmc' or 'mcmc.objects' ",
+            stop("'fit_sum' must contain an element 'mcmc'; or 'mcmc.objects' ",
                  "must be specified.")
         }
         flag1 <- ifelse("args" %in% names(fit_sum), TRUE, FALSE)
@@ -74,8 +74,7 @@ pp_irtree <- function(fit_sum = NULL,
         flag1 <- FALSE
     }
     
-    checkmate::qassert(iter, "X1[1,)")
-    
+    checkmate::assert_int(iter, lower = 1, upper = nrow(mcmc.objects[[1]]))
     checkmate::assert_numeric(probs, lower = 0, upper = 1,
                               any.missing = FALSE,  min.len = 1, unique = TRUE,
                               null.ok = TRUE)
@@ -93,47 +92,60 @@ pp_irtree <- function(fit_sum = NULL,
     # if (fitModel == "steps") stop("fitModel 'steps' not implemented yet.")
     
     if (is.null(probs)) {
-        probs <- c(.025, .975, .16, .84)
-        names(probs) <- c("q025", "q975", "q16", "q84")
+        probs <- c(.025, .975, .16, .84, .50)
+        names(probs) <- c("q025", "q975", "q16", "q84", "q50")
     } else if (is.null(attr(probs, "names"))) {
         names(probs) <- paste0("q", probs)
     }
     
     J <- length(traitItem)
-    M <- mcmc.objects %>% 
-        magrittr::extract2(1) %>% 
-        nrow
-    chains <- length(mcmc.objects)
+    M <- nrow(mcmc.objects[[1]])
+    # chains <- length(mcmc.objects)
+    thin <- round(M/iter)
     
     arsModel <- switch(fitModel, 
                        "ext"   = TRUE,  
-                       "ext2"  = TRUE,
-                       "ext3"  = TRUE,
-                       "ext4"  = TRUE,
-                       "ext5"  = TRUE,
+                       # "ext2"  = TRUE,
+                       # "ext3"  = TRUE,
+                       # "ext4"  = TRUE,
+                       # "ext5"  = TRUE,
                        "2012"  = FALSE,
                        "pcm"   = FALSE,
-                       "steps" = FALSE)
+                       "steps" = FALSE,
+                       "shift" = FALSE)
     
     # tmp1 <- M %>% magrittr::divide_by(iter) %>% floor
     # reps <- sapply(seq(1, by = M, length = chains), . %>% seq(by = tmp1, length = iter)) %>% as.vector
-    
-    thin <- M %>% 
-        magrittr::divide_by(iter) %>% 
-        round
 
     dimen <- switch(fitModel, 
                     "ext"   = 3,  
-                    "ext2"  = 3,
-                    "ext3"  = 4,
-                    "ext4"  = 3,
-                    "ext5"  = 3,
+                    # "ext2"  = 3,
+                    # "ext3"  = 4,
+                    # "ext4"  = 3,
+                    # "ext5"  = 3,
                     "2012"  = 2,
                     "pcm"   = 0,
-                    "steps" = 0) + 1
-    n.trait <- length(table(traitItem))
-    S <- dimen - 1 + n.trait
+                    "steps" = 0,
+                    "shift" = 3) + 1
+    if (is.null(fit_sum$args$S)) {
+        n.trait <- length(table(traitItem))
+        S <- dimen - 1 + n.trait
+    } else {
+        S <- fit_sum$args$S
+    }
     
+    # S_t:  Number of theta dimensions
+    # S_b1: Number of columns in beta matrix
+    # S_b2: Number of beta dimensions
+
+    S_b1 <- switch(fitModel,
+                   "2012"  = 3,
+                   "ext"   = 4,
+                   "pcm"   = 4,
+                   "steps" = 4,
+                   "shift" = 3,
+                   S)
+
     vars <- c("^Sigma", "^beta")
     if (arsModel == TRUE)
         vars <- c(vars, "^beta_ARS_extreme")
@@ -160,12 +172,11 @@ pp_irtree <- function(fit_sum = NULL,
     betas <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta", collapse.chains = F) %>% 
         tibble::as_tibble() %>% 
         dplyr::select(., dplyr::matches("beta\\[")) %>% 
-        dplyr::select(sapply(1:ifelse(fitModel %in% c("pcm", "steps"), 4, dimen), . %>%
-                                 seq(., by = ifelse(fitModel %in% c("pcm", "steps"), 4, dimen), length = J)) %>%
+        dplyr::select(sapply(1:S_b1, . %>% seq(., by = S_b1, length = J)) %>%
                           as.vector) %>%
         t %>% 
         matrix %>% 
-        array(dim = c(J, ifelse(fitModel %in% c("pcm", "steps"), 4, dimen), length(reps)))
+        array(dim = c(J, S_b1, length(reps)))
     
     if (arsModel == TRUE)
         beta_ARS_extreme <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta_ARS_extreme",
@@ -329,6 +340,52 @@ pp_irtree <- function(fit_sum = NULL,
                 array(dim = c(J, N, 5)) %>%
                 apply(c(1, 3), t)
             
+            pp[, , rrr] <- p_cat %>%
+                apply(1:2, function(x) rmultinom(1, 1, x)) %>%
+                magrittr::equals(1) %>% 
+                apply(2:3, which)
+            
+            if (is.environment(p)) {
+                p$tick()$print()
+            } else {
+                setTxtProgressBar(pb, rrr)
+            }
+        }
+    } else if (fitModel == "shift") {
+        ##### pp for 'shift' #####
+        for (rrr in reps) {
+            
+            theta <- Sigma1[rrr, ] %>%
+                matrix(., S, S) %>% 
+                MASS::mvrnorm(n = N, mu = rep(0, S), Sigma = .)
+            
+            p_cat <- array(NA_real_, dim = c(N, J, 5))
+            
+            middle <- matrix(theta[, 1], N, J) %>% 
+                magrittr::subtract(matrix(betas[, 1, rrr], N, J, byrow = T)) %>% 
+                pnorm
+            
+            extreme <- matrix(theta[, 2], N, J) %>% 
+                magrittr::subtract(matrix(betas[, 2, rrr], N, J, byrow = T)) %>% 
+                pnorm
+            
+            # acquies <- matrix(theta[, 3], N, J) %>%
+            #     magrittr::subtract(matrix(betas[, 3, rrr], N, J, byrow = T)) %>% 
+            #     pnorm
+            
+            trait <- theta[, (traitItem + dimen - 1)] %>% 
+                magrittr::subtract(matrix(betas[, 3, rrr], N, J, byrow = T)) %>% 
+                magrittr::multiply_by(matrix((-1)^revItem, N, J, byrow = T)) %>% 
+                magrittr::add(matrix(theta[, 3], N, J)) %>% 
+                pnorm
+            
+            p_cat[, , 1] <- (1-middle)*(1-trait)*extreme
+            p_cat[, , 2] <- (1-middle)*(1-trait)*(1-extreme)
+            p_cat[, , 3] <-    middle
+            p_cat[, , 4] <- (1-middle)*trait*(1-extreme)
+            p_cat[, , 5] <- (1-middle)*trait*   extreme 
+            
+            # pp[, , which(reps == rrr)] <- p_cat %>%
             pp[, , rrr] <- p_cat %>%
                 apply(1:2, function(x) rmultinom(1, 1, x)) %>%
                 magrittr::equals(1) %>% 

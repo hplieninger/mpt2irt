@@ -4,7 +4,7 @@ library("magrittr")
 
 # DATA GENERATION ---------------------------------------------------------
 
-context("Data generation")
+context("Multidim: Data generation")
 
 N <- sample(10:20, 1)
 J <- sample(6:20, 1)
@@ -75,7 +75,7 @@ test_that("generate_irtree() returns correct output", {
 
 # MODEL FITTING -----------------------------------------------------------
 
-context("Model fitting")
+context("Multidim: Model fitting")
 
 M <- 200
 warmup <- 100
@@ -128,7 +128,7 @@ test_that("fit_irtree() returns MCMC list", {
 
 # SUMMARIZING MODEL RESULTS -----------------------------------------------
 
-context("Summarizing fitted models")
+context("Multidim: Summarizing fitted models")
 
 iter <- 10
 
@@ -154,8 +154,7 @@ res5d <- suppressMessages(pp_irtree(res5b, iter = iter, N = N))
 
 res6b <- summarize_irtree_fit(res6)
 res6c <- tidyup_irtree_fit(res6b)
-# res6d <- suppressMessages(pp_irtree(res6b, iter = iter, N = N))
-expect_error(pp_irtree(res6b, iter = iter, N = N))
+res6d <- suppressMessages(pp_irtree(res6b, iter = iter, N = N))
 
 test_that("tidyup_irtree_fit() returns correlations", {
     expect_equal(unique(as.vector(sapply(res1c$Corr, dim))), 3)
@@ -192,39 +191,55 @@ test_that("pp_irtree() returns valid values", {
     expect_is(res2d, "data.frame")
     expect_is(res3d, "data.frame")
     expect_is(res4d, "data.frame")
+    expect_is(res5d, "data.frame")
+    expect_is(res6d, "data.frame")
     
     expect_equal(as.numeric(levels(res1d$Item)), 1:J)
     expect_equal(as.numeric(levels(res2d$Item)), 1:J)
     expect_equal(as.numeric(levels(res3d$Item)), 1:J)
     expect_equal(as.numeric(levels(res4d$Item)), 1:J)
+    expect_equal(as.numeric(levels(res5d$Item)), 1:J)
+    expect_equal(as.numeric(levels(res6d$Item)), 1:J)
     
     expect_equal(as.numeric(levels(res1d$Categ)), 1:5)
     expect_equal(as.numeric(levels(res2d$Categ)), 1:5)
     expect_equal(as.numeric(levels(res3d$Categ)), 1:5)
     expect_equal(as.numeric(levels(res4d$Categ)), 1:5)
+    expect_equal(as.numeric(levels(res5d$Categ)), 1:5)
+    expect_equal(as.numeric(levels(res6d$Categ)), 1:5)
     
-    expect_equal(ncol(res1d), 8)
-    expect_equal(ncol(res2d), 8)
-    expect_equal(ncol(res3d), 8)
-    expect_equal(ncol(res4d), 8)
+    # expect_equal(ncol(res1d), 9)
+    # expect_equal(ncol(res2d), 9)
+    # expect_equal(ncol(res3d), 9)
+    # expect_equal(ncol(res4d), 9)
+    # expect_equal(ncol(res5d), 9)
+    # expect_equal(ncol(res6d), 9)
     
     expect_equal(unique(res1d$Persons), N)
     expect_equal(unique(res2d$Persons), N)
     expect_equal(unique(res3d$Persons), N)
     expect_equal(unique(res4d$Persons), N)
+    expect_equal(unique(res5d$Persons), N)
+    expect_equal(unique(res6d$Persons), N)
     
-    expect_equal(unique(res1d$Samples), iter)
-    expect_equal(unique(res2d$Samples), iter)
-    expect_equal(unique(res3d$Samples), iter)
-    expect_equal(unique(res4d$Samples), iter)
+    expect_equal(unique(res1d$Samples), iter*res1b$args$n.chains)
+    expect_equal(unique(res2d$Samples), iter*res2b$args$n.chains)
+    expect_equal(unique(res3d$Samples), iter*res3b$args$n.chains)
+    expect_equal(unique(res4d$Samples), iter*res4b$args$n.chains)
+    expect_equal(unique(res5d$Samples), iter*res5b$args$n.chains)
+    expect_equal(unique(res6d$Samples), iter*res6b$args$n.chains)
     
     expect_gte(min(subset(res1d, select = -(Item:Samples))), 0)
     expect_gte(min(subset(res2d, select = -(Item:Samples))), 0)
     expect_gte(min(subset(res3d, select = -(Item:Samples))), 0)
     expect_gte(min(subset(res4d, select = -(Item:Samples))), 0)
+    expect_gte(min(subset(res5d, select = -(Item:Samples))), 0)
+    expect_gte(min(subset(res6d, select = -(Item:Samples))), 0)
     
     expect_lte(min(subset(res1d, select = -(Item:Samples))), 1)
     expect_lte(min(subset(res2d, select = -(Item:Samples))), 1)
     expect_lte(min(subset(res3d, select = -(Item:Samples))), 1)
     expect_lte(min(subset(res4d, select = -(Item:Samples))), 1)
+    expect_lte(min(subset(res5d, select = -(Item:Samples))), 1)
+    expect_lte(min(subset(res6d, select = -(Item:Samples))), 1)
 })

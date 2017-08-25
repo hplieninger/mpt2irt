@@ -32,9 +32,10 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
 0=not reversed)}
 
-\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
-acquiescence) or \code{"ext"} (Acquiescence Model) or \code{"pcm"} (partial
-credit model) or \code{"steps"} (Steps Model [Verhelst; Tutz]).}
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without 
+acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
+(partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
+or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
 }
 \value{
 Returns a data frame containing the specified quantiles of the
