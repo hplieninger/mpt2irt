@@ -1,3 +1,4 @@
+# detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")
 
