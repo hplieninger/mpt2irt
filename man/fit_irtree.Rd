@@ -5,8 +5,8 @@
 \title{Fit an mpt2irt model.}
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
-  V = NULL, fitModel = c("ext", "2012", "pcm", "steps"),
-  fitMethod = c("stan", "jags"), outFormat = NULL, startSmall = TRUE,
+  V = NULL, fitModel = c("ext", "2012", "pcm", "steps", "shift"),
+  fitMethod = c("stan", "jags"), outFormat = NULL, startSmall = FALSE,
   M = 1000, warmup = 1000, n.chains = 2, thin = 1,
   method = "parallel", add2varlist = NULL, cores = NULL,
   summarise = FALSE, N2 = 2, ...)

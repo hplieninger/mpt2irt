@@ -44,7 +44,7 @@ generate_irtree_ext <- function(N = NULL,
                                  len = J)
     # checkmate::qassert(prop.rev, "N1[0,1]")
     checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
-                              len = length(unique(traitItem)))
+                              min.len = 1, max.len = length(unique(traitItem)))
     checkmate::assert_number(beta_ARS_extreme, finite = TRUE)
     
     # multiple traits
@@ -158,7 +158,7 @@ generate_irtree_2012 <- function(N = NULL,
                                  len = J)
     # checkmate::qassert(prop.rev, "N1[0,1]")
     checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
-                              len = length(unique(traitItem)))
+                              min.len = 1, max.len = length(unique(traitItem)))
     
     
     n.trait <- length(unique(traitItem))
@@ -253,7 +253,7 @@ generate_irtree_steps <- function(N = NULL,
     checkmate::qassert(J, "X1[1,)")
     checkmate::assert_integerish(revItem, lower = 0, upper = 1,
                                  any.missing = FALSE, len = J, null.ok = TRUE)
-    checkmate::assert_integerish(traitItem, lower = 1, upper = 1,
+    checkmate::assert_integerish(traitItem, lower = 1, # upper = 1,
                                  any.missing = FALSE, len = J, null.ok = TRUE)
     if (is.null(revItem)) revItem <- rbinom(J, 1, .33)
     if (is.null(traitItem)) traitItem <- rep(1, J)

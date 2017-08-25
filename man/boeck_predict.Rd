@@ -18,6 +18,9 @@ boeck_predict(fit_sum = NULL, theta = matrix(0, N, S2), betas = NULL,
 \item{beta_ARS_extreme}{only for \code{genModel="ext"}: probability (on
 probit scale) of choosing category 5 (vs.4) in case of ARS}
 
+\item{measure}{Character vector that indicates whether the mean (default) or
+the median of the posterior distribution should be plotted.}
+
 \item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)
 person) or a numeric value specifying the trait value used to plot response
 styles (e.g., trait=0 for an average person)}

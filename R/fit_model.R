@@ -212,24 +212,32 @@ fit_irtree <- function(X,
         inits <- vector("list", length = n.chains)
         for (iii in 1:n.chains) {
             inits[[iii]] <- list(# xi_beta  = runif(S, 3/4, 4/3),
-                                 mu_beta = truncnorm::rtruncnorm(S, mean = 0, sd = 1,
-                                                                 a = -2, b = 2),
+                                 mu_beta = array(
+                                     truncnorm::rtruncnorm(S, mean = 0, sd = 1,
+                                                           a = -2, b = 2),
+                                     dim = S),
                                  beta_raw = matrix(truncnorm::rtruncnorm(J*dimen, mean = 0, sd = 1,
                                                                          a = -2, b = 2),
                                                    nrow = J, ncol = dimen),
                                  beta_ARS_extreme = truncnorm::rtruncnorm(1, mean = 0, sd = 1,
                                                                           a = -2, b = 2),
-                                 xi_theta = runif(S, 3/4, 4/3))
+                                 xi_theta = array(runif(S, 3/4, 4/3)), dim = S)
             if (fitModel == "pcm") {
-                inits[[iii]]$beta_raw = matrix(truncnorm::rtruncnorm(J*4, mean = 0, sd = 1,
+                inits[[iii]]$mu_beta_vec <- truncnorm::rtruncnorm(S*4, mean = 0, sd = 1,
+                                                                  a = -2, b = 2)
+                inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*4, mean = 0, sd = 1,
                                                                      a = -2, b = 2),
                                                nrow = J, ncol = 4)
                 inits[[iii]]$beta_ARS_extreme <- NULL
+                inits[[iii]]$mu_beta <- NULL
             } else if (fitModel == "steps") {
-                inits[[iii]]$beta_raw = matrix(truncnorm::rtruncnorm(J*4, mean = 0, sd = 1,
+                inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*4, mean = 0, sd = 1,
                                                                      a = -2, b = 2),
                                                nrow = J, ncol = 4)
+                inits[[iii]]$mu_beta_vec <- truncnorm::rtruncnorm(S*4, mean = 0, sd = 1,
+                                                                  a = -2, b = 2)
                 inits[[iii]]$beta_ARS_extreme <- NULL
+                inits[[iii]]$mu_beta <- NULL
             } else if (fitModel == "shift") {
                 inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*3, mean = 0, sd = 1,
                                                                       a = -2, b = 2),
@@ -238,14 +246,15 @@ fit_irtree <- function(X,
                                                               a = -2, b = 2)
                 inits[[iii]]$sigma2_beta_raw <-  array(runif(S - 1, 3/4, 4/3))
                 inits[[iii]]$beta_ARS_extreme <- NULL
-            } else if (fitModel == "ext5") {
-                inits[[iii]]$beta_ARS_extreme <- NULL
-                inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S + 1, mean = 0, sd = 1,
-                                                             a = -2, b = 2)
-                inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*(dimen + 1), mean = 0, sd = 1,
-                                                                      a = -2, b = 2),
-                                                nrow = J, ncol = dimen + 1)
-            }
+            } 
+            # else if (fitModel == "ext5") {
+            #     inits[[iii]]$beta_ARS_extreme <- NULL
+            #     inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S + 1, mean = 0, sd = 1,
+            #                                                  a = -2, b = 2)
+            #     inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*(dimen + 1), mean = 0, sd = 1,
+            #                                                           a = -2, b = 2),
+            #                                     nrow = J, ncol = dimen + 1)
+            # }
         }
     }
     
@@ -319,20 +328,8 @@ fit_irtree <- function(X,
             stanExe <- stanmodels$stan_pcm
         } else if (fitModel == "steps") {
             stanExe <- stanmodels$stan_steps
-        } else if (fitModel == "ext2") {
-            # stanExe <- boeck_stan_ext2
-            stop("Model 'ext2' currently not implemented")
-        } else if (fitModel == "ext3") {
-            # stanExe <- boeck_stan_ext3
-            stop("Model 'ext3' currently not implemented")
-        } else if (fitModel == "ext4") {
-            # stanExe <- boeck_stan_ext4
-            stop("Model 'ext4' currently not implemented")
-        } else if (fitModel == "ext5") {
-            # stanExe <- boeck_stan_ext5
-            stop("Model 'ext5' currently not implemented")
         } else if (fitModel == "shift") {
-            # stanExe <- stanmodels$stan_boeck_shift
+            stanExe <- stanmodels$stan_boeck_shift
         } else {
             stanExe <- stanmodels$stan_boeck_2012
         }
@@ -352,7 +349,10 @@ fit_irtree <- function(X,
             try(boeck.samp <- rstan::As.mcmc.list(boeck.samp))
         }
         time2 <- Sys.time()
-        boeck.samp@date <- c(boeck.samp@date, strftime(time1), strftime(time2), paste(round(difftime(time2, time1, units = "hours"), 2), "hours"))
+        boeck.samp@date <- c(boeck.samp@date,
+                             strftime(time1),
+                             strftime(time2),
+                             paste(round(difftime(time2, time1, units = "hours"), 2), "hours"))
         names(boeck.samp@date) <- c("Stan", "Start", "End", "Difference")
     }
     # if(!missing(mail) && !is.null(mail))

@@ -60,6 +60,8 @@ plot_responses <- function(X,
 #' 
 #' @param fit_sum List. A summary of theta and beta parameters as returned from \code{\link{tidyup_irtree_fit}}.
 #' @param theta Matrix. A matrix of person parameters for which the predictions should be made.
+#' @param measure Character vector that indicates whether the mean (default) or
+#'   the median of the posterior distribution should be plotted.
 #' @inheritParams fit_irtree
 #' @inheritParams tidyup_irtree_fit
 #' @inheritParams generate_irtree_ext
@@ -95,19 +97,25 @@ boeck_predict <- function(fit_sum = NULL,
     
     measure <- match.arg(measure)
     
-    flag1 <- ifelse(args %in% names(fit_sum), TRUE, FALSE)
+    # flag1 <- ifelse(args %in% names(fit_sum), TRUE, FALSE)
     checkmate::qassert(fit_sum, "L+")
-    checkmate::assert_int(S, lower = 1, null.ok = flag1)
+    checkmate::assert_int(S, lower = 1,
+                          null.ok = !is.null(fit_sum$args$S))
     checkmate::qassert(N, "X1[1, )")
-    checkmate::assert_int(J, lower = 1, null.ok = flag1)
+    checkmate::assert_int(J, lower = 1, 
+                          null.ok = !is.null(fit_sum$args$J))
     checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = flag1)
+                                 min.len = 1, 
+                                 null.ok = !is.null(fit_sum$args$revItem))
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = flag1)
+                                 min.len = 1,
+                                 null.ok = !is.null(fit_sum$args$traitItem))
     checkmate::assert_character(fitModel, min.chars = 1, any.missing = FALSE,
-                                len = 1, null.ok = flag1)
+                                len = 1, 
+                                null.ok = !is.null(fit_sum$args$fitModel))
     # checkmate::assert_character(fitMethod, min.chars = 1, any.missing = FALSE,
-    #                             len = 1, null.ok = flag1)
+    #                             len = 1,
+    #                             null.ok = !is.null(fit_sum$args$fitMethod))
     checkmate::qassert(plot, "B1")
     
     
@@ -228,19 +236,21 @@ plot_expected <- function(fit_sum,
                           col = "cyan",
                           lwd = 2,
                           ylim = NULL,
-                          measure = c("Median", "Mean"), ...) {
+                          measure = c("Median", "Mean"),
+                          ...) {
     measure <- match.arg(measure)
     
-    flag1 <- ifelse(args %in% names(fit_sum), TRUE, FALSE)
     checkmate::qassert(fit_sum, "L+")
     checkmate::assert_matrix(X, mode = "integerish", any.missing = FALSE,
                              min.rows = 2, min.cols = 2)
     J <- ncol(X)
     checkmate::assert_integerish(X, lower = 1, upper = 5, any.missing = FALSE)
     checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = flag1)
+                                 min.len = 1, 
+                                 null.ok = !is.null(fit_sum$args$revItem))
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = flag1)
+                                 min.len = 1, 
+                                 null.ok = !is.null(fit_sum$args$traitItem))
     checkmate::qassert(points, "X1[1,]")
     
     if (is.null(revItem))

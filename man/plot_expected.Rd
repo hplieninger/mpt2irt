@@ -37,6 +37,9 @@ interpretation.)}
 
 \item{ylim}{the y limits of the plot.}
 
+\item{measure}{Character vector that indicates whether the mean (default) or
+the median of the posterior distribution should be plotted.}
+
 \item{...}{Additional arguments passed to \code{\link[graphics]{lines}}.}
 }
 \description{
