@@ -40,4 +40,4 @@ res3$plot
 Misc
 ====
 
-The proposed Acquiescence Model is a mixture model. Existing approaches to ARS (e.g., Billiet & McClendon, 2000; Ferrando et al., 2016; Johnson & Bolt, 2010; Maydeu-Olivares & Coffman, 2006) view acquiescence as a shift process. A graphical comparison of the two approaches in terms of the predicted category probabilities may be found at <https://hplieninger.shinyapps.io/shift-vs-mixture-ARS>.
+The proposed Acquiescence Model is a mixture model. Existing approaches to ARS (e.g., Billiet & McClendon, 2000; Ferrando et al., 2016; Maydeu-Olivares & Coffman, 2006) view acquiescence as a shift process. A graphical comparison of the two approaches in terms of the predicted category probabilities may be found at <https://hplieninger.shinyapps.io/shift-vs-mixture-ARS>.
