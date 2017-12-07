@@ -4,7 +4,8 @@
 \alias{gen_betas}
 \title{Generate item parameters.}
 \usage{
-gen_betas(genModel = NULL, J = NULL, betas = NULL)
+gen_betas(genModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
+  J = NULL, betas = NULL)
 }
 \arguments{
 \item{genModel}{Character. The data generating model (either "2012" or "ext").}
@@ -33,7 +34,7 @@ dat <- generate_irtree_ext(N = 20, J = J, betas = betapar, beta_ARS_extreme = 1)
 tmp1 <- list("beta.mrs" = list("mean" =  0,
                                "sd"   =  0.3,
                                "a"    = -2,
-                               "b"    =  2))
+                               "b"    =  Inf))
 betapar <- mpt2irt:::gen_betas("ext", J = J, betas = tmp1)
 }
 \seealso{

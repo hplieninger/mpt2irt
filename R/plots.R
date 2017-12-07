@@ -131,8 +131,7 @@ plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp,
 #' function of the cognitive process involved (i.e., MRS, ERS, ARS, target
 #' trait) and both \code{traitItem} and \code{revItem}.
 #' 
-#' @param fit a fitted object from \link{fit_irtree} (either Boeckenholt 2012 or extended)
-#' @param S number of distinct MPT-parameters (2012: 3; extended: 4)
+#' @param fit a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{tidyup_irtree_fit}}.
 # @param N number of participants
 # @param J number of items
 # @param revItem a vector with 1=reversed / 0=not reversed
@@ -162,103 +161,138 @@ plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp,
 #' }
 #' @export
 plot_irtree <- function(fit,
-                        S = NULL,
-                        J = NULL,
+                        fitModel = NULL,
+                        # S = NULL,
+                        # J = NULL,
                         revItem = NULL,
                         traitItem = NULL,
                         # trait = "sample",
                         return_data = FALSE,
                         tt_names = NULL,
                         measure = c("Median", "Mean"),
-                        rs_names = NULL,
-                        fitMethod = NULL) {
+                        rs_names = NULL
+                        # fitMethod = NULL
+                        ) {
     measure <- match.arg(measure)
     
     checkmate::qassert(fit, "L+")
-    # checkmate::qassert(S, "X1[1,]")
-    checkmate::assert_int(S, lower = 1, null.ok = TRUE)
+    checkmate::assert_character(fitModel, min.chars = 1, any.missing = FALSE,
+                                len = 1,
+                                null.ok = !is.null(fit$args$fitModel))
+    # checkmate::assert_int(S, lower = 1, null.ok = TRUE)
     # checkmate::qassert(J, "X1[1,]")
-    checkmate::assert_int(J, lower = 1, null.ok = TRUE)
+    # checkmate::assert_int(J, lower = 1, null.ok = !is.null(fit$args$J))
     # checkmate::qassert(revItem, "X+[0,1]")
     checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = TRUE)
+                                 min.len = 1, null.ok = !is.null(fit$args$revItem))
     # checkmate::qassert(traitItem, "X+[1,]")
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = TRUE)
+                                 min.len = 1, null.ok = !is.null(fit$args$traitItem))
     if (is.null(traitItem)) traitItem <- fit$args$traitItem
     checkmate::assert_character(tt_names, len = length(unique(traitItem)),
                                 null.ok = TRUE)
-    checkmate::assert_character(rs_names, len = S, null.ok = TRUE)
     
-    if (is.null(S)) S <- fit$args$S
-    if (is.null(J)) J <- fit$args$J
+    # if (is.null(S)) S <- fit$args$S
+    # if (is.null(J)) J <- fit$args$J
     if (is.null(revItem)) revItem <- fit$args$revItem
-    if (is.null(fitMethod)) fitMethod <- fit$args$fitMethod
+    # if (is.null(fitMethod)) fitMethod <- fit$args$fitMethod
+    if (is.null(fitModel)) fitModel <- fit$args$fitModel
+    
+    S_b1 <- switch(fitModel,
+                   "2012"  = 3,
+                   "ext"   = 4,
+                   "pcm"   = 4,
+                   "steps" = 4,
+                   "shift" = 3,
+                   "ext2"  = 5,
+                   ifelse(length(fit$args$S) > 0, fit$args$S, 4))
+    checkmate::assert_character(rs_names, len = S_b1, null.ok = TRUE)
     
     if (is.null(rs_names)) {
-        if (S == 3) {
+        if (S_b1 == 3) {
             rs_names <- c("m", "e", "t")
-        } else if (fit$args$fitModel %in% c("pcm", "steps")) {
+        } else if (fitModel %in% c("pcm", "steps")) {
             rs_names <- paste("Threshold", 1:4)
-        } else if (S == 4) {
+        } else if (S_b1 == 4) {
             rs_names <- c("m", "e", "a", "t")
-        } 
+        } else if (S_b1 == 5) {
+            rs_names <- c("m", "e", "a", "t", "e*")
+        }  
     }
     
-    if (!any(names(fit) %in% c("args", "V"))) {
-        fit <- list("samples" = fit)
+    if (!("beta" %in% names(fit))) {
+        fit <- summarize_irtree_fit(fit, interact = F)
+        fit <- tidyup_irtree_fit(fit)
     }
-    # if (is.null(fitMethod)) {
-    #     if ("samples" %in% names(fit)) {
-    #         if (is.list(fit$samples)) {
-    #             fitMethod <- "jags"
-    #         } else {
-    #             fitMethod <- "stan"
-    #         }
-    #     } else if ("dic" %in% names(fit)) {
-    #         fitMethod <- "jags"
-    #     }
-    # }
+    dat_0 <- lapply(fit$beta, magrittr::set_colnames, rs_names)
+    dat_1 <- reshape2::melt(dat_0) %>% 
+        reshape2::dcast(Var1 + Var2 ~ L1)
+    dat_1[, 3:6] <- apply(dat_1[, 3:6], 2, function(x) pnorm(-x))
+    names(dat_1)[1:2] <- c("Item", "Type")
     
-    if (!("summary" %in% names(fit))) {
-        if (!("mcmc" %in% names(fit))) {
-            if (fitMethod == "jags") {
-                fit$mcmc <- fit$samples$mcmc
-            } else {
-                fit$mcmc <- rstan::As.mcmc.list(fit$samples)
-            }
-        }
-        if (class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
-        # fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
-        fit$summary <- summary(fit$mcmc)
-    }
-    
-    ss <- merge(data.frame("id" = rownames(fit$summary$statistics), "Mean" = fit$summary$statistics[, "Mean"]),
-                cbind("id" = rownames(fit$summary$quantiles), as.data.frame(fit$summary$quantiles)))
-    
-    ss <- ss[grep("^beta\\[[[:digit:]]+\\,[[:digit:]]]", ss$id), ]
-    names(ss)[names(ss) %in% c("2.5%", "50%", "97.5%")] <- c("q025", "Median", "q975")
-    ss[-1] <- apply(ss[-1], 2, function(x) pnorm(-x))
-    ss$Type <- sapply(strsplit(as.character(ss$id), "[,]"), function(x) as.numeric(substr(x[2], 1, 1)))
-    ss$Type <- factor(ss$Type, labels = rs_names)
-    ss$Item <- factor(sapply(sapply(strsplit(as.character(ss$id), "\\["),
-                                    function(x) strsplit(x[2], ",")),
-                             function(x) as.numeric(x[1])))
-    ss <- ss[order(ss$Item), ]
-    # ss$Item <- factor(rep(item_order, each = S))
-    # if (missing(revItem) | is.null(revItem))
-    #     revItem <- rep(1,J)
-    # if (missing(traitItem) | is.null(traitItem))
-    #     traitItem <- rep(1,J)
-    ss$revItem <- factor(rep(revItem, each = S))
-    ss$traitItem <- factor(rep(traitItem, each = S), levels = 1:max(traitItem))
+    dat_1$revItem <- factor(rep(revItem, each = S_b1))
+    dat_1$traitItem <- factor(rep(traitItem, each = S_b1), levels = 1:max(traitItem))
     if (!is.null(tt_names))
-        ss$traitItem <- factor(ss$traitItem, labels = tt_names)
+        dat_1$traitItem <- factor(dat_1$traitItem, labels = tt_names)
+    
+    # if ("beta" %in% names(fit)) {
+    #     dat_0 <- lapply(fit$beta, magrittr::set_colnames, rs_names)
+    #     dat_1 <- reshape2::melt(dat_0) %>% 
+    #         reshape2::dcast(Var1 + Var2 ~ L1)
+    #     dat_1[, 3:6] <- apply(dat_1[, 3:6], 2, function(x) pnorm(-x))
+    #     names(dat_1)[1:2] <- c("Item", "Type")
+    #     # dat_1 <- dat_1[order(dat_1$Item), ]
+    #     
+    #     dat_1$revItem <- factor(rep(revItem, each = S_b1))
+    #     dat_1$traitItem <- factor(rep(traitItem, each = S_b1), levels = 1:max(traitItem))
+    #     if (!is.null(tt_names))
+    #         dat_1$traitItem <- factor(dat_1$traitItem, labels = tt_names)
+    # } else {
+    #     fit <- summarize_irtree_fit(fit, interact = F)
+    #     fit <- tidyup_irtree_fit(fit)
+    #     # if (!any(names(fit) %in% c("args", "V"))) {
+    #     #     fit <- list("samples" = fit)
+    #     # }
+    #     # if (!("summary" %in% names(fit))) {
+    #     #     if (!("mcmc" %in% names(fit))) {
+    #     #         if (fitMethod == "jags") {
+    #     #             fit$mcmc <- fit$samples$mcmc
+    #     #         } else {
+    #     #             fit$mcmc <- rstan::As.mcmc.list(fit$samples)
+    #     #         }
+    #     #     }
+    #     #     if (class(fit$mcmc) != "mcmc.list") stop("Unable to find or create object of class 'mcmc.list' in 'fit$mcmc'.")
+    #     #     # fit$summary <- coda:::summary.mcmc.list(fit$mcmc)
+    #     #     fit$summary <- summary(fit$mcmc)
+    #     # }
+    #     
+    #     dat_1 <- merge(data.frame("id" = rownames(fit$summary$statistics), "Mean" = fit$summary$statistics[, "Mean"]),
+    #                 cbind("id" = rownames(fit$summary$quantiles), as.data.frame(fit$summary$quantiles)))
+    #     
+    #     dat_1 <- dat_1[grep("^beta\\[[[:digit:]]+\\,[[:digit:]]]", dat_1$id), ]
+    #     names(dat_1)[names(dat_1) %in% c("2.5%", "50%", "97.5%")] <- c("Q_025", "Median", "Q_975")
+    #     dat_1[-1] <- apply(dat_1[-1], 2, function(x) pnorm(-x))
+    #     dat_1$Type <- sapply(strsplit(as.character(dat_1$id), "[,]"), function(x) as.numeric(substr(x[2], 1, 1)))
+    #     dat_1$Type <- factor(dat_1$Type, labels = rs_names)
+    #     dat_1$Item <- factor(sapply(sapply(strsplit(as.character(dat_1$id), "\\["),
+    #                                     function(x) strsplit(x[2], ",")),
+    #                              function(x) as.numeric(x[1])))
+    #     dat_1 <- dat_1[order(dat_1$Item), ]
+    #     # dat_1$Item <- factor(rep(item_order, each = S_b1))
+    #     # if (missing(revItem) | is.null(revItem))
+    #     #     revItem <- rep(1,J)
+    #     # if (missing(traitItem) | is.null(traitItem))
+    #     #     traitItem <- rep(1,J)
+    #     dat_1$revItem <- factor(rep(revItem, each = S_b1))
+    #     dat_1$traitItem <- factor(rep(traitItem, each = S_b1), levels = 1:max(traitItem))
+    #     if (!is.null(tt_names))
+    #         dat_1$traitItem <- factor(dat_1$traitItem, labels = tt_names)
+    # }
     
     # if(class(fit) != "mcmc.list")
     #     fit <- stan2mcmc.list(fit)
-    # ss <- data.frame(Item=rep(NA, S*J), Type=NA, Mean=NA,SD=NA, "q025"=NA, "Median"=NA,"q975"=NA)
-    # for(s in 1:S) {
+    # dat_1 <- data.frame(Item=rep(NA, S_b1*J), Type=NA, Mean=NA,SD=NA, "Q_025"=NA, "Median"=NA,"Q_975"=NA)
+    # for(s in 1:S_b1) {
     #     beta_rs <- runjags::combine.mcmc(fit$mcmc[, paste0("beta[",1:J,",",s,"]")])
     #     M <- nrow(beta_rs)
     #     p.item.rs <- matrix(NA, M, J)
@@ -275,39 +309,39 @@ plot_irtree <- function(fit,
     #         p.item.rs <- apply(beta_rs, 2, function(x) pnorm(as.numeric(trait)-x))
     #     }
     # 
-    #     ss[seq(s,S*J, S), 3:7] <- t(apply(p.item.rs, 2, function(x) c( mean(x), sd(x),quantile(x, c(.025, .5, .975)))))
-    #     ss[seq(s,S*J, S),1:2] <- cbind( 1:J,  rs_names[s])
+    #     dat_1[seq(s,S_b1*J, S_b1), 3:7] <- t(apply(p.item.rs, 2, function(x) c( mean(x), sd(x),quantile(x, c(.025, .5, .975)))))
+    #     dat_1[seq(s,S_b1*J, S_b1),1:2] <- cbind( 1:J,  rs_names[s])
     # }
-    # ss$Type <- factor(ss$Type, levels=rs_names)
+    # dat_1$Type <- factor(dat_1$Type, levels=rs_names)
     # if (missing(revItem) | is.null(revItem))
     #     revItem <- rep(1,J)
     # if (missing(traitItem) |is.null(traitItem))
     #     traitItem <- rep(1,J)
-    # ss$revItem <- factor(rep(revItem, each=S))
-    # ss$traitItem <- factor(rep(traitItem, each=S), levels=1:max(traitItem))
-    # ss$Item <- factor(ss$Item, levels=as.character(1:J))
+    # dat_1$revItem <- factor(rep(revItem, each=S_b1))
+    # dat_1$traitItem <- factor(rep(traitItem, each=S_b1), levels=1:max(traitItem))
+    # dat_1$Item <- factor(dat_1$Item, levels=as.character(1:J))
     # if (!is.null(tt_names)) {
-    #     ss$traitItem <- factor(ss$traitItem, labels = tt_names)
-    #     try(levels(ss$traitItem) <- levels(tt_names), silent = T)
+    #     dat_1$traitItem <- factor(dat_1$traitItem, labels = tt_names)
+    #     try(levels(dat_1$traitItem) <- levels(tt_names), silent = T)
     # }
     
     # library("ggplot2")
     # loadNamespace("ggplot2")
     
-    gg <- ggplot(aes_string(x = "Item", y = measure, col = "revItem"), data = ss) + 
-        # ggplot(aes(x=Item, y=Mean, col=revItem), data=ss) + 
+    gg <- ggplot(aes_string(x = "Item", y = measure, col = "revItem"), data = dat_1) + 
+        # ggplot(aes(x=Item, y=Mean, col=revItem), data=dat_1) + 
         geom_point() +
         theme_bw() +
-        # facet_wrap(~ Type + traitItem, nrow = S, scales = "free_x") +
+        # facet_wrap(~ Type + traitItem, nrow = S_b1, scales = "free_x") +
         facet_grid(Type ~ traitItem, scales = "free_x") +
-        geom_errorbar(aes_string(ymin = "q025", ymax = "q975")) + 
+        geom_errorbar(aes_string(ymin = "Q_025", ymax = "Q_975")) + 
         ylim(0, 1) +
         labs(y = expression(Phi(-beta)),
              title = paste0("Estimated Item Parameters (", measure, ", 95% CI)"))
     # plot(gg)
     
     if (return_data == TRUE) {
-        return(ss)
+        return(dat_1)
     } else {
         return(gg)
     }

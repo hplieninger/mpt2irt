@@ -8,6 +8,7 @@ using namespace Rcpp;
 
 
 RcppExport SEXP _rcpp_module_boot_stan_fit4stan_boeck_2012_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4stan_boeck_ext2_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4stan_boeck_ext_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4stan_boeck_ext_HH_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4stan_boeck_shift_mod();
@@ -16,6 +17,7 @@ RcppExport SEXP _rcpp_module_boot_stan_fit4stan_steps_mod();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rcpp_module_boot_stan_fit4stan_boeck_2012_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_2012_mod, 0},
+    {"_rcpp_module_boot_stan_fit4stan_boeck_ext2_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_ext2_mod, 0},
     {"_rcpp_module_boot_stan_fit4stan_boeck_ext_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_ext_mod, 0},
     {"_rcpp_module_boot_stan_fit4stan_boeck_ext_HH_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_ext_HH_mod, 0},
     {"_rcpp_module_boot_stan_fit4stan_boeck_shift_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_shift_mod, 0},

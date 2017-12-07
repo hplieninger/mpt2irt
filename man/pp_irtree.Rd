@@ -8,8 +8,8 @@ pp_irtree(fit_sum = NULL, mcmc.objects = NULL, iter = 100, probs = NULL,
   N = NULL, traitItem = NULL, revItem = NULL, fitModel = NULL)
 }
 \arguments{
-\item{fit_sum}{List. Output from either \code{\link{tidyup_irtree_fit}} or
-\code{\link{summarize_irtree_fit}} that contains \code{mcmc.objects}.}
+\item{fit_sum}{List. Output from \code{\link{summarize_irtree_fit}} that
+contains \code{mcmc.objects}.}
 
 \item{mcmc.objects}{a list of MCMC or runjags objects, all with the same number of chains and matching variable names, or a single MCMC object/list or runjags object.  No default.}
 

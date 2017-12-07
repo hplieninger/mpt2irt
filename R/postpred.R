@@ -16,8 +16,8 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' distribution is summarized with the quantiles given in \code{probs} and a
 #' data frame containing these quantiles for every item is returned.
 #' 
-#' @param fit_sum List. Output from either \code{\link{tidyup_irtree_fit}} or
-#'   \code{\link{summarize_irtree_fit}} that contains \code{mcmc.objects}.
+#' @param fit_sum List. Output from \code{\link{summarize_irtree_fit}} that
+#'   contains \code{mcmc.objects}.
 #' @param iter Numeric. Number of iterations per chain to use for generating
 #'   posterior predictives.
 #' @param probs Numeric. Vector of probabilities (passed to
@@ -69,10 +69,10 @@ pp_irtree <- function(fit_sum = NULL,
             stop("'fit_sum' must contain an element 'mcmc'; or 'mcmc.objects' ",
                  "must be specified.")
         }
-        flag1 <- ifelse("args" %in% names(fit_sum), TRUE, FALSE)
-    } else {
-        flag1 <- FALSE
-    }
+        # flag1 <- ifelse("args" %in% names(fit_sum), TRUE, FALSE)
+    } # else {
+    #     flag1 <- FALSE
+    # }
     
     checkmate::assert_int(iter, lower = 1, upper = nrow(mcmc.objects[[1]]))
     checkmate::assert_numeric(probs, lower = 0, upper = 1,
@@ -80,11 +80,11 @@ pp_irtree <- function(fit_sum = NULL,
                               null.ok = TRUE)
     checkmate::qassert(N, "X1[1,)")
     checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = flag1)
+                                 min.len = 1, null.ok = !is.null(fit_sum$args$revItem))
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
-                                 min.len = 1, null.ok = flag1)
+                                 min.len = 1, null.ok = !is.null(fit_sum$args$traitItem))
     checkmate::assert_character(fitModel, min.chars = 1, any.missing = FALSE,
-                                len = 1, null.ok = flag1)
+                                len = 1, null.ok = !is.null(fit_sum$args$fitModel))
     
     if (is.null(revItem)) revItem <- fit_sum$args$revItem
     if (is.null(traitItem)) traitItem <- fit_sum$args$traitItem
@@ -105,7 +105,7 @@ pp_irtree <- function(fit_sum = NULL,
     
     arsModel <- switch(fitModel, 
                        "ext"   = TRUE,  
-                       # "ext2"  = TRUE,
+                       "ext2"  = TRUE,
                        # "ext3"  = TRUE,
                        # "ext4"  = TRUE,
                        # "ext5"  = TRUE,
@@ -119,7 +119,7 @@ pp_irtree <- function(fit_sum = NULL,
 
     dimen <- switch(fitModel, 
                     "ext"   = 3,  
-                    # "ext2"  = 3,
+                    "ext2"  = 3,
                     # "ext3"  = 4,
                     # "ext4"  = 3,
                     # "ext5"  = 3,
@@ -141,22 +141,16 @@ pp_irtree <- function(fit_sum = NULL,
     S_b1 <- switch(fitModel,
                    "2012"  = 3,
                    "ext"   = 4,
+                   "ext2"  = 5,
                    "pcm"   = 4,
                    "steps" = 4,
                    "shift" = 3,
                    S)
 
     vars <- c("^Sigma", "^beta")
-    if (arsModel == TRUE)
+    if (fitModel %in% c("ext")) {
         vars <- c(vars, "^beta_ARS_extreme")
-    # vars <- switch(fitModel, 
-    #                 "ext"  = c(vars, "^beta_ARS_extreme"),  
-    #                 "ext2" = c(vars, "^beta_ARS_extreme"),
-    #                 "ext3" = c(vars, "^beta_ARS_extreme"),
-    #                 "ext4" = c(vars, "^beta_ARS_extreme"),
-    #                 "ext5" = c(vars, "^beta_ARS_extreme"),
-    #                 "2012" = vars,
-    #                 "pcm"  = vars)
+    }
 
     # fit_mcmc2 <- coda:::window.mcmc.list(mcmc.objects, thin = thin) %>%
     fit_mcmc2 <- window(mcmc.objects, thin = thin) %>% 
@@ -178,9 +172,10 @@ pp_irtree <- function(fit_sum = NULL,
         matrix %>% 
         array(dim = c(J, S_b1, length(reps)))
     
-    if (arsModel == TRUE)
+    if (fitModel %in% c("ext")) {
         beta_ARS_extreme <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta_ARS_extreme",
                                                   collapse.chains = F)
+    }
     
     pp <- array(NA_real_, dim = c(N, J, length(reps)))
     
@@ -197,7 +192,7 @@ pp_irtree <- function(fit_sum = NULL,
     # pb <- txtProgressBar(style = 3, char = "zzz ", min = min(reps), max = max(reps))
     
     ##### pp for 'ext' and '2012' #####
-    if (fitModel %in% c("ext", "2012")) {
+    if (fitModel %in% c("ext", "2012", "ext2")) {
         for (rrr in reps) {
             
             theta <- Sigma1[rrr, ] %>%
@@ -229,9 +224,13 @@ pp_irtree <- function(fit_sum = NULL,
                 magrittr::multiply_by(matrix((-1)^revItem, N, J, byrow = T)) %>% 
                 pnorm
             
-            if (arsModel == TRUE) {
+            if (fitModel == "ext") {
                 extreme_a <- matrix(theta[, 2], N, J) %>% 
                     magrittr::subtract(matrix(beta_ARS_extreme[rrr, ], N, J)) %>% 
+                    pnorm
+            } else if (fitModel == "ext2") {
+                extreme_a <- matrix(theta[, 2], N, J) %>% 
+                    magrittr::subtract(matrix(betas[, 5, rrr], N, J, byrow = T)) %>% 
                     pnorm
             } else {
                 extreme_a <- matrix(0, N, J)

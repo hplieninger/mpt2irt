@@ -47,7 +47,7 @@
 #'   priors (startSmall=T; beta and theta closer to 0; might solve problems with
 #'   slow convergence of some chains for extreme starting values).
 #' @param M number of MCMC samples (after warmup)
-#' @param warmup number of samples for warmup (in JAGS: 3/4 for adaption, 1/4
+#' @param warmup number of samples for warmup (in JAGS: 1/5 for adaption, 4/5
 #'   for burnin)
 #' @param n.chains number of MCMC chains (and number of CPUs used)
 #' @param thin thinning of MCMC samples
@@ -90,7 +90,7 @@ fit_irtree <- function(X,
                        traitItem = rep(1, ncol(X)),
                        df = NULL,
                        V = NULL, 
-                       fitModel = c("ext", "2012", "pcm", "steps", "shift"),
+                       fitModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
                        fitMethod = c("stan", "jags"), 
                        outFormat = NULL,
                        startSmall = FALSE,
@@ -157,10 +157,10 @@ fit_irtree <- function(X,
     #              "reverse-coded and regular items correlate negatively.")
     #     }
     # }
-    tmp_test_X <- data.frame(traitItem = levels(factor(traitItem)),
-                             # n = as.vector(table(tmp1)),
-                             revItem = NA,
-                             cors = NA)
+    tmp_test_X <- data.frame("traitItem" = levels(factor(traitItem)),
+                             # "n" = as.vector(table(tmp1)),
+                             "revItem" = NA,
+                             "cors" = NA)
     tmp_test_X$cors <- split(data.frame(t(X)), traitItem) %>% 
         lapply(t) %>% 
         lapply(cor) %>% 
@@ -182,7 +182,7 @@ fit_irtree <- function(X,
     # number of response processes/dimensions
     dimen <- switch(fitModel, 
                 "ext" = 3,  
-                # "ext2" = 3,
+                "ext2" = 3,
                 # "ext3" = 4,
                 # "ext4" = 3,
                 # "ext5" = 3,
@@ -246,7 +246,14 @@ fit_irtree <- function(X,
                                                               a = -2, b = 2)
                 inits[[iii]]$sigma2_beta_raw <-  array(runif(S - 1, 3/4, 4/3))
                 inits[[iii]]$beta_ARS_extreme <- NULL
-            } 
+            }  else if (fitModel == "ext2") {
+                inits[[iii]]$beta_raw <- matrix(truncnorm::rtruncnorm(J*5, mean = 0, sd = 1,
+                                                                      a = -2, b = 2),
+                                                nrow = J, ncol = 5)
+                inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S + 1, mean = 0, sd = 1,
+                                                              a = -2, b = 2)
+                inits[[iii]]$beta_ARS_extreme <- NULL
+            }
             # else if (fitModel == "ext5") {
             #     inits[[iii]]$beta_ARS_extreme <- NULL
             #     inits[[iii]]$mu_beta <- truncnorm::rtruncnorm(S + 1, mean = 0, sd = 1,
@@ -265,7 +272,7 @@ fit_irtree <- function(X,
     }
     
     varlist <-  c("theta", "beta", "Sigma", "sigma_beta", "mu_beta")
-    if (fitModel %in% c("ext", "ext2", "ext3")) {
+    if (fitModel %in% c("ext", "ext3")) {
         varlist <- c(varlist, "beta_ARS_extreme")
     }
     if (fitMethod == "stan") {
@@ -330,8 +337,10 @@ fit_irtree <- function(X,
             stanExe <- stanmodels$stan_steps
         } else if (fitModel == "shift") {
             stanExe <- stanmodels$stan_boeck_shift
-        } else {
+        } else if (fitModel == "2012") {
             stanExe <- stanmodels$stan_boeck_2012
+        } else if (fitModel == "ext2") {
+            stanExe <- stanmodels$stan_boeck_ext2
         }
         if (is.null(cores)) cores <- args$cores <- min(n.chains, parallel::detectCores() - 1)
         boeck.samp <- rstan::sampling(stanExe,
@@ -355,6 +364,14 @@ fit_irtree <- function(X,
                              paste(round(difftime(time2, time1, units = "hours"), 2), "hours"))
         names(boeck.samp@date) <- c("Stan", "Start", "End", "Difference")
     }
+    
+    args$session$system <- Sys.info()
+    args$session$info <- sessionInfo()
+    args$session$info$otherPkgs <- lapply(args$session$info$otherPkgs, `[`,
+                                     c("Package", "Version", "Packaged", "RemoteSha"))
+    args$session$info$loadedOnly <- lapply(args$session$info$loadedOnly, `[`,
+                                     c("Package", "Version", "Packaged", "RemoteSha"))
+    
     # if(!missing(mail) && !is.null(mail))
     #     mail::sendmail(mail, subject=paste("IRT-MPT Model finished on", Sys.info()["nodename"]),
     #                    message="Calculation finished!", password="rmail")

@@ -5,7 +5,7 @@
 \title{Generate data for Acquiescence Model.}
 \usage{
 generate_irtree_ext(N = NULL, J = NULL, betas = NULL, traitItem = rep(1,
-  J), theta_vcov = NULL, prop.rev = 0.5, genModel = "ext",
+  J), theta_vcov = NULL, prop.rev = 0.5, genModel = c("ext", "ext2"),
   beta_ARS_extreme = NULL, cat = TRUE, theta = NULL)
 }
 \arguments{

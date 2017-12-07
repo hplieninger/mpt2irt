@@ -8,11 +8,10 @@ tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
   traitItem = NULL, fitModel = NULL, fitMethod = NULL, plot = TRUE, ...)
 }
 \arguments{
-\item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{summarize_irtree_fit}}.}
+\item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from
+\code{\link{summarize_irtree_fit}}.}
 
-\item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)
-person) or a numeric value specifying the trait value used to plot response
-styles (e.g., trait=0 for an average person)}
+\item{S}{number of latent processes to be measured}
 
 \item{N}{number of persons}
 
@@ -33,12 +32,18 @@ or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
 
 \item{fitMethod}{whether to use JAGS or Stan}
 
-\item{plot}{Logical. Whether a plot should be produced using \code{\link{plot_irtree}} and returned.}
+\item{plot}{Logical. Whether a plot should be produced using
+\code{\link{plot_irtree}} and returned. NB: When you \code{\link{save}} the
+output including the plot, the file will require much more space on disk
+compared to space required in memory (see also
+\url{https://stackoverflow.com/a/21836959/}).}
 
 \item{...}{Further arguments passed to \code{\link{plot_irtree}}.}
 }
 \value{
-The function returns a list for each of the core parameters (e.g., theta, beta), which are each summarized with the posterior mean, median and 95% CI.
+The function returns a list for each of the core parameters (e.g.,
+  theta, beta), which are each summarized with the posterior mean, median and
+  95\% CI.
 }
 \description{
 Function takes a fitted model returned from \code{\link{fit_irtree}} and

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots2.R
 \name{boeck_predict}
 \alias{boeck_predict}
-\title{Model predicted response distribution.}
+\title{Model-predicted response distribution.}
 \usage{
 boeck_predict(fit_sum = NULL, theta = matrix(0, N, S2), betas = NULL,
   beta_ARS_extreme = NULL, measure = c("Median", "Mean"), S = NULL,
@@ -21,9 +21,7 @@ probit scale) of choosing category 5 (vs.4) in case of ARS}
 \item{measure}{Character vector that indicates whether the mean (default) or
 the median of the posterior distribution should be plotted.}
 
-\item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)
-person) or a numeric value specifying the trait value used to plot response
-styles (e.g., trait=0 for an average person)}
+\item{S}{number of latent processes to be measured}
 
 \item{N}{number of persons}
 

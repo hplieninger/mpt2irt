@@ -54,7 +54,7 @@ plot_responses <- function(X,
     return()
 }
 
-#' Model predicted response distribution.
+#' Model-predicted response distribution.
 #' 
 #' Calculate the predicted response distribution given the posterior median/mean of the item parameters and a matrix \code{theta} of person parameters.
 #' 

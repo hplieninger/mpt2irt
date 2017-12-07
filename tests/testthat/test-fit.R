@@ -153,6 +153,13 @@ test_that("tidyup_irtree_fit() returns correct number of parameters", {
     expect_equal(unique(sapply(res4c$theta, nrow)), N)
 })
 
+test_that("plot_irtree() returns a valid ggplot", {
+    expect_true(ggplot2::is.ggplot(res1c$plot))
+    expect_true(ggplot2::is.ggplot(res2c$plot))
+    expect_true(ggplot2::is.ggplot(res3c$plot))
+    expect_true(ggplot2::is.ggplot(res4c$plot))
+})
+
 test_that("pp_irtree() returns valid values", {
     expect_is(res1d, "data.frame")
     expect_is(res2d, "data.frame")

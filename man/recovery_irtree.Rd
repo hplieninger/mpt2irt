@@ -54,7 +54,7 @@ qnorm(.9))}.}
 
 \item{thin}{thinning of MCMC samples}
 
-\item{warmup}{number of samples for warmup (in JAGS: 3/4 for adaption, 1/4
+\item{warmup}{number of samples for warmup (in JAGS: 1/5 for adaption, 4/5
 for burnin)}
 
 \item{method}{the method with which to call JAGS; probably a character vector specifying one of 'rjags', 'simple', 'interruptible', 'parallel', 'rjparallel', 'background', 'bgparallel' or 'snow'. The 'rjags' and 'rjparallel' methods run JAGS using the rjags package, whereas other options do not require the rjags package and call JAGS as an external executable.  The advantage of the 'rjags' method is that the model will not need to be recompiled between successive calls to extend.jags, all other methods require a re-compilation (and adaptation if necessary) step at every call to extend.jags.  Note that the 'rjparallel' and 'snow' methods may leave behind zombie JAGS processes if the user interrupts the R session used to start the simulations - for this reason the 'parallel' method is recommended for interactive use with parallel chains. The 'background' and 'bgparallel' return a filename for the started simulation, which can be read using \code{\link{results.jags}}.  The 'parallel' and 'interruptible' methods for Windows require XP Professional, Vista or later (or any Unix-alike).  For more information refer to the userguide vignette.}

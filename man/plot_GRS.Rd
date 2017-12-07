@@ -8,7 +8,9 @@ plot_GRS(fit, parameter = "beta", estimate = "point", plot = TRUE,
   return.odd = TRUE, ...)
 }
 \arguments{
-\item{fit}{a fitted object from \link{fit_irtree} (either Boeckenholt 2012 or extended)}
+\item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{tidyup_irtree_fit}}.
+person) or a numeric value specifying the trait value used to plot response
+styles (e.g., trait=0 for an average person)}
 
 \item{parameter}{Character. The group of parameters for which the statistic is
 to be calculated. Using the empty vector (\code{""}) uses all parameters in

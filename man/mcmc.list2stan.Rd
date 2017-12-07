@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{mcmc.list2stan}
 \alias{mcmc.list2stan}
-\title{Convert MCMC List to Array}
+\title{Convert MCMC list to array.}
 \usage{
 mcmc.list2stan(x)
 }

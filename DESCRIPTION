@@ -43,6 +43,8 @@ Suggests:
     testthat (>= 1.0.2),
     tibble,
     tidyr
+Remotes: 
+    olafmersmann/truncnorm
 LinkingTo: StanHeaders (>= 2.14.0), rstan (>= 2.14.1), BH (>= 1.62.0), Rcpp (>=
     0.12.0), RcppEigen
 LazyData: true

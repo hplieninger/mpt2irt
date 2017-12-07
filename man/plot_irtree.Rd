@@ -4,18 +4,19 @@
 \alias{plot_irtree}
 \title{Plot item parameters of an mpt2irt model.}
 \usage{
-plot_irtree(fit, S = NULL, J = NULL, revItem = NULL, traitItem = NULL,
+plot_irtree(fit, fitModel = NULL, revItem = NULL, traitItem = NULL,
   return_data = FALSE, tt_names = NULL, measure = c("Median", "Mean"),
-  rs_names = NULL, fitMethod = NULL)
+  rs_names = NULL)
 }
 \arguments{
-\item{fit}{a fitted object from \link{fit_irtree} (either Boeckenholt 2012 or extended)}
-
-\item{S}{number of distinct MPT-parameters (2012: 3; extended: 4)
+\item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{tidyup_irtree_fit}}.
 person) or a numeric value specifying the trait value used to plot response
 styles (e.g., trait=0 for an average person)}
 
-\item{J}{number of items}
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without 
+acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
+(partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
+or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
 
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
 0=not reversed)}
@@ -35,8 +36,6 @@ trait(s).}
 the median of the posterior distribution should be plotted.}
 
 \item{rs_names}{Character vector. Names of the MPT parameters used for plotting, defaults to something like \code{c("m", "e", "a", "t")}.}
-
-\item{fitMethod}{whether to use JAGS or Stan}
 }
 \description{
 This function takes the output from a fitted model and plots the item

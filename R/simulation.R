@@ -236,8 +236,7 @@ recovery_irtree <- function(rrr = NULL,
                            fitMethod = fitMethod, df = NULL, V = NULL,
                            M = M, n.chains = n.chains, thin = thin,
                            warmup = warmup, df_vcov = df_vcov, startSmall = startSmall,
-                           jagspath = runjags::runjags.getOption("jagspath"),
-                           session = NULL)
+                           jagspath = runjags::runjags.getOption("jagspath"))
         
         # fitpar <- list() ; dic <- list()
         for(sss in 1:length(S.fit)){
@@ -290,8 +289,8 @@ recovery_irtree <- function(rrr = NULL,
                 returnlist$param.sum[[fitModel[sss]]] <- sum.jags
                 returnlist$df <- fit.jags$df
                 returnlist$V <- fit.jags$V
-                returnlist$session <- sessionInfo()
-                returnlist$nodename <- Sys.info()["nodename"]
+                # returnlist$session <- sessionInfo()
+                # returnlist$nodename <- Sys.info()["nodename"]
                 rm(fit.jags, sum.jags)
                 
                 #             rjags::load.module("glm", quiet=T)
@@ -332,8 +331,8 @@ recovery_irtree <- function(rrr = NULL,
                     summary(returnlist$param.sum[[fitModel[sss]]]$mcmc)
                 returnlist$df <- fit.stan$df
                 returnlist$V <- fit.stan$V
-                returnlist$session <- sessionInfo()
-                returnlist$nodename <- Sys.info()["nodename"]
+                # returnlist$session <- sessionInfo()
+                # returnlist$nodename <- Sys.info()["nodename"]
                 if (savext_mcmc == TRUE) {
                     returnlist_mcmc <- returnlist$param.sum[[fitModel[sss]]]$mcmc
                 }

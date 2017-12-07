@@ -5,7 +5,7 @@
 \title{Fit an mpt2irt model.}
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
-  V = NULL, fitModel = c("ext", "2012", "pcm", "steps", "shift"),
+  V = NULL, fitModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
   fitMethod = c("stan", "jags"), outFormat = NULL, startSmall = FALSE,
   M = 1000, warmup = 1000, n.chains = 2, thin = 1,
   method = "parallel", add2varlist = NULL, cores = NULL,
@@ -46,7 +46,7 @@ slow convergence of some chains for extreme starting values).}
 
 \item{M}{number of MCMC samples (after warmup)}
 
-\item{warmup}{number of samples for warmup (in JAGS: 3/4 for adaption, 1/4
+\item{warmup}{number of samples for warmup (in JAGS: 1/5 for adaption, 4/5
 for burnin)}
 
 \item{n.chains}{number of MCMC chains (and number of CPUs used)}

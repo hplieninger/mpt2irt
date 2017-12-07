@@ -1,4 +1,4 @@
-#' Convert MCMC List to Array
+#' Convert MCMC list to array.
 #' 
 #' Converts an mcmc.list (each list entry: rows=MCMC samples; cols=parameters) to a 3 dimensional array (MCMC samples; chains; parameters)
 #' Property of ??? (Internet!)

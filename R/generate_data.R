@@ -31,33 +31,35 @@ generate_irtree_ext <- function(N = NULL,
                                 traitItem = rep(1,J),
                                 theta_vcov = NULL, 
                                 prop.rev = .5,
-                                genModel = "ext",
+                                genModel = c("ext", "ext2"),
                                 beta_ARS_extreme = NULL,
                                 cat = TRUE,
                                 theta = NULL) {
+    genModel <- match.arg(genModel)
     
-    checkmate::qassert(N, "X1[2,]")
+    checkmate::qassert(N, "X1[1,]")
     checkmate::qassert(J, "X>0[1,]")
     checkmate::assert_matrix(betas, mode = "double", any.missing = FALSE, 
-                             nrows = J, ncols = 4)
+                             nrows = J, ncols = ifelse(genModel == "ext", 4, 5))
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
                                  len = J)
     # checkmate::qassert(prop.rev, "N1[0,1]")
     checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
                               min.len = 1, max.len = length(unique(traitItem)))
-    checkmate::assert_number(beta_ARS_extreme, finite = TRUE)
+    checkmate::assert_number(beta_ARS_extreme, finite = TRUE,
+                             null.ok = ifelse(genModel == "ext", F, T))
     
     # multiple traits
     n.trait <- length(unique(traitItem))
-    if(n.trait != 1 & (min(traitItem)!=1 | max(traitItem) != n.trait))
+    if (n.trait != 1 & (min(traitItem) != 1 | max(traitItem) != n.trait))
         warning("Check definition of traitItem!")
     S_style <- ifelse(as.character(genModel) != "2012", 3, 2)
-    S <- S_style + n.trait + ifelse(genModel=="ext3", 1, 0)
-    if(length(prop.rev) == 1) {
+    S <- S_style + n.trait + ifelse(genModel == "ext3", 1, 0)
+    if (length(prop.rev) == 1) {
         prop.rev <- rep(prop.rev, n.trait)
     }
     if (is.null(theta)) {
-        if(missing(theta_vcov) | is.null(theta_vcov)) {
+        if (missing(theta_vcov) | is.null(theta_vcov)) {
             theta_vcov <- diag(S)
         } else if (is.vector(theta_vcov)) {
             theta_vcov <- theta_vcov * diag(S)
@@ -75,33 +77,33 @@ generate_irtree_ext <- function(N = NULL,
     m <- y <- e <- a <- matrix(NA, N, J)
     # reversed items
     revItem <- rep(0, J)
-    for(tt in 1:n.trait){
+    for (tt in 1:n.trait) {
         Jtmp <-  ceiling(prop.rev[tt] * sum(traitItem == tt))
-        tmp <- rep(0:1, c(sum(traitItem == tt)-Jtmp,Jtmp))
+        tmp <- rep(0:1, c(sum(traitItem == tt) - Jtmp,Jtmp))
         revItem[traitItem == tt] <- sample(  tmp )
     }
     #   if(prop.rev != 0)
     #     revItem[1:ceiling(J*prop.rev)] <- 1
     #   revItem <- sample(revItem, J)
     # generate data
-    for(i in 1:N){
-        for(j in 1:J){      
+    for (i in 1:N) {
+        for (j in 1:J) {      
             m[i, j] <- pnorm(theta[i,1] - betas[j,1])
             e[i, j] <- pnorm(theta[i,2] - betas[j,2])
-            if(as.character(genModel) != "2012"){
+            if (as.character(genModel) != "2012") {
                 a[i, j] <- pnorm(theta[i,3] - betas[j,3])
             }
             y[i, j] <- pnorm(theta[i, S_style + traitItem[j]] - betas[j, S_style + 1])
             
             # reversed items: only relevant for trait-dimension/response process
-            p.trait <- ifelse(revItem[j] == 1, 1-y[i, j], y[i, j])
+            p.trait <- ifelse(revItem[j] == 1, 1 - y[i, j], y[i, j])
             
             # type of ERS in case of ARS:
             extr_ars <- switch(as.character(genModel),
                                "ext" = pnorm(theta[i, 2] - beta_ARS_extreme),
                                # "ext" = e[i,j], 
-                               # "ext2" = beta_ARS_extreme, 
-                               "ext3" = pnorm(theta[i, S] - beta_ARS_extreme),
+                               "ext2" = pnorm(theta[i, 2] - betas[j, 5]),
+                               # "ext3" = pnorm(theta[i, S] - beta_ARS_extreme),
                                "2012" = .5)
             
             # response probabilities: MPT model from -2, -1, 0, 1, 2 // 0,1,2,3,4
@@ -319,26 +321,38 @@ generate_irtree_steps <- function(N = NULL,
 #' tmp1 <- list("beta.mrs" = list("mean" =  0,
 #'                                "sd"   =  0.3,
 #'                                "a"    = -2,
-#'                                "b"    =  2))
+#'                                "b"    =  Inf))
 #' betapar <- mpt2irt:::gen_betas("ext", J = J, betas = tmp1)
 # @export
-gen_betas <- function(genModel = NULL,
+gen_betas <- function(genModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
                       J = NULL,
                       betas = NULL) {
     
-    checkmate::assert_list(betas, null.ok = TRUE)
+    genModel <- match.arg(genModel)
     checkmate::qassert(J, "X>0[1,]")
+    checkmate::assert_list(betas, null.ok = TRUE)
     
     J <- sum(J)
-    if (any(!names(betas) %in% c("beta.mrs", "beta.ers", "beta.trait", "beta.ars"))) {
-        stop("Argument 'betas' is an optional list with possible entries 'beta.mrs', 'beta.ers', 'beta.trait', and 'beta.ars'. Check definition and spelling of 'betas'.")
+    if (any(!names(betas) %in% c("beta.mrs", "beta.ers", "beta.trait", "beta.ars", "beta.aers"))) {
+        stop("Argument 'betas' is an optional list with possible entries 'beta.mrs', ",
+             "'beta.ers', 'beta.trait', 'beta.ars', and 'beta.aers'. Check ",
+             "definition and spelling of 'betas'.")
     }
     for (iii in seq_len(length(betas))) {
         if (any(!names(betas[[iii]]) %in% c("mean", "sd", "a", "b"))) {
             stop("Possible entries for lists in argument 'betas' are 'mean', 'sd', 'a', and 'b'. Check definition and spelling of 'betas'.")
         }
     }
-    res <- matrix(NA, J, ifelse(genModel == "2012", 3, 4))
+    S_b1 <- switch(genModel,
+                   "2012"  = 3,
+                   "ext"   = 4,
+                   "pcm"   = 4,
+                   "steps" = 4,
+                   "shift" = 3,
+                   "ext2"  = 5)
+    
+    res <- matrix(NA, J, S_b1)
+    
     # beta.mrs
     if (is.null(betas$beta.mrs$mean)) {
         betas$beta.mrs$mean <- qnorm(.7)
@@ -353,6 +367,7 @@ gen_betas <- function(genModel = NULL,
         betas$beta.mrs$b <- qnorm(.9)
     }
     res[, 1] <- do.call(truncnorm::rtruncnorm, c(n = J, betas$beta.mrs))
+    
     # beta.ers
     if (is.null(betas$beta.ers$mean)) {
         betas$beta.ers$mean <- qnorm(.7)
@@ -367,6 +382,7 @@ gen_betas <- function(genModel = NULL,
         betas$beta.ers$b <- qnorm(.9)
     }
     res[, 2] <- do.call(truncnorm::rtruncnorm, c(n = J, betas$beta.ers))
+    
     # beta.trait
     if (is.null(betas$beta.trait$mean)) {
         betas$beta.trait$mean <- 0
@@ -380,7 +396,9 @@ gen_betas <- function(genModel = NULL,
     if (is.null(betas$beta.trait$b)) {
         betas$beta.trait$b <- qnorm(.7)
     }
-    res[, ncol(res)] <- do.call(truncnorm::rtruncnorm, c(n = J, betas$beta.trait))
+    tmp1 <- ifelse(genModel %in% c("ext2"), 4, ncol(res))
+    res[, tmp1] <- do.call(truncnorm::rtruncnorm, c(n = J, betas$beta.trait))
+    
     # beta.ars
     if (genModel != "2012") {
         if (is.null(betas$beta.ars$mean)) {
@@ -397,6 +415,24 @@ gen_betas <- function(genModel = NULL,
         }
         res[, 3] <- do.call(truncnorm::rtruncnorm, c(n = J, betas$beta.ars))
     }
+    
+    # beta.aers
+    if (genModel %in% c("ext2")) {
+        if (is.null(betas$beta.aers$mean)) {
+            betas$beta.aers$mean <- qnorm(.7)
+        }
+        if (is.null(betas$beta.aers$sd)) {
+            betas$beta.aers$sd <- sqrt(.1)
+        }
+        if (is.null(betas$beta.aers$a)) {
+            betas$beta.aers$a <- qnorm(.5)
+        }
+        if (is.null(betas$beta.aers$b)) {
+            betas$beta.aers$b <- qnorm(.9)
+        }
+        res[, 5] <- do.call(truncnorm::rtruncnorm, c(n = J, betas$beta.aers))
+    }
+    
     return(res)
 }
 
