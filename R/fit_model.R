@@ -303,6 +303,10 @@ fit_irtree <- function(X,
                                         burnin = ceiling(warmup*4/5), adapt = ceiling(warmup/5),
                                         thin = thin, method = method, 
                                         summarise = summarise, modules = c("glm", "dic"), ...)
+        
+        args$session$jagspath <- runjags::runjags.getOption("jagspath")
+        
+        
         if (is.null(outFormat)) {
             boeck.samp <- boeck.jags
         } else if (outFormat == "mcmc.list") {

@@ -3,7 +3,7 @@
 #' This function allows to run a simulation study of mpt2irt models. Data are
 #' generated either from the Boeckenholt Model (\code{genModel = "2012"}) or
 #' from the Acquiescence Model (\code{genModel = "ext"}). Subsequently, one or
-#' both of these models are fit to the generated data using eihter JAGS or Stan.
+#' both of these models are fit to the generated data using either JAGS or Stan.
 #' The results are saved in an RData file in \code{dir}.
 #' 
 #' @param J number of items. Can be a vector for multiple traits (e.g.,
@@ -77,7 +77,7 @@ recovery_irtree <- function(rrr = NULL,
                             J = NULL,
                             prop.rev = .5,
                             genModel = c("ext", "2012"),
-                            fitModel = NULL,
+                            fitModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
                             fitMethod = c("stan", "jags"), 
                             theta_vcov = NULL,
                             betas = NULL,
@@ -94,7 +94,8 @@ recovery_irtree <- function(rrr = NULL,
                             df_vcov = 50,
                             dir = NULL,
                             keep_mcmc = FALSE,
-                            savext_mcmc = FALSE,
+                            savext_all = FALSE,
+                            savext_mcmc = TRUE,
                             add2varlist = c("deviance", "pd", "popt", "dic"), ...) {
     
     # It is assumed that parameters such as df and V are the same for all models
@@ -104,39 +105,57 @@ recovery_irtree <- function(rrr = NULL,
     checkmate::qassert(rrr, "X>0[1,]")
     checkmate::qassert(N, "X1")
     checkmate::qassert(J, "X>0[1,]")
-    # checkmate::qassert(prop.rev, "X1[0,1]")
     genModel <- match.arg(genModel)
-    checkmate::qassert(fitModel, "S>0")
     fitMethod <- match.arg(fitMethod)
-    # checkmate::assert_list(betas, null.ok = TRUE)
-    # checkmate::assert_number(beta_ARS_extreme, finite = TRUE, null.ok = TRUE)
+    if (fitMethod == "stan") {
+        fitModel <- match.arg(fitModel, several.ok = TRUE)
+    } else {
+        # PCM and Steps not yet implemented in JAGS
+        fitModel <- match.arg(fitModel, choices = c("ext", "2012"),
+                              several.ok = TRUE)
+    }
     checkmate::qassert(df_vcov, "N1[1,]")
     
-    ### INPUT WRANGLING --------------------------------------------------------
+    args <- c(as.list(environment()), list(...))
+    
+    ### INPUT WRANGLING -----
     
     #### multiple traits
     n.trait <- length(J)
     traitItem <- rep(1:n.trait, J)
-    if(length(prop.rev) == 1)
-        prop.rev <- rep(prop.rev, n.trait)
-    #     if(length(trait.sd) ==1){
-    #         trait.sd <- rep(trait.sd,  sum(J))
-    #     }else if(length(trait.sd) == n.trait){
-    #         trait.sd <- rep(trait.sd, J)
-    #     }
     J <- sum(J)
     
-    genModel <- as.character(genModel)
     numRS.gen <- ifelse(genModel == "2012", 2, 3)
     S.gen <- numRS.gen + n.trait
     numRS.fit <- sapply(fitModel, function(x) ifelse(x == "2012", 2, 3))
     S.fit <- numRS.fit + n.trait
     
+    ### DIRECTORIES -----
+    
+    try(dir <- path.expand(dir))
+    if (!dir.exists(dir)) {
+        set.seed(Sys.Date())
+        tmp1 <- paste0(sample(c(letters, LETTERS, 0:9), 12, T), collapse = "")
+        dirx <- paste0(getwd(), "/", tmp1)
+        if (!dir.exists(dirx)) {
+            dir.create(dirx)
+        }
+        on.exit(message(paste0("Data saved in: ", dirx)))
+    }
+    
+    if (savext_mcmc == TRUE) {
+        if (!dir.exists(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))) {
+            dir.create(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))
+        }
+    }
+    
+    ### LOOP OVER REPLICATIONS -----
+    
     for (qqq in seq_along(rrr)) {
         
         time_1 <- Sys.time()
         
-        ### GENERATE A SINGLE DATASET ----------------------------------------------
+        ### GENERATE DATA -----
         cor2cov <- function(mat = NULL, sd = NULL) {
             # is in MBESS package, but MBESS has so many dependencies
             checkmate::qassert(mat, "M+[-1,1]")
@@ -168,36 +187,10 @@ recovery_irtree <- function(rrr = NULL,
         
         
         if (genModel == "2012") {
-            # if (missing(betas)) {
-            #     beta.mrs <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-            #                                       a = qnorm(.5), b = qnorm(.9))
-            #     beta.ers <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-            #                                       a = qnorm(.5), b = qnorm(.9))
-            #     beta.trait <- truncnorm::rtruncnorm(n = J, mean = 0, sd = sqrt(.5),
-            #                                         a = qnorm(.3), b = qnorm(.7))
-            #     betas_i <- cbind(beta.mrs, beta.ers, beta.trait)
-            # } else {
-            #     betas_i <- betas
-            # }
             betas_i <- gen_betas(genModel = genModel, J = J, betas = betas)
             gen <- generate_irtree_2012(N = N, J = J, betas = betas_i, theta_vcov = theta_vcov_i,
                                   prop.rev = prop.rev, traitItem = traitItem, cat = TRUE)
         } else if (genModel == "ext") {
-            # if (missing(betas)) {
-            #     beta.mrs <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-            #                                       a = qnorm(.5), b = qnorm(.9))
-            #     beta.ers <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-            #                                       a = qnorm(.5), b = qnorm(.9))
-            #     beta.ars <- truncnorm::rtruncnorm(n = J, mean = qnorm(.95), sd = sqrt(.1),
-            #                                       a = qnorm(.8), b = qnorm(.999))
-            #     # beta.ars <- truncnorm::rtruncnorm(n = J, mean = qnorm(.9), sd = sqrt(.1),
-            #     #                                   a = qnorm(.8), b = qnorm(.99))
-            #     beta.trait <- truncnorm::rtruncnorm(n = J, mean = 0, sd = sqrt(.5),
-            #                                         a = qnorm(.3), b = qnorm(.7))
-            #     betas_i <- cbind(beta.mrs, beta.ers, beta.ars, beta.trait)
-            # } else {
-            #     betas_i <- betas
-            # }
             betas_i <- gen_betas(genModel = genModel, J = J, betas = betas)
             
             if (is.null(beta_ARS_extreme)) {
@@ -228,201 +221,179 @@ recovery_irtree <- function(rrr = NULL,
                                   switch(genModel, "ext" = gen$beta_ARS_extreme)),
                                 ncol = 1, dimnames = list(genNames, NULL))
         
-        ### FIT THAT SHIT IN JAGS ----------------------------------------------
+        returnlist <- list(param.sum = param.sum,
+                           # genModel = genModel,
+                           sim_args = args
+                           # fitModel = fitModel,
+                           # S = S.fit,
+                           # revItem = gen$revItem,
+                           # traitItem = gen$traitItem,
+                           # X = gen$X,
+                           # N = N,
+                           # J = J,
+                           # prop.rev = prop.rev,
+                           # n.trait = n.trait,
+                           # fitMethod = fitMethod,
+                           # df = NULL,
+                           # V = NULL,
+                           # M = M,
+                           # n.chains = n.chains,
+                           # thin = thin,
+                           # warmup = warmup,
+                           # df_vcov = df_vcov,
+                           # startSmall = startSmall,
+                           # jagspath = runjags::runjags.getOption("jagspath")
+                           )
         
-        returnlist <- list(param.sum = param.sum, genModel = genModel, fitModel = fitModel,
-                           S = S.fit, revItem = gen$revItem, traitItem = gen$traitItem,
-                           X = gen$X, N = N, J = J, prop.rev = prop.rev, n.trait = n.trait,
-                           fitMethod = fitMethod, df = NULL, V = NULL,
-                           M = M, n.chains = n.chains, thin = thin,
-                           warmup = warmup, df_vcov = df_vcov, startSmall = startSmall,
-                           jagspath = runjags::runjags.getOption("jagspath"))
+        ### FIT MODELS -----
         
-        # fitpar <- list() ; dic <- list()
-        for(sss in 1:length(S.fit)){
+        for (sss in 1:length(S.fit)) {
             
-            # fitNames <- theta_mu <- V.ls <- list()
-            # fitNames <- list()
-            # for(sss in 1:length(S.fit)){
-            #         fitNames[[sss]] <- c(paste0("theta[",apply(expand.grid(1:N, 1:S.fit[sss]),1, 
-            #                                                    paste0, collapse=","),"]"),
-            #                              paste0("beta[",apply(expand.grid(1:J, 1:(numRS.fit[sss]+1)),1, 
-            #                                                   paste0, collapse=","),"]"), 
-            #                              paste0("Sigma[",apply(expand.grid(1:S.fit[sss], 1:S.fit[sss]),1, 
-            #                                                    paste0, collapse=","),"]"),
-            #                              ttt)
-            # theta_mu[[sss]] <- rep(0,S.fit[sss])
+            ### FIT IN JAGS -----
             
-            ### set up parameters
-            #         if(missing(V)){
-            #             V.ls[[sss]] <- diag(S.fit[sss])
-            #         }else if(length(S.fit) == 1){
-            #             V.ls[[sss]] <- unlist(V)
-            #         }else{
-            #             V.ls[[sss]] <- V[[sss]]
-            #         }
-            # }
-            #         if(missing(df)){
-            #             df <- S.fit+1
-            #         }
-            
-            if(fitMethod == "jags") {
-                fit.jags <- fit_irtree(X = gen$X,
-                                      revItem = gen$revItem,
-                                      traitItem = gen$traitItem,
-                                      fitModel = fitModel[sss], fitMethod = fitMethod, df = df, V = V,
-                                      n.chains = n.chains, thin = thin, M = M, warmup = warmup,
-                                      outFormat = outFormat, startSmall = startSmall,
-                                      return_defaults = TRUE, method = method,
-                                      add2varlist = add2varlist, ...)
-                sum.jags <- runjags::add.summary(fit.jags$samples)
-                # sum.jags$mcmc <- NULL
-                if (savext_mcmc == TRUE) {
-                    returnlist_mcmc <- sum.jags$mcmc
-                }
-                if (keep_mcmc == FALSE) {
-                    for (iii in seq_along(sum.jags$mcmc)) {
-                        sum.jags$mcmc[[iii]] <- sum.jags$mcmc[[iii]][, 1, drop = F]
-                    }
-                    sum.jags$crosscorr <- NULL
-                }
-                returnlist$param.sum[[fitModel[sss]]] <- sum.jags
-                returnlist$df <- fit.jags$df
-                returnlist$V <- fit.jags$V
-                # returnlist$session <- sessionInfo()
-                # returnlist$nodename <- Sys.info()["nodename"]
-                rm(fit.jags, sum.jags)
+            if (fitMethod == "jags") {
+                fit_jags <- fit_irtree(X = gen$X,
+                                       revItem = gen$revItem,
+                                       traitItem = gen$traitItem,
+                                       fitModel = fitModel[sss], fitMethod = fitMethod, df = df, V = V,
+                                       n.chains = n.chains, thin = thin, M = M, warmup = warmup,
+                                       outFormat = outFormat, startSmall = startSmall,
+                                       method = method,
+                                       add2varlist = add2varlist, ...)
                 
-                #             rjags::load.module("glm", quiet=T)
-                #             #         boeck.jags <- run.jags(model=paste0( modelPath,"/mpt2irt/models/jags_boeck_",fitModel[sss],"_1d.txt"), 
-                #             #                               monitor = c("theta", "beta", "Sigma", "T_obs","T_pred", "post_p",
-                #             #                                           'deviance', 'pd', 'pd.i', 'popt', 'dic'), 
-                #             #                               data=datalist, n.chains=n.chains,  
-                #             #                               burnin = M/4, sample = M, adapt=M/4, 
-                #             #                               summarise = T, thin = thin, method="simple")
-                #             boeck.jags <- rjags::jags.model(file=paste0( modelPath,"/mpt2irt/models/jags_boeck_",
-                #                                                          fitModel[sss],".txt"), 
-                #                                             data=datalist,  n.chains=n.chains, n.adapt=M/4)
-                #             adapt <- F
-                #             while(!adapt){
-                #                 adapt <- rjags::adapt(boeck.jags,M/4,end.adaptation = FALSE)
-                #             }
-                #             rjags::update(boeck.jags, M/4)
-                #             boeck.samp <- coda.samples.dic(boeck.jags, 
-                #                                            variable.names = c("theta", "beta", "Sigma",
-                #                                                               "T_obs","T_pred", "post_p"),
-                #                                            n.iter=M*thin, thin = thin)
-                #             dic[[sss]] <- boeck.samp$dic
-                #             boeck.stan <- mcmc.list2stan(boeck.samp$samples)
-                #             rm(boeck.samp)
+                # returnlist$sim_args$jagspath <- runjags::runjags.getOption("jagspath")
+                
+                fit2 <- summarize_irtree_fit(fit_jags)
+                fit3 <- tidyup_irtree_fit(fit2, plot = FALSE)
+                
+                returnlist$param.sum[[fitModel[sss]]] <- fit3
+                
+                tmp0 <- sprintf("sim_%04d_%s_%s_mcmc.RData", rrr[qqq], fitMethod, fitModel[sss])
+                
+                if (savext_mcmc == TRUE) {
+                    
+                    tmp11 <- gsub("_mcmc.RData", "", tmp0) %>% 
+                        gsub("sim", "mcmc", x = .)
+                    
+                    assign(tmp11, fit2$mcmc)
+                    
+                    tmp13 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp0)
+                    do.call(save, list(tmp11, file = tmp13))
+                }
+                if (savext_all == TRUE) {
+                    
+                    tmp21 <- gsub("_mcmc.RData", "", tmp0) %>% 
+                        gsub("sim", "res", x = .)
+                    
+                    tmp22 <- gsub("mcmc", "raw", tmp0)
+                    tmp23 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp22)
+                    
+                    assign(tmp21, fit_jags)
+                    
+                    do.call(save, list(tmp21, file = tmp23))
+                }
+                
+                rm(fit_jags, fit2, fit3)
+                
+                # sum.jags <- runjags::add.summary(fit_jags$samples)
+                # # sum.jags$mcmc <- NULL
+                # if (savext_mcmc == TRUE) {
+                #     returnlist_mcmc <- sum.jags$mcmc
+                # }
+                # if (keep_mcmc == FALSE) {
+                #     for (iii in seq_along(sum.jags$mcmc)) {
+                #         sum.jags$mcmc[[iii]] <- sum.jags$mcmc[[iii]][, 1, drop = F]
+                #     }
+                #     sum.jags$crosscorr <- NULL
+                # }
+                # returnlist$param.sum[[fitModel[sss]]] <- sum.jags
+                # rm(fit_jags, sum.jags)
+                
             } else if (fitMethod == "stan") {
-                ### Stan
-                fit.stan <- fit_irtree(X = gen$X,
+                
+                ### FIT IN STAN ----
+                
+                fit_stan <- fit_irtree(X = gen$X,
                                       revItem = gen$revItem,
                                       traitItem = gen$traitItem,
                                       fitModel = fitModel[sss], fitMethod = fitMethod, df = df, V = V,
                                       n.chains = n.chains, thin = thin, M = M, warmup = warmup,
                                       outFormat = outFormat, startSmall = startSmall,
-                                      return_defaults = TRUE, add2varlist = NULL, ...)
-                returnlist$param.sum[[fitModel[sss]]] <- fit.stan
-                returnlist$param.sum[[fitModel[sss]]]$mcmc <- rstan::As.mcmc.list(fit.stan$samples)
-                returnlist$param.sum[[fitModel[sss]]]$summary <-
-                    # coda:::summary.mcmc.list(returnlist$param.sum[[fitModel[sss]]]$mcmc)
-                    summary(returnlist$param.sum[[fitModel[sss]]]$mcmc)
-                returnlist$df <- fit.stan$df
-                returnlist$V <- fit.stan$V
-                # returnlist$session <- sessionInfo()
-                # returnlist$nodename <- Sys.info()["nodename"]
+                                      add2varlist = NULL, ...)
+                
+                
+                fit2 <- summarize_irtree_fit(fit_stan)
+                fit3 <- tidyup_irtree_fit(fit2, plot = FALSE)
+                
+                returnlist$param.sum[[fitModel[sss]]] <- fit3
+                
+                tmp0 <- sprintf("sim_%04d_%s_%s_mcmc.RData", rrr[qqq], fitMethod, fitModel[sss])
+                
                 if (savext_mcmc == TRUE) {
-                    returnlist_mcmc <- returnlist$param.sum[[fitModel[sss]]]$mcmc
+                    
+                    tmp11 <- gsub("_mcmc.RData", "", tmp0) %>% 
+                        gsub("sim", "mcmc", x = .)
+                    
+                    assign(tmp11, fit2$mcmc)
+                    
+                    tmp13 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp0)
+                    do.call(save, list(tmp11, file = tmp13))
                 }
-                if (keep_mcmc == FALSE) {
-                    returnlist$param.sum[[fitModel[sss]]]$mcmc <- NULL
-                    returnlist$param.sum[[fitModel[sss]]]$samples@sim$samples <- vector("list", length = n.chains)
-                    # for (iii in seq_along(fit.stan$samples@sim$samples)[-1]) {
-                    #     returnlist$param.sum[[fitModel[sss]]]$samples@sim$samples[[iii]] <-
-                    #         lapply(returnlist$param.sum[[fitModel[sss]]]$samples@sim$samples[[iii]], function(x) x <- NULL)
-                    #     attributes(returnlist$param.sum[[fitModel[sss]]]$samples@sim$samples[[iii]]) <-
-                    #         lapply(attributes(returnlist$param.sum[[fitModel[sss]]]$samples@sim$samples[[iii]]), function(x) x <- NULL)
-                    # }
+                if (savext_all == TRUE) {
+                    
+                    tmp21 <- gsub("_mcmc.RData", "", tmp0) %>% 
+                        gsub("sim", "res", x = .)
+                    
+                    tmp22 <- gsub("mcmc", "raw", tmp0)
+                    tmp23 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp22)
+                    
+                    assign(tmp21, fit_stan)
+                    
+                    do.call(save, list(tmp21, file = tmp23))
                 }
-                rm(fit.stan)
+                
+                rm(fit_stan, fit2, fit3)
+                
+                # returnlist$param.sum[[fitModel[sss]]] <- fit_stan
+                # returnlist$param.sum[[fitModel[sss]]]$mcmc <- rstan::As.mcmc.list(fit_stan$samples)
+                # returnlist$param.sum[[fitModel[sss]]]$summary <-
+                #     summary(returnlist$param.sum[[fitModel[sss]]]$mcmc)
+                # if (savext_mcmc == TRUE) {
+                #     returnlist_mcmc <- returnlist$param.sum[[fitModel[sss]]]$mcmc
+                # }
+                # if (keep_mcmc == FALSE) {
+                #     returnlist$param.sum[[fitModel[sss]]]$mcmc <- NULL
+                #     returnlist$param.sum[[fitModel[sss]]]$samples@sim$samples <- vector("list", length = n.chains)
+                # }
+                # rm(fit_stan)
             }
-            #         else {
-            #             ### Stan
-            #             data(boeck_stan_models)
-            #             if(fitModel == "ext"){
-            #                 stanExe <- boeck_stan_ext
-            #             }else{
-            #                 stanExe <- boeck_stan_2012
-            #             }
-            #             boeck.stan <- rstan::sampling(stanExe, 
-            #                                           # model_name=paste0("Boeckenholt_", fitModel[sss]),
-            #                                           pars=c("theta","beta", "Sigma","T_obs","T_pred","post_p"),
-            #                                           data=datalist, chains = n.chains, thin=thin, 
-            #                                           iter=M*thin)
-            #             dic[[sss]] <- NULL
-            #         }
-            
-            # fitpar[[sss]] <- rstan::monitor(boeck.stan, print=T)[fitNames[[sss]],] 
         }
         
         
-        ### RETURN SOMETHING -------------------------------------------------------
+        ### RETURN -----
         
-        # if (is.null(save.dir)) {
-        #     exist.dirs <- list.dirs(getwd(), recursive = F, full.names = T)
-        #     exist.dir2 <- grepl("sim-results", exist.dirs)
-        #     if (length(exist.dirs) > 0) {
-        #         save.dir <- tail(exist.dirs[exist.dir2], 1)
-        #         save.di2 <- paste0(save.dir, "/", Sys.info()[["nodename"]])
-        #         if (!dir.exists(save.di2)) {
-        #             dir.create(save.di2)
-        #         } else {
-        #             save.dir <- paste0(getwd(), "/sim-results-",
-        #                                sprintf("%02d", sum(exist.dir2) + 1))
-        #             dir.create(save.dir)
-        #             save.di2 <- paste0(save.dir, "/", Sys.info()[["nodename"]])
-        #             dir.create(save.di2)
-        #         }
-        #     } else {
-        #         save.dir <- paste0(getwd(), "/sim-results-", sprintf("%02d", 1))
-        #         dir.create(save.dir)
-        #         save.di2 <- paste0(save.dir, "/", Sys.info()[["nodename"]])
-        #         dir.create(save.di2)
-        #     }
-        # }
         time_2 <- Sys.time()
         returnlist$date <- difftime(time_2, time_1, units = "hours")
-        try(dir <- path.expand(dir))
-        if (!dir.exists(dir)) {
-            set.seed(Sys.Date())
-            tmp1 <- paste0(sample(c(letters, LETTERS, 0:9), 12, T), collapse = "")
-            dirx <- paste0(getwd(), "/", tmp1)
-            if (!dir.exists(dirx)) {
-                dir.create(dirx)
-            }
-            on.exit(warning(paste0("Data saved in: ", dirx)))
-        }
+        
         save_file <- paste0("sim-results-", sprintf("%04d", rrr[qqq]), "-", substr(Sys.time(), 1, 10), ".RData")
         save_file <- gsub(" CET", "", save_file)
         save_file <- gsub(" ", "-", save_file)
         save_file <- gsub(":", "-", save_file)
         
-        returnName <- paste0("sim_sum_", sprintf("%04d", rrr[qqq]))
+        returnName <- sprintf("sim_%04d", rrr[qqq])
         assign(returnName, returnlist)
         
         do.call(save, list(returnName, file = paste0(ifelse(dir.exists(dir), dir, dirx), "/", save_file)))
         
-        if (savext_mcmc == TRUE) {
-            save_file_mcmc <- paste0("mcmc-", sprintf("%04d", rrr[qqq]), ".RData")
-            return_name_mcmc <- paste0("mcmc_", sprintf("%04d", rrr[qqq]))
-            assign(return_name_mcmc, returnlist_mcmc)
-            if (!dir.exists(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))) {
-                dir.create(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))
-            }
-            do.call(save, list(return_name_mcmc, file = paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", save_file_mcmc)))
-        }
+        # if (savext_mcmc == TRUE) {
+        #     save_file_mcmc <- paste0("mcmc-", sprintf("%04d", rrr[qqq]), ".RData")
+        #     return_name_mcmc <- paste0("mcmc_", sprintf("%04d", rrr[qqq]))
+        #     assign(return_name_mcmc, returnlist_mcmc)
+        #     if (!dir.exists(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))) {
+        #         dir.create(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))
+        #     }
+        #     do.call(save, list(return_name_mcmc, file = paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", save_file_mcmc)))
+        # }
         
         
         if (!is.null(dir)) {
@@ -439,213 +410,4 @@ recovery_irtree <- function(rrr = NULL,
             close(cony)
         }
     }
-    
-    ### REST OLD CODE ------------------------------------------------------------------
-    
-    
-    
-    #### response styles
-    #     if(length(RSmin) == 1)
-    #         RSmin <- rep(RSmin, numRS.gen)
-    #     if(length(RSmax) == 1)
-    #         RSmax <- rep(RSmax, numRS.gen)
-    #   if(length(RSmin)!=(S.gen-1) | length(RSmax)!=(S.gen-1))
-    #     warning("Check definition of RSmin and RSmax")
-    
-    #     genNames <- c(paste0("theta[",apply(expand.grid(1:N, 1:S.gen),1, 
-    #                                         paste0, collapse=","),"]"),
-    #                   paste0("beta[",apply(expand.grid(1:J, 1:(numRS.gen+1)),1, 
-    #                                        paste0, collapse=","),"]"), 
-    #                   paste0("Sigma[",apply(expand.grid(1:S.gen, 1:S.gen),1, 
-    #                                         paste0, collapse=","),"]"))
-    # ttt <- c("T_obs","T_pred","post_p")
-    
-    # separate lists for fitting fitModel
-    #     fitNames <- theta_mu <- V.ls <- list()
-    #     for(sss in 1:length(S.fit)){
-    #         fitNames[[sss]] <- c(paste0("theta[",apply(expand.grid(1:N, 1:S.fit[sss]),1, 
-    #                                                    paste0, collapse=","),"]"),
-    #                              paste0("beta[",apply(expand.grid(1:J, 1:(numRS.fit[sss]+1)),1, 
-    #                                                   paste0, collapse=","),"]"), 
-    #                              paste0("Sigma[",apply(expand.grid(1:S.fit[sss], 1:S.fit[sss]),1, 
-    #                                                    paste0, collapse=","),"]"),
-    #                              ttt)
-    #         theta_mu[[sss]] <- rep(0,S.fit[sss])
-    #         
-    #         ### set up parameters
-    #         if(missing(V)){
-    #             V.ls[[sss]] <- diag(S.fit[sss])
-    #         }else if(length(S.fit) == 1){
-    #             V.ls[[sss]] <- unlist(V)
-    #         }else{
-    #             V.ls[[sss]] <- V[[sss]]
-    #         }
-    #     }
-    #     if(missing(df)){
-    #         df <- S.fit+1
-    #     }
-    
-    
-    
-    
-    #### function for a single CPU ####################
-    
-    #     boeckrep <- function(rr){
-    
-    #         #### generate data
-    #         if(genModel == "2012"){
-    #             beta.mrs <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-    #                                               a = qnorm(.5), b = qnorm(.9))
-    #             beta.ers <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-    #                                               a = qnorm(.5), b = qnorm(.9))
-    #             beta.trait <- truncnorm::rtruncnorm(n = J, mean = 0, sd = sqrt(.5),
-    #                                                 a = qnorm(.3), b = qnorm(.7))
-    #             betas_i <- cbind(beta.mrs, beta.ers, beta.trait)
-    #             gen <- generate_irtree_2012(N = N, J = J, betas = betas_i, theta_vcov = theta_vcov_i,
-    #                                   prop.rev = prop.rev, traitItem = traitItem, cat = TRUE)
-    #         }else if (genModel == "ext"){
-    #             beta.mrs <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-    #                                               a = qnorm(.5), b = qnorm(.9))
-    #             beta.ers <- truncnorm::rtruncnorm(n = J, mean = qnorm(.7), sd = sqrt(.1),
-    #                                               a = qnorm(.5), b = qnorm(.9))
-    #             beta.ars <- truncnorm::rtruncnorm(n = J, mean = qnorm(.975), sd = sqrt(.1),
-    #                                               a = qnorm(.9), b = qnorm(.999))
-    #             beta.trait <- truncnorm::rtruncnorm(n = J, mean = 0, sd = sqrt(.5),
-    #                                                 a = qnorm(.3), b = qnorm(.7))
-    #             betas_i <- cbind(beta.mrs, beta.ers, beta.ars, beta.trait)
-    # #             betas_i <- cbind(runif(J,RSmin[1],RSmax[1]),
-    # #                           runif(J,RSmin[2],RSmax[2]), 
-    # #                           runif(J,RSmin[3],RSmax[3]),
-    # #                           rnorm(J,0,trait.sd ))
-    #             gen <- generate_irtree_ext(N = N, J = J, betas = betas_i, theta_vcov = theta_vcov_i,
-    #                                  prop.rev = prop.rev, traitItem = traitItem, cat = TRUE)
-    #         }
-    
-    
-    
-    #         ##################### fit JAGS / Stan
-    #         fitpar <- list() ; dic <- list()
-    #         for(sss in 1:length(S.fit)){
-    #             datalist <- list(S=S.fit[sss], df=df[sss], V=V.ls[[sss]], N=N, J=J, revItem=gen$revItem,
-    #                              traitItem=gen$traitItem, X=gen$X, theta_mu=theta_mu[[sss]])
-    #             if(fitMethod == "jags"){
-    #                 rjags::load.module("glm", quiet=T)
-    #                 #         boeck.jags <- run.jags(model=paste0( modelPath,"/mpt2irt/models/jags_boeck_",fitModel[sss],"_1d.txt"), 
-    #                 #                               monitor = c("theta", "beta", "Sigma", "T_obs","T_pred", "post_p",
-    #                 #                                           'deviance', 'pd', 'pd.i', 'popt', 'dic'), 
-    #                 #                               data=datalist, n.chains=n.chains,  
-    #                 #                               burnin = M/4, sample = M, adapt=M/4, 
-    #                 #                               summarise = T, thin = thin, method="simple")
-    #                 boeck.jags <- rjags::jags.model(file=paste0( modelPath,"/mpt2irt/models/jags_boeck_",
-    #                                                              fitModel[sss],".txt"), 
-    #                                                 data=datalist,  n.chains=n.chains, n.adapt=M/4)
-    #                 adapt <- F
-    #                 while(!adapt){
-    #                     adapt <- rjags::adapt(boeck.jags,M/4,end.adaptation = FALSE)
-    #                 }
-    #                 rjags::update(boeck.jags, M/4)
-    #                 boeck.samp <- coda.samples.dic(boeck.jags, 
-    #                                                variable.names = c("theta", "beta", "Sigma",
-    #                                                                   "T_obs","T_pred", "post_p"),
-    #                                                n.iter=M*thin, thin = thin)
-    #                 dic[[sss]] <- boeck.samp$dic
-    #                 boeck.stan <- mcmc.list2stan(boeck.samp$samples)
-    #                 rm(boeck.samp)
-    #             }else{
-    #                 ### Stan
-    #                 data(boeck_stan_models)
-    #                 if(fitModel == "ext"){
-    #                     stanExe <- boeck_stan_ext
-    #                 }else{
-    #                     stanExe <- boeck_stan_2012
-    #                 }
-    #                 boeck.stan <- rstan::sampling(stanExe, 
-    #                                               # model_name=paste0("Boeckenholt_", fitModel[sss]),
-    #                                               pars=c("theta","beta", "Sigma","T_obs","T_pred","post_p"),
-    #                                               data=datalist, chains = n.chains, thin=thin, 
-    #                                               iter=M*thin)
-    #                 dic[[sss]] <- NULL
-    #             }
-    #             
-    #             fitpar[[sss]] <- rstan::monitor(boeck.stan, print=T)[fitNames[[sss]],] 
-    #         }
-    #         genpar <- c(gen$theta, gen$betas, gen$theta_vcov)
-    #         names(genpar) <- genNames
-    #         
-    #         if(path != ""){
-    #             try(write(paste0("\n|", paste0(rep("#",floor(rr/R*30)), collapse=""),
-    #                              paste0(rep(" ",30-floor(rr/R*30)), collapse=""),
-    #                              "| rr=",rr,"/",R," ; ",Sys.time()), append=T,
-    #                       file=paste0(path,"/recovery_irtree_progress.txt")))
-    #             if(saveTemp)
-    #                 try(save(genpar, fitpar, dic, 
-    #                          file=paste0(path,"/boeck_recov_",fitMethod,"_gen-",genModel,
-    #                                      "_fit-",paste0(fitModel, collapse="-") ,
-    #                                      "_N=",N,"_J=",J,"_rep",rr,".RData")))
-    #         }
-    #         
-    #         # clean up to get RAM
-    #         gc(T, verbose=F)
-    #         res <- list(gen=genpar, fit=fitpar, dic=dic)
-    #         return(res)
-    #     }
-    #     
-    #     # paths to save temporary results
-    #     modelPath <- .libPaths()[1]
-    #     if(path != "")
-    #         try(write(paste0("Boeckenholt Recovery Simulation: \ngenModel = ", genModel, "; fitModel = ", 
-    #                          paste0(fitModel, collapse="-"), " ; Start: ",Sys.time()),
-    #                   file=paste0(path,"/recovery_irtree_progress.txt")))
-    #     
-    #     ######## parallel computing
-    #     
-    #     cl <- makeCluster(nCPU)
-    #     registerDoParallel(cl)
-    #     
-    #     runtime <- system.time({
-    #         res <- foreach::foreach(rr=1:R, .packages = c("mpt2irt","rjags","rstan","coda"), 
-    #                                 .combine="c") %dopar% {boeckrep(rr)}
-    #     })
-    #     cat("\nTotal Runtime: ",round(runtime[3]/3600, 2), "Hours\n")
-    #     
-    #     stopCluster(cl)
-    #     
-    #     ###### collect results
-    #     
-    #     estimate1 <-  array(NA, c(R, N*S.fit[1] + J*(numRS.fit[1]+1) + S.fit[1]*S.fit[1] + 3 ,10), 
-    #                         dimnames= list(NULL, fitNames[[1]], colnames(res[[2]][[1]])))
-    #     if(length(S.fit) == 2){
-    #         estimate2 <-  array(NA, c(R, N*S.fit[2] + J*(numRS.fit[2]+1) + S.fit[2]*S.fit[2] + 3 ,10), 
-    #                             dimnames= list(NULL, fitNames[[2]], colnames(res[[2]][[2]])))
-    #     }else{
-    #         estimate2 <- NULL
-    #     }
-    #     true <- matrix(NA, R, length(res[[1]]),  dimnames=list(NULL, names(res[[1]])))
-    #     dic <- data.frame(dev1=NA, penalty1=NA, dic1=NA, dev2=NA, penalty2=NA, dic2=NA)
-    #     
-    #     for(r in 1:R){
-    #         true[r,] <- res[[(r-1)*3+1]]
-    #         estimate1[r,,] <- res[[(r-1)*3+2]][[1]]
-    #         ddd <- res[[(r-1)*3+3]]
-    #         try(dic[r,1:3] <- c(ddd[[1]]$dev, ddd[[1]]$pen, ddd[[1]]$dev+ ddd[[1]]$pen), silent=T)
-    #         if(length(S.fit) == 2){
-    #             estimate2[r,,] <- res[[(r-1)*3+2]][[2]]
-    #             try(dic[r,4:6] <- c(ddd[[2]]$dev, ddd[[2]]$pen, ddd[[2]]$dev+ ddd[[2]]$pen), silent=T)
-    #         }
-    #     }
-    #     
-    #     if(path != ""){
-    #         try(unlink(paste0(path,"/recovery_irtree_progress.txt")), silent=T)
-    #         for(rr in 1:R){
-    #             try(unlink(paste0(path,"/boeck_recov_",fitMethod,"_gen-",genModel,
-    #                               "_fit-",paste0(fitModel, collapse="-") ,"_N=",N,"_J=",J,"_rep",rr,".RData")), silent=T)
-    #         }
-    #     }
-    #     
-    #     res <- list(estimate1=estimate1, estimate2=estimate2, true=true, dic=dic, N=N, J=J, S.gen=S.gen, 
-    #                 S.fit=S.fit, R=R, genModel=genModel, fitModel=fitModel, fitMethod=fitMethod, 
-    #                 RSmin=RSmin, RSmax=RSmax, theta_vcov=theta_vcov_i, numRS.gen=numRS.gen, numRS.fit=numRS.fit,
-    #                 prop.rev=prop.rev, traitItem=traitItem, trait.sd=trait.sd, thin=thin, M=M)
-    #     class(res) <- "boecksim"
-    #     return(res)
 }
