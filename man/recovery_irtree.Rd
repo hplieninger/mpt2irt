@@ -5,11 +5,12 @@
 \title{Recovery simulation of mpt2irt models.}
 \usage{
 recovery_irtree(rrr = NULL, N = NULL, J = NULL, prop.rev = 0.5,
-  genModel = c("ext", "2012"), fitModel = NULL, fitMethod = c("stan",
-  "jags"), theta_vcov = NULL, betas = NULL, beta_ARS_extreme = NULL,
-  df = NULL, V = NULL, M = 500, n.chains = 3, thin = 1,
-  warmup = 500, method = "simple", outFormat = NULL, startSmall = FALSE,
-  df_vcov = 50, dir = NULL, keep_mcmc = FALSE, savext_mcmc = FALSE,
+  genModel = c("ext", "2012"), fitModel = c("ext", "2012", "pcm", "steps",
+  "shift", "ext2"), fitMethod = c("stan", "jags"), theta_vcov = NULL,
+  betas = NULL, beta_ARS_extreme = NULL, df = NULL, V = NULL, M = 500,
+  n.chains = 3, thin = 1, warmup = 500, method = "simple",
+  outFormat = NULL, startSmall = FALSE, df_vcov = 50, dir = NULL,
+  keep_mcmc = FALSE, savext_all = FALSE, savext_mcmc = TRUE,
   add2varlist = c("deviance", "pd", "popt", "dic"), ...)
 }
 \arguments{
@@ -92,7 +93,7 @@ Function does not directly return anything but saves an external
 This function allows to run a simulation study of mpt2irt models. Data are
 generated either from the Boeckenholt Model (\code{genModel = "2012"}) or
 from the Acquiescence Model (\code{genModel = "ext"}). Subsequently, one or
-both of these models are fit to the generated data using eihter JAGS or Stan.
+both of these models are fit to the generated data using either JAGS or Stan.
 The results are saved in an RData file in \code{dir}.
 }
 \details{
