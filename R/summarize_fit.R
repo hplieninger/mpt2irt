@@ -262,7 +262,7 @@ tidyup_irtree_fit <- function(fit,
     # }
     
     if (plot == TRUE) {
-        env <- new.env(parent = environment(tidyup_irtree_fit2))
+        env <- new.env(parent = environment(tidyup_irtree_fit))
         env$return_list <- return_list
         env$fitModel <- fitModel
         env$revItem <- revItem
