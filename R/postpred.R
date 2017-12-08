@@ -101,7 +101,8 @@ pp_irtree <- function(fit_sum = NULL,
     J <- length(traitItem)
     M <- nrow(mcmc.objects[[1]])
     # chains <- length(mcmc.objects)
-    thin <- round(M/iter)
+    attr(mcmc.objects[[1]], "mcpar")[3]
+    thin <- round(M/iter*attr(mcmc.objects[[1]], "mcpar")[3])
     
     arsModel <- switch(fitModel, 
                        "ext"   = TRUE,  
@@ -400,8 +401,8 @@ pp_irtree <- function(fit_sum = NULL,
     
     if (!is.environment(p)) close(pb)
     
-    message("I drew posterior predictives, I need a little bit more time to ",
-            "restructure the results, I ask for your patience.")
+    message("\nI drew posterior predictives, I need a little bit more time to ",
+            "restructure the results,\nI ask for your patience.")
     
     tmp1 <- pp %>% 
         reshape2::melt() %>%

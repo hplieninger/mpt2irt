@@ -72,7 +72,7 @@ tidyup_irtree_fit <- function(fit,
                                 null.ok = !is.null(fit$args$fitMethod))
     checkmate::qassert(plot, "B1")
     
-    if (!any(names(fit) %in% c("args", "V"))) {
+    if (!any(names(fit) %in% c("args", "V", "samples"))) {
         fit <- list("samples" = fit)
     }
     
@@ -347,8 +347,7 @@ summarize_irtree_fit <- function(fit,
             fit$mcmc <- fit$samples$mcmc
             fit$samples$mcmc <- window(fit$samples$mcmc,
                                        start = attr(fit$samples$mcmc[[1]], "mcpar")[2] - 1,
-                                       end = attr(fit$samples$mcmc[[1]], "mcpar")[2],
-                                       thin = 1)
+                                       end = attr(fit$samples$mcmc[[1]], "mcpar")[2])
         }
     }
     if (class(fit$mcmc) != "mcmc.list") {
