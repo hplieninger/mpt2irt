@@ -71,21 +71,21 @@ test_that("generate_irtree() returns correct output", {
 context("Model fitting")
 
 M <- 200
-warmup <- 200
+warmup <- 100
 
 invisible(capture.output(
-    res1 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "2012", fitMethod = "jags"),
-    res2 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       M = M, warmup = warmup, n.chains = 2,
-                       fitModel = "ext", fitMethod = "stan"),
-    res3 <- fit_irtree(dat2$X, revItem = dat2$revItem,
-                       M = M, warmup = warmup, n.chains = 2,
-                       fitModel = "ext", fitMethod = "jags"),
-    res4 <- fit_irtree(dat2$X, revItem = dat2$revItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "2012", fitMethod = "stan")
+    res1 <- fit_irtree(dat1$X, fitModel = "2012", fitMethod = "jags",
+                       revItem = dat1$revItem,
+                       M = M, warmup = warmup, n.chains = 1),
+    res2 <- fit_irtree(dat1$X, fitModel = "ext", fitMethod = "stan",
+                       revItem = dat1$revItem,
+                       M = M, warmup = warmup, n.chains = 2),
+    res3 <- fit_irtree(dat2$X, fitModel = "ext", fitMethod = "jags",
+                       revItem = dat2$revItem,
+                       M = M, warmup = warmup, n.chains = 2),
+    res4 <- fit_irtree(dat2$X, fitModel = "2012", fitMethod = "stan",
+                       revItem = dat2$revItem,
+                       M = M, warmup = warmup, n.chains = 1)
 ))
 
 test_that("fit_irtree() returns MCMC list", {

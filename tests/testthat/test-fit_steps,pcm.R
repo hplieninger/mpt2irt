@@ -140,15 +140,15 @@ invisible(capture.output(
     # res1 <- fit_irtree(dat1$X, revItem = dat1$revItem,
     #                    M = M, warmup = warmup, n.chains = 1,
     #                    fitModel = "pcm", fitMethod = "jags"),
-    res2 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "pcm", fitMethod = "stan"),
+    res2 <- fit_irtree(dat1$X, fitModel = "pcm", fitMethod = "stan",
+                       revItem = dat1$revItem,
+                       M = M, warmup = warmup, n.chains = 1),
     # res3 <- fit_irtree(dat2$X, revItem = dat2$revItem,
     #                    M = M, warmup = warmup, n.chains = 1,
     #                    fitModel = "steps", fitMethod = "jags"),
-    res4 <- fit_irtree(dat2$X, revItem = dat2$revItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "steps", fitMethod = "stan")
+    res4 <- fit_irtree(dat2$X, fitModel = "steps", fitMethod = "stan",
+                       revItem = dat2$revItem,
+                       M = M, warmup = warmup, n.chains = 1)
 ))
 
 test_that("fit_irtree() returns MCMC list", {

@@ -8,6 +8,8 @@ context("ext2: Data generation")
 
 N <- sample(10:20, 1)
 J <- sample(2:20, 1)
+# N <- 10
+# J <- 2
 
 betas1 <- mpt2irt:::gen_betas(genModel = "ext2", J = J)
 
@@ -65,15 +67,14 @@ test_that("generate_irtree() returns correct output", {
 context("ext2: Model fitting")
 
 M <- 200
-warmup <- 200
+warmup <- 100
 
-res1 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                   M = M, warmup = warmup, n.chains = 1,
-                   fitModel = "ext2", fitMethod = "stan")
-res2 <- fit_irtree(dat2$X, revItem = dat2$revItem,
-                   traitItem = dat2$traitItem,
-                   M = M, warmup = warmup, n.chains = 1,
-                   fitModel = "ext2", fitMethod = "stan")
+res1 <- fit_irtree(dat1$X, fitModel = "ext2", fitMethod = "stan",
+                   revItem = dat1$revItem, traitItem = dat1$traitItem,
+                   M = M, warmup = warmup, n.chains = 1)
+res2 <- fit_irtree(dat2$X, fitModel = "ext2", fitMethod = "stan",
+                   revItem = dat2$revItem, traitItem = dat2$traitItem,
+                   M = M, warmup = warmup, n.chains = 1)
 
 test_that("fit_irtree() returns MCMC list", {
     expect_equal(unique(sapply(rstan::As.mcmc.list(res1$samples), nrow)), M)

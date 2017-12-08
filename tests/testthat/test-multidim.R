@@ -8,6 +8,8 @@ context("Multidim: Data generation")
 
 N <- sample(10:20, 1)
 J <- sample(6:20, 1)
+# N <- 10
+# J <- 6
 
 betas1 <- mpt2irt:::gen_betas(genModel = "ext", J = J)
 betas2 <- mpt2irt:::gen_betas(genModel = "2012", J = J)
@@ -81,30 +83,24 @@ M <- 200
 warmup <- 100
 
 invisible(capture.output(
-    res1 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       traitItem = dat1$traitItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "2012", fitMethod = "jags"),
-    res2 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       traitItem = dat1$traitItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "ext", fitMethod = "stan"),
-    res3 <- fit_irtree(dat2$X, revItem = dat2$revItem,
-                       traitItem = dat2$traitItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "ext", fitMethod = "jags"),
-    res4 <- fit_irtree(dat2$X, revItem = dat2$revItem,
-                       traitItem = dat2$traitItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "2012", fitMethod = "stan"),
-    res5 <- fit_irtree(dat3$X, revItem = dat3$revItem,
-                       traitItem = dat3$traitItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "steps", fitMethod = "stan"),
-    res6 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-                       traitItem = dat1$traitItem,
-                       M = M, warmup = warmup, n.chains = 1,
-                       fitModel = "shift", fitMethod = "stan")
+    res1 <- fit_irtree(dat1$X, fitModel = "2012", fitMethod = "jags",
+                       revItem = dat1$revItem, traitItem = dat1$traitItem,
+                       M = M, warmup = warmup, n.chains = 1),
+    res2 <- fit_irtree(dat1$X, fitModel = "ext", fitMethod = "stan",
+                       revItem = dat1$revItem, traitItem = dat1$traitItem,
+                       M = M, warmup = warmup, n.chains = 1),
+    res3 <- fit_irtree(dat2$X, fitModel = "ext", fitMethod = "jags",
+                       revItem = dat2$revItem, traitItem = dat2$traitItem,
+                       M = M, warmup = warmup, n.chains = 1),
+    res4 <- fit_irtree(dat2$X, fitModel = "2012", fitMethod = "stan",
+                       revItem = dat2$revItem, traitItem = dat2$traitItem,
+                       M = M, warmup = warmup, n.chains = 1),
+    res5 <- fit_irtree(dat3$X, fitModel = "steps", fitMethod = "stan",
+                       revItem = dat3$revItem, traitItem = dat3$traitItem,
+                       M = M, warmup = warmup, n.chains = 1),
+    res6 <- fit_irtree(dat1$X, fitModel = "shift", fitMethod = "stan",
+                       revItem = dat1$revItem, traitItem = dat1$traitItem,
+                       M = M, warmup = warmup, n.chains = 1)
 ))
 
 dat_over <- data.frame(name = paste0("res", 1:6),
