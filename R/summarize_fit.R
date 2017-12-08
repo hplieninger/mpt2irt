@@ -15,7 +15,7 @@ if (getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #'   output including the plot, the file will require much more space on disk
 #'   compared to space required in memory (see also
 #'   \url{https://stackoverflow.com/a/21836959/}).
-#' @param ... Further arguments passed to \code{\link{plot_irtree}}.
+# @param ... Further arguments passed to \code{\link{plot_irtree}}.
 #' @inheritParams fit_irtree
 #' @inheritParams plot_irtree
 #' @return The function returns a list for each of the core parameters (e.g.,
@@ -48,8 +48,7 @@ tidyup_irtree_fit <- function(fit,
                               traitItem = NULL,
                               fitModel = NULL,
                               fitMethod = NULL, 
-                              plot = TRUE,
-                              ...){
+                              plot = TRUE){
     
     checkmate::qassert(fit, "L+")
     checkmate::assert_int(S, lower = 1,
@@ -263,15 +262,31 @@ tidyup_irtree_fit <- function(fit,
     # }
     
     if (plot == TRUE) {
-        return_list$plot <- invisible(plot_irtree(fit = return_list, 
-                                                  fitModel = fitModel,
-                                                  # S = S_b1, 
-                                                  # J = J,
-                                                  revItem = revItem,
-                                                  traitItem = traitItem,
-                                                  return_data = FALSE, 
-                                                  # fitMethod = fitMethod,
-                                                  ...))
+        env <- new.env(parent = environment(tidyup_irtree_fit2))
+        env$return_list <- return_list
+        env$fitModel <- fitModel
+        env$revItem <- revItem
+        env$traitItem <- traitItem
+        
+        return_list$plot <- with(env, {
+            p1 <- invisible(plot_irtree(fit = return_list,
+                                        fitModel = fitModel,
+                                        # S = S_b1,
+                                        # J = J,
+                                        revItem = revItem,
+                                        traitItem = traitItem,
+                                        return_data = FALSE))
+            return(p1)
+        })
+        # return_list$plot <- invisible(plot_irtree(fit = return_list,
+        #                                           fitModel = fitModel,
+        #                                           # S = S_b1,
+        #                                           # J = J,
+        #                                           revItem = revItem,
+        #                                           traitItem = traitItem,
+        #                                           return_data = FALSE,
+        #                                           # fitMethod = fitMethod,
+        #                                           ...))
     }
     
     return(return_list)
@@ -425,4 +440,281 @@ summarize_irtree_fit <- function(fit,
     }
     
     return(fit)
+}
+
+#' Summarize and tidy up a fitted model.
+#'
+#' Function takes a fitted model returned from \code{\link{fit_irtree}} and
+#' returns a tidy summary of the fitted parameters.
+#'
+#' @param fit a fitted object from \code{\link{fit_irtree}} or preferably from
+#'   \code{\link{summarize_irtree_fit}}.
+#' @param S number of latent processes to be measured
+#' @param N number of persons
+#' @param J number of items
+#' @param plot Logical. Whether a plot should be produced using
+#'   \code{\link{plot_irtree}} and returned. NB: When you \code{\link{save}} the
+#'   output including the plot, the file will require much more space on disk
+#'   compared to space required in memory (see also
+#'   \url{https://stackoverflow.com/a/21836959/}).
+#' @param ... Further arguments passed to \code{\link{plot_irtree}}.
+#' @inheritParams fit_irtree
+#' @inheritParams plot_irtree
+#' @return The function returns a list for each of the core parameters (e.g.,
+#'   theta, beta), which are each summarized with the posterior mean, median and
+#'   95\% CI.
+#' @import coda
+#' @examples
+#' \dontrun{
+#' # generate data
+#' N <- 20
+#' J <- 10
+#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+#' dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+#'
+#' # fit model
+#' res1 <- fit_irtree(dat$X, revItem = dat$revItem, M = 200)
+#' res2 <- summarize_irtree_fit(res1)
+#' res3 <- tidyup_irtree_fit(res2)
+#' names(res3)
+#' res3$plot
+#' cor(res3$theta$Median, dat$theta)
+#' cor(res3$beta$Median, dat$betas)
+#' }
+# @export
+tidyup_irtree_fit_OLD <- function(fit,
+                              S = NULL,
+                              N = NULL,
+                              J = NULL,
+                              revItem = NULL,
+                              traitItem = NULL,
+                              fitModel = NULL,
+                              fitMethod = NULL, 
+                              plot = TRUE,
+                              ...){
+    
+    checkmate::qassert(fit, "L+")
+    checkmate::assert_int(S, lower = 1,
+                          null.ok = !is.null(fit$args$S))
+    checkmate::assert_int(N, lower = 1,
+                          null.ok = !is.null(fit$args$N))
+    checkmate::assert_int(J, lower = 1,
+                          null.ok = !is.null(fit$args$J))
+    checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
+                                 min.len = 1,
+                                 null.ok = !is.null(fit$args$revItem))
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 min.len = 1,
+                                 null.ok = !is.null(fit$args$traitItem))
+    checkmate::assert_character(fitModel, min.chars = 1, any.missing = FALSE,
+                                len = 1,
+                                null.ok = !is.null(fit$args$fitModel))
+    checkmate::assert_character(fitMethod, min.chars = 1, any.missing = FALSE,
+                                len = 1, 
+                                null.ok = !is.null(fit$args$fitMethod))
+    checkmate::qassert(plot, "B1")
+    
+    if (!any(names(fit) %in% c("args", "V", "samples"))) {
+        fit <- list("samples" = fit)
+    }
+    
+    if (is.null(S)) S <- fit$args$S
+    if (is.null(J)) J <- fit$args$J
+    if (is.null(N)) N <- fit$args$N
+    if (is.null(revItem)) revItem <- fit$args$revItem
+    if (is.null(traitItem)) traitItem <- fit$args$traitItem
+    if (is.null(fitMethod)) fitMethod <- fit$args$fitMethod
+    if (is.null(fitModel)) fitModel <- fit$args$fitModel
+    
+    if (!("summary" %in% names(fit))) {
+        fit <- summarize_irtree_fit(fit, fitMethod = fitMethod, interact = F)
+    } 
+    
+    # S_t:  Number of theta dimensions
+    # S_b1: Number of columns in beta matrix
+    # S_b2: Number of beta dimensions
+    
+    S_t  <- switch(fitModel,
+                   S)
+    S_b1 <- switch(fitModel,
+                   "2012"  = 3,
+                   "ext"   = 4,
+                   "pcm"   = 4,
+                   "steps" = 4,
+                   "shift" = 3,
+                   "ext2"  = 5,
+                   S)
+    # S_b2 <- switch(fitModel,
+    #                # "2012"  = 3,
+    #                # "ext"   = 4,
+    #                "pcm"   = 4*length(unique(traitItem)),
+    #                "steps" = 4*length(unique(traitItem)),
+    #                "shift" = S - 1,
+    #                S)
+    S_b2 <- switch(fitModel,
+                   # "2012"  = 3,
+                   # "ext"   = 4,
+                   "pcm"   = c(length(unique(traitItem)), 4),
+                   "steps" = c(length(unique(traitItem)), 4),
+                   "shift" = c(1, S - 1),
+                   "ext2"  = c(1, S + 1),
+                   c(1, S))
+    
+    ### Initialize list of empty lists to store estimates in
+    
+    return_list <- list("beta" = list(),
+                        "theta" = list(),
+                        "sigma_vec" = list(),
+                        "Sigma" = list(),
+                        "Corr" = list(),
+                        "mu_beta" = list(),
+                        "sigma_beta" = list(),
+                        "beta_ARS_extreme" = list())
+    
+    for (iii in seq_along(return_list)) {
+        tmp1 <- switch(names(return_list)[iii],
+                       "beta" = matrix(NA_real_, J, S_b1),
+                       "theta" = matrix(NA_real_, N, S_t),
+                       "sigma_vec" = rep(NA_real_, sum(upper.tri(diag(S_t), diag = T))),
+                       "Sigma" = matrix(NA_real_, S_t, S_t),
+                       "Corr" = matrix(NA_real_, S_t, S_t),
+                       # "mu_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S_t + 1, S_t)),
+                       "mu_beta" = matrix(NA_real_, S_b2[1], S_b2[2]),
+                       # "sigma_beta" = rep(NA_real_, ifelse(fitModel == "ext5", S_t + 1, S_t)),
+                       "sigma_beta" = matrix(NA_real_, S_b2[1], S_b2[2]),
+                       "beta_ARS_extreme" = NA_real_)
+        return_list[[iii]] <- setNames(list(tmp1, tmp1, tmp1, tmp1),
+                                       nm = c("Mean", "Median", "Q_025", "Q_975"))
+    }
+    return_list$args <- fit$args
+    
+    ### Retrive estimates and save them in 'return_list'
+    
+    for (i in 1:S_t){
+        return_list$theta$Mean[, i] <- fit$summary$statistics[paste0("theta[",1:N,",",i,"]"), "Mean"]
+        return_list$theta$Median[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "50%"]
+        return_list$theta$Q_025[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "2.5%"]
+        return_list$theta$Q_975[, i] <- fit$summary$quantiles[paste0("theta[",1:N,",",i,"]"), "97.5%"]
+    }
+    for (i in 1:S_b1){
+        return_list$beta$Mean[, i] <- fit$summary$statistics[paste0("beta[",1:J,",",i,"]"), "Mean"]
+        return_list$beta$Median[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "50%"]
+        return_list$beta$Q_025[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "2.5%"]
+        return_list$beta$Q_975[, i] <- fit$summary$quantiles[paste0("beta[",1:J,",",i,"]"), "97.5%"]
+    }
+    sigma_idx <- which(upper.tri(diag(S_t), diag = T) == TRUE, arr.ind = T)
+    return_list$sigma_vec$Mean <- fit$summary$statistics[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "Mean"]
+    return_list$sigma_vec$Median <- fit$summary$quantiles[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "50%"]
+    return_list$sigma_vec$Q_025 <- fit$summary$quantiles[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "2.5%"]
+    return_list$sigma_vec$Q_975 <- fit$summary$quantiles[paste0("Sigma[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "97.5%"]
+    # rm(sigma_idx)
+    
+    return_list$Sigma$Mean[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Mean
+    return_list$Sigma$Mean[lower.tri(diag(S_t))] <- t(return_list$Sigma$Mean)[lower.tri(diag(S_t))]
+    return_list$Sigma$Median[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Median
+    return_list$Sigma$Median[lower.tri(diag(S_t))] <- t(return_list$Sigma$Median)[lower.tri(diag(S_t))]
+    return_list$Sigma$Q_025[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Q_025
+    return_list$Sigma$Q_025[lower.tri(diag(S_t))] <- t(return_list$Sigma$Q_025)[lower.tri(diag(S_t))]
+    return_list$Sigma$Q_975[upper.tri(diag(S_t), T)] <- return_list$sigma_vec$Q_975
+    return_list$Sigma$Q_975[lower.tri(diag(S_t))] <- t(return_list$Sigma$Q_975)[lower.tri(diag(S_t))]
+    return_list$sigma_vec <- NULL
+    
+    # Correlations
+    return_list$corr_vec$Mean <- fit$summary$statistics[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "Mean"]
+    return_list$corr_vec$Median <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "50%"]
+    return_list$corr_vec$Q_975 <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "97.5%"]
+    return_list$corr_vec$Q_025 <- fit$summary$quantiles[paste0("Corr[", sigma_idx[, 1], ",", sigma_idx[, 2] ,"]"), "2.5%"]
+    rm(sigma_idx)
+    
+    return_list$Corr$Mean[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Mean
+    return_list$Corr$Mean[lower.tri(diag(S_t))] <- t(return_list$Corr$Mean)[lower.tri(diag(S_t))]
+    return_list$Corr$Median[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Median
+    return_list$Corr$Median[lower.tri(diag(S_t))] <- t(return_list$Corr$Median)[lower.tri(diag(S_t))]
+    return_list$Corr$Q_025[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Q_025
+    return_list$Corr$Q_025[lower.tri(diag(S_t))] <- t(return_list$Corr$Q_025)[lower.tri(diag(S_t))]
+    return_list$Corr$Q_975[upper.tri(diag(S_t), T)] <- return_list$corr_vec$Q_975
+    return_list$Corr$Q_975[lower.tri(diag(S_t))] <- t(return_list$Corr$Q_975)[lower.tri(diag(S_t))]
+    return_list$corr_vec <- NULL
+    
+    if (S_b2[1] == 1) {
+        tmp1 <- grep("sigma_beta\\[.*[0-9]+\\]", rownames(fit$summary$statistics))
+        tmp2 <- grep("mu_beta\\[.*[0-9]+\\]", rownames(fit$summary$statistics))
+        # return_list$sigma_beta$Mean <- fit$summary$statistics[paste0("sigma_beta[", 1:S_b2[2] ,"]"), "Mean"]
+        # return_list$sigma_beta$Median <- fit$summary$quantiles[paste0("sigma_beta[", 1:S_b2[2] ,"]"), "50%"]
+        # return_list$sigma_beta$Q_025 <- fit$summary$quantiles[paste0("sigma_beta[", 1:S_b2[2] ,"]"), "2.5%"]
+        # return_list$sigma_beta$Q_975 <- fit$summary$quantiles[paste0("sigma_beta[", 1:S_b2[2] ,"]"), "97.5%"]
+        return_list$sigma_beta$Mean   <- fit$summary$statistics[tmp1, "Mean"]
+        return_list$sigma_beta$Median <- fit$summary$quantiles[ tmp1, "50%"]
+        return_list$sigma_beta$Q_025  <- fit$summary$quantiles[ tmp1, "2.5%"]
+        return_list$sigma_beta$Q_975  <- fit$summary$quantiles[ tmp1, "97.5%"]
+        # return_list$mu_beta$Mean[1,]   <- fit$summary$statistics[paste0("mu_beta[", 1:S_b2[2] ,"]"), "Mean"]
+        # return_list$mu_beta$Median[1,] <- fit$summary$quantiles[paste0("mu_beta[", 1:S_b2[2] ,"]"), "50%"]
+        # return_list$mu_beta$Q_025[1,]  <- fit$summary$quantiles[paste0("mu_beta[", 1:S_b2[2] ,"]"), "2.5%"]
+        # return_list$mu_beta$Q_975[1,]  <- fit$summary$quantiles[paste0("mu_beta[", 1:S_b2[2] ,"]"), "97.5%"]
+        return_list$mu_beta$Mean[1,]   <- fit$summary$statistics[tmp2, "Mean"]
+        return_list$mu_beta$Median[1,] <- fit$summary$quantiles[ tmp2, "50%"]
+        return_list$mu_beta$Q_025[1,]  <- fit$summary$quantiles[ tmp2, "2.5%"]
+        return_list$mu_beta$Q_975[1,]  <- fit$summary$quantiles[ tmp2, "97.5%"]
+    } else {
+        for (i in seq_len(S_b2[1])) {
+            return_list$sigma_beta$Mean[i,]   <- fit$summary$statistics[paste0("sigma_beta[", i, ",", 1:S_b2[2], "]"), "Mean"]
+            return_list$sigma_beta$Median[i,] <- fit$summary$quantiles[ paste0("sigma_beta[", i, ",", 1:S_b2[2], "]"), "50%"]
+            return_list$sigma_beta$Q_025[i,]  <- fit$summary$quantiles[ paste0("sigma_beta[", i, ",", 1:S_b2[2], "]"), "2.5%"]
+            return_list$sigma_beta$Q_975[i,]  <- fit$summary$quantiles[ paste0("sigma_beta[", i, ",", 1:S_b2[2], "]"), "97.5%"]
+            return_list$mu_beta$Mean[i,]   <- fit$summary$statistics[paste0("mu_beta[", i, ",", 1:S_b2[2], "]"), "Mean"]
+            return_list$mu_beta$Median[i,] <- fit$summary$quantiles[ paste0("mu_beta[", i, ",", 1:S_b2[2], "]"), "50%"]
+            return_list$mu_beta$Q_025[i,]  <- fit$summary$quantiles[ paste0("mu_beta[", i, ",", 1:S_b2[2], "]"), "2.5%"]
+            return_list$mu_beta$Q_975[i,]  <- fit$summary$quantiles[ paste0("mu_beta[", i, ",", 1:S_b2[2], "]"), "97.5%"]
+        }
+        
+    }
+    # if (fitModel == "ext5") {
+    #     return_list$sigma_beta$Mean <- fit$summary$statistics[paste0("sigma_beta[", 1:(S_b2+1) ,"]"), "Mean"]
+    #     return_list$sigma_beta$Median <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S_b2+1) ,"]"), "50%"]
+    #     return_list$sigma_beta$Q_025 <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S_b2+1) ,"]"), "2.5%"]
+    #     return_list$sigma_beta$Q_975 <- fit$summary$quantiles[paste0("sigma_beta[", 1:(S_b2+1) ,"]"), "97.5%"]
+    #     return_list$mu_beta$Mean <- fit$summary$statistics[paste0("mu_beta[", 1:(S_b2+1) ,"]"), "Mean"]
+    #     return_list$mu_beta$Median <- fit$summary$quantiles[paste0("mu_beta[", 1:(S_b2+1) ,"]"), "50%"]
+    #     return_list$mu_beta$Q_025 <- fit$summary$quantiles[paste0("mu_beta[", 1:(S_b2+1) ,"]"), "2.5%"]
+    #     return_list$mu_beta$Q_975 <- fit$summary$quantiles[paste0("mu_beta[", 1:(S_b2+1) ,"]"), "97.5%"]
+    # }
+    
+    if (fitModel %in% c("ext")) {
+        return_list$beta_ARS_extreme$Mean <- fit$summary$statistics["beta_ARS_extreme", "Mean"]
+        return_list$beta_ARS_extreme$Median <- fit$summary$quantiles["beta_ARS_extreme", "50%"]
+        return_list$beta_ARS_extreme$Q_025 <- fit$summary$quantiles["beta_ARS_extreme", "2.5%"]
+        return_list$beta_ARS_extreme$Q_975 <- fit$summary$quantiles["beta_ARS_extreme", "97.5%"]
+    } else {
+        return_list$beta_ARS_extreme <- NULL
+    }
+    
+    ### Save further settings in 'return_list'
+    
+    try(return_list$dic <- fit$samples$dic, silent = TRUE)
+    return_list$date <- switch(fitMethod,
+                               "stan" = fit$samples@date,
+                               "jags" = fit$samples$date)
+    # if (fitMethod == "stan") {
+    #     return_list$date <- fit$samples@date
+    # } else {
+    #     if ("date" %in% names(fit$samples)) {
+    #         return_list$date <- fit$samples$date
+    #     } else {
+    #         return_list$date <- fit$date
+    #     }
+    # }
+    
+    if (plot == TRUE) {
+        return_list$plot <- invisible(plot_irtree(fit = return_list,
+                                                  fitModel = fitModel,
+                                                  # S = S_b1,
+                                                  # J = J,
+                                                  revItem = revItem,
+                                                  traitItem = traitItem,
+                                                  return_data = FALSE,
+                                                  # fitMethod = fitMethod,
+                                                  ...))
+    }
+    
+    return(return_list)
 }
