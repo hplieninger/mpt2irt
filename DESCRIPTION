@@ -30,8 +30,7 @@ Imports:
     parallel,
     rlang,
     runjags,
-    truncnorm,
-    colorspace
+    truncnorm
 Suggests:
     dplyr,
     knitr (>= 1.15.1),
