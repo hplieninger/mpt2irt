@@ -31,7 +31,10 @@
 #'   which the variance-covariance matrix for generating the data is drawn.
 #' @param dir Path to directory where results should be stored,
 #' @param keep_mcmc Logical indicating wheter to retain, besides a summary of the parameters, the raw mcmc samples.
-#' @param savext_mcmc Logical indicating wheter to save the raw mcmc samples in an external RData file.
+#' @param savext_mcmc Logical indicating wheter to save the mcmc samples in
+#'   an external RData file.
+#' @param savext_all Logical indicating wheter to save the output from Stan/JAGS
+#'   in an external RData file.
 #' @param beta_ARS_extreme Numeric. Only for \code{genModel="ext"}: probability
 #'   (on probit scale) of choosing category 5 (vs.4) in case of ARS. Defaults to
 #'   \code{rtruncnorm(mean = qnorm(.7), sd = sqrt(.1), a = qnorm(.5), b =

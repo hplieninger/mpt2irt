@@ -75,7 +75,11 @@ which the variance-covariance matrix for generating the data is drawn.}
 
 \item{keep_mcmc}{Logical indicating wheter to retain, besides a summary of the parameters, the raw mcmc samples.}
 
-\item{savext_mcmc}{Logical indicating wheter to save the raw mcmc samples in an external RData file.}
+\item{savext_all}{Logical indicating wheter to save the output from Stan/JAGS
+in an external RData file.}
+
+\item{savext_mcmc}{Logical indicating wheter to save the mcmc samples in
+an external RData file.}
 
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
