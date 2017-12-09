@@ -40,3 +40,28 @@ load_rda <- function(file = NULL) {
     nm <- load(file, env)[1]
     env[[nm]]
 }
+
+#' Get a Directory for Saving Files.
+#' 
+#' Check if dir exists and otherwise create one.
+#' 
+#' @param dir Character.
+#' @return Character containing directory.
+# @export
+get_dir <- function(dir = NULL) {
+    if (!is.null(dir)) {
+        try(dir <- normalizePath(dir))
+    } 
+    if (is.null(dir) | !dir.exists(dir)) {
+        set.seed(Sys.Date())
+        tmp1 <- paste0(sample(c(letters, LETTERS, 0:9), 12, T), collapse = "")
+        dirx <- paste0(getwd(), "/", tmp1)
+        if (!dir.exists(dirx)) {
+            dir.create(dirx)
+        }
+        # on.exit(message(paste0("Data saved in: ", dirx)))
+    } else {
+        dirx <- dir
+    }
+    return(dirx)
+}

@@ -135,22 +135,24 @@ recovery_irtree <- function(rrr = NULL,
     
     ### DIRECTORIES -----
     
-    try(dir <- path.expand(dir))
-    if (!dir.exists(dir)) {
-        set.seed(Sys.Date())
-        tmp1 <- paste0(sample(c(letters, LETTERS, 0:9), 12, T), collapse = "")
-        dirx <- paste0(getwd(), "/", tmp1)
-        if (!dir.exists(dirx)) {
-            dir.create(dirx)
-        }
-        on.exit(message(paste0("Data saved in: ", dirx)))
-    }
-    
-    if (savext_mcmc == TRUE) {
-        if (!dir.exists(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))) {
-            dir.create(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))
-        }
-    }
+    # if (!is.null(dir)) {
+    #     try(dir <- path.expand(dir))
+    #     if (!dir.exists(dir)) {
+    #         set.seed(Sys.Date())
+    #         tmp1 <- paste0(sample(c(letters, LETTERS, 0:9), 12, T), collapse = "")
+    #         dirx <- paste0(getwd(), "/", tmp1)
+    #         if (!dir.exists(dirx)) {
+    #             dir.create(dirx)
+    #         }
+    #         on.exit(message(paste0("Data saved in: ", dirx)))
+    #     }
+    # }
+    # 
+    # if (savext_mcmc == TRUE) {
+    #     if (!dir.exists(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))) {
+    #         dir.create(paste0(ifelse(dir.exists(dir), dir, dirx), "/", "mcmc"))
+    #     }
+    # }
     
     ### LOOP OVER REPLICATIONS -----
     
@@ -273,6 +275,15 @@ recovery_irtree <- function(rrr = NULL,
                 
                 tmp0 <- sprintf("sim_%04d_%s_%s_mcmc.RData", rrr[qqq], fitMethod, fitModel[sss])
                 
+                dirx <- get_dir(dir = dir)
+                dirmcmc <- paste0(dirx, "/mcmc")
+                
+                if (any(c(savext_mcmc, savext_all) == TRUE)) {
+                    if (!dir.exists(dirmcmc)) {
+                        dir.create(normalizePath(dirmcmc))
+                    }
+                }
+                
                 if (savext_mcmc == TRUE) {
                     
                     tmp11 <- gsub("_mcmc.RData", "", tmp0) %>% 
@@ -280,7 +291,7 @@ recovery_irtree <- function(rrr = NULL,
                     
                     assign(tmp11, fit2$mcmc)
                     
-                    tmp13 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp0)
+                    tmp13 <- paste0(dirmcmc, "/", tmp0)
                     do.call(save, list(tmp11, file = tmp13))
                 }
                 if (savext_all == TRUE) {
@@ -289,7 +300,7 @@ recovery_irtree <- function(rrr = NULL,
                         gsub("sim", "res", x = .)
                     
                     tmp22 <- gsub("mcmc", "raw", tmp0)
-                    tmp23 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp22)
+                    tmp23 <- paste0(dirmcmc, "/", tmp22)
                     
                     assign(tmp21, fit_jags)
                     
@@ -332,6 +343,15 @@ recovery_irtree <- function(rrr = NULL,
                 
                 tmp0 <- sprintf("sim_%04d_%s_%s_mcmc.RData", rrr[qqq], fitMethod, fitModel[sss])
                 
+                dirx <- get_dir(dir = dir)
+                dirmcmc <- paste0(dirx, "/mcmc")
+                
+                if (any(c(savext_mcmc, savext_all) == TRUE)) {
+                    if (!dir.exists(dirmcmc)) {
+                        dir.create(normalizePath(dirmcmc))
+                    }
+                }
+                
                 if (savext_mcmc == TRUE) {
                     
                     tmp11 <- gsub("_mcmc.RData", "", tmp0) %>% 
@@ -339,7 +359,7 @@ recovery_irtree <- function(rrr = NULL,
                     
                     assign(tmp11, fit2$mcmc)
                     
-                    tmp13 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp0)
+                    tmp13 <- paste0(dirmcmc, "/", tmp0)
                     do.call(save, list(tmp11, file = tmp13))
                 }
                 if (savext_all == TRUE) {
@@ -348,7 +368,7 @@ recovery_irtree <- function(rrr = NULL,
                         gsub("sim", "res", x = .)
                     
                     tmp22 <- gsub("mcmc", "raw", tmp0)
-                    tmp23 <- paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", tmp22)
+                    tmp23 <- paste0(dirmcmc, "/", tmp22)
                     
                     assign(tmp21, fit_stan)
                     
@@ -372,7 +392,6 @@ recovery_irtree <- function(rrr = NULL,
             }
         }
         
-        
         ### RETURN -----
         
         time_2 <- Sys.time()
@@ -386,7 +405,9 @@ recovery_irtree <- function(rrr = NULL,
         returnName <- sprintf("sim_%04d", rrr[qqq])
         assign(returnName, returnlist)
         
-        do.call(save, list(returnName, file = paste0(ifelse(dir.exists(dir), dir, dirx), "/", save_file)))
+        dirx <- get_dir(dir = dir)
+        
+        do.call(save, list(returnName, file = paste0(dirx, "/", save_file)))
         
         # if (savext_mcmc == TRUE) {
         #     save_file_mcmc <- paste0("mcmc-", sprintf("%04d", rrr[qqq]), ".RData")
@@ -398,19 +419,20 @@ recovery_irtree <- function(rrr = NULL,
         #     do.call(save, list(return_name_mcmc, file = paste0(ifelse(dir.exists(dir), dir, dirx), "/mcmc/", save_file_mcmc)))
         # }
         
-        
         if (!is.null(dir)) {
-            # cony <- file(paste0(ifelse(dir.exists(dir), dir, dirx), "/progress_", Sys.info()["nodename"], ".txt"), open = "a")
-            cony <- file(paste0(ifelse(dir.exists(dir), dir, dirx), "/progress.txt"), open = "a")
-            writeLines(con = cony,
-                       text = paste0(sprintf("%04d", rrr[qqq]),
-                                     "\t\tStarted at: ", time_1,
-                                     "\t\tEnded at: ", time_2,
-                                     "\t\tDifference of: ", format(round(difftime(time_2, time_1, units = "hours"), 3), nsmall = 3, width = 6), # " hours"
-                                     "\t\t", Sys.info()["nodename"]
-                                     )
-                       )
-            close(cony)
+            if (dir.exists(dir)) {
+                # cony <- file(paste0(ifelse(dir.exists(dir), dir, dirx), "/progress_", Sys.info()["nodename"], ".txt"), open = "a")
+                cony <- file(paste0(dir, "/progress.txt"), open = "a")
+                writeLines(con = cony,
+                           text = paste0(sprintf("%04d", rrr[qqq]),
+                                         "\t\tStarted at: ", time_1,
+                                         "\t\tEnded at: ", time_2,
+                                         "\t\tDifference of: ", format(round(difftime(time_2, time_1, units = "hours"), 3), nsmall = 3, width = 6), # " hours"
+                                         "\t\t", Sys.info()["nodename"]
+                           )
+                )
+                close(cony)
+            }
         }
     }
 }

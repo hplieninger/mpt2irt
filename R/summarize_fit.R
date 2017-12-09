@@ -421,23 +421,45 @@ summarize_irtree_fit <- function(fit,
     
     # fit$summary <- coda:::summary.mcmc.list(fit$mcmc, ...)
     fit$summary <- list()
-    try({
-        if (fitMethod == "stan") {
-            sum1 <- shinystan::as.shinystan(fit$samples)
-        } else {
-            sum1 <- shinystan::as.shinystan(fit$mcmc)
-        }
-        fit$summary$statistics <- sum1@summary[, c("mean", "se_mean", "sd", "n_eff", "Rhat")]
-        colnames(fit$summary$statistics)[1] <- "Mean"
-        fit$summary$quantiles  <- sum1@summary[, !(colnames(sum1@summary) %in% c("mean", "se_mean", "sd", "n_eff", "Rhat"))]
-        fit$summary$start  <- attr(fit$mcmc[[1]], "mcpar")[1]
-        fit$summary$end    <- attr(fit$mcmc[[1]], "mcpar")[2]
-        fit$summary$thin   <- attr(fit$mcmc[[1]], "mcpar")[3]
-        fit$summary$nchain <- length(fit$mcmc)
-    }, silent = TRUE)
+    
+    if (tryCatch(!shinystan::is.shinystan(1),
+                 error = function(e) return(FALSE))) {
+        try({
+            if (fitMethod == "stan") {
+                sum1 <- shinystan::as.shinystan(fit$samples)
+            } else {
+                sum1 <- shinystan::as.shinystan(fit$mcmc)
+            }
+            fit$summary$statistics <- sum1@summary[, c("mean", "se_mean", "sd", "n_eff", "Rhat")]
+            colnames(fit$summary$statistics)[1] <- "Mean"
+            fit$summary$quantiles  <- sum1@summary[, !(colnames(sum1@summary) %in% c("mean", "se_mean", "sd", "n_eff", "Rhat"))]
+            fit$summary$start  <- attr(fit$mcmc[[1]], "mcpar")[1]
+            fit$summary$end    <- attr(fit$mcmc[[1]], "mcpar")[2]
+            fit$summary$thin   <- attr(fit$mcmc[[1]], "mcpar")[3]
+            fit$summary$nchain <- length(fit$mcmc)
+        })
+    } 
     if (length(fit$summary) == 0) {
         fit$summary <- summary(fit$mcmc, ...)
     }
+    
+    # try({
+    #     if (fitMethod == "stan") {
+    #         sum1 <- shinystan::as.shinystan(fit$samples)
+    #     } else {
+    #         sum1 <- shinystan::as.shinystan(fit$mcmc)
+    #     }
+    #     fit$summary$statistics <- sum1@summary[, c("mean", "se_mean", "sd", "n_eff", "Rhat")]
+    #     colnames(fit$summary$statistics)[1] <- "Mean"
+    #     fit$summary$quantiles  <- sum1@summary[, !(colnames(sum1@summary) %in% c("mean", "se_mean", "sd", "n_eff", "Rhat"))]
+    #     fit$summary$start  <- attr(fit$mcmc[[1]], "mcpar")[1]
+    #     fit$summary$end    <- attr(fit$mcmc[[1]], "mcpar")[2]
+    #     fit$summary$thin   <- attr(fit$mcmc[[1]], "mcpar")[3]
+    #     fit$summary$nchain <- length(fit$mcmc)
+    # }, silent = TRUE)
+    # if (length(fit$summary) == 0) {
+    #     fit$summary <- summary(fit$mcmc, ...)
+    # }
     
     return(fit)
 }
