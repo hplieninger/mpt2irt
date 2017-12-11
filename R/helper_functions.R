@@ -43,23 +43,26 @@ load_rda <- function(file = NULL) {
 
 #' Get a Directory for Saving Files.
 #' 
-#' Check if dir exists and otherwise create one.
+#' Check if dir exists and otherwise creates one.
 #' 
 #' @param dir Character.
-#' @return Character containing directory.
+#' @return Character, namely, an existing directory.
 # @export
 get_dir <- function(dir = NULL) {
+    # Returns either dir or---if unavailable---a path to a writable dir
+    # Function is useful if a network dir becomes unavailable during a run of
+    # recovery_irtree()
     if (!is.null(dir)) {
-        try(dir <- normalizePath(dir))
-    } 
-    if (is.null(dir) | !dir.exists(dir)) {
-        set.seed(Sys.Date())
-        tmp1 <- paste0(sample(c(letters, LETTERS, 0:9), 12, T), collapse = "")
-        dirx <- paste0(getwd(), "/", tmp1)
-        if (!dir.exists(dirx)) {
-            dir.create(dirx)
+        try(dir <- suppressWarnings(normalizePath(dir)))
+        if (!dir.exists(dir)) {
+            dir <- NULL
         }
-        # on.exit(message(paste0("Data saved in: ", dirx)))
+    } 
+    if (is.null(dir)) {
+        tmp1 <- tail(strsplit(tempdir(), "\\\\")[[1]], 1)
+        tmp2 <- ifelse(dir.exists(getwd()), getwd(), normalizePath("~"))
+        dirx <- suppressWarnings(normalizePath(paste0(tmp2, "/", tmp1)))
+        dir.create(dirx, showWarnings = FALSE)
     } else {
         dirx <- dir
     }

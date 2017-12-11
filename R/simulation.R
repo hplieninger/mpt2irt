@@ -30,7 +30,8 @@
 #' @param df_vcov Numeric. Degrees of freedom for wishart distribution from
 #'   which the variance-covariance matrix for generating the data is drawn.
 #' @param dir Path to directory where results should be stored,
-#' @param keep_mcmc Logical indicating wheter to retain, besides a summary of the parameters, the raw mcmc samples.
+#' @param keep_mcmc Logical indicating wheter to retain, besides a summary of
+#'   the parameters, the raw mcmc samples.
 #' @param savext_mcmc Logical indicating wheter to save the mcmc samples in
 #'   an external RData file.
 #' @param savext_all Logical indicating wheter to save the output from Stan/JAGS
@@ -47,7 +48,8 @@
 # @param saveTemp save temporary results to same location as progress report
 # @param rng_seed random number seed
 # @param mail an email address used when the simulation is finished (no dash "-" allowed!)
-# @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
+# @param ... further arguments passed to \code{\link[rstan]{sampling}} (for
+#   Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
 #' @inheritParams fit_irtree
 #' @inheritParams generate_irtree_ext
 #' @inheritParams runjags::run.jags
@@ -99,7 +101,8 @@ recovery_irtree <- function(rrr = NULL,
                             keep_mcmc = FALSE,
                             savext_all = FALSE,
                             savext_mcmc = TRUE,
-                            add2varlist = c("deviance", "pd", "popt", "dic"), ...) {
+                            add2varlist = c("deviance", "pd", "popt", "dic"),
+                            ...) {
     
     # It is assumed that parameters such as df and V are the same for all models
     # in fitModel. There's no problem in changing this, only remember to change
@@ -118,6 +121,11 @@ recovery_irtree <- function(rrr = NULL,
                               several.ok = TRUE)
     }
     checkmate::qassert(df_vcov, "N1[1,]")
+    checkmate::assert_character(dir, any.missing = FALSE, max.len = 1, 
+                                null.ok = TRUE)
+    checkmate::qassert(keep_mcmc, "B1")
+    checkmate::qassert(savext_all, "B1")
+    checkmate::qassert(savext_mcmc, "B1")
     
     args <- c(as.list(environment()), list(...))
     
@@ -282,6 +290,7 @@ recovery_irtree <- function(rrr = NULL,
                     if (!dir.exists(dirmcmc)) {
                         dir.create(normalizePath(dirmcmc))
                     }
+                    on.exit(message(paste0("Data saved in: ", dirx)), add = T)
                 }
                 
                 if (savext_mcmc == TRUE) {
@@ -350,6 +359,7 @@ recovery_irtree <- function(rrr = NULL,
                     if (!dir.exists(dirmcmc)) {
                         dir.create(normalizePath(dirmcmc))
                     }
+                    on.exit(message(paste0("Data saved in: ", dirx)), add = T)
                 }
                 
                 if (savext_mcmc == TRUE) {
@@ -408,6 +418,7 @@ recovery_irtree <- function(rrr = NULL,
         dirx <- get_dir(dir = dir)
         
         do.call(save, list(returnName, file = paste0(dirx, "/", save_file)))
+        on.exit(message(paste0("Data saved in: ", dirx)), add = T)
         
         # if (savext_mcmc == TRUE) {
         #     save_file_mcmc <- paste0("mcmc-", sprintf("%04d", rrr[qqq]), ".RData")

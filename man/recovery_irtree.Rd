@@ -73,7 +73,8 @@ which the variance-covariance matrix for generating the data is drawn.}
 
 \item{dir}{Path to directory where results should be stored,}
 
-\item{keep_mcmc}{Logical indicating wheter to retain, besides a summary of the parameters, the raw mcmc samples.}
+\item{keep_mcmc}{Logical indicating wheter to retain, besides a summary of
+the parameters, the raw mcmc samples.}
 
 \item{savext_all}{Logical indicating wheter to save the output from Stan/JAGS
 in an external RData file.}

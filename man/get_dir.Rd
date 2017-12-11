@@ -10,8 +10,8 @@ get_dir(dir = NULL)
 \item{dir}{Character.}
 }
 \value{
-Character containing directory.
+Character, namely, an existing directory.
 }
 \description{
-Check if dir exists and otherwise create one.
+Check if dir exists and otherwise creates one.
 }
