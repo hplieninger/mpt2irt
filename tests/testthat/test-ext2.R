@@ -7,7 +7,7 @@ library("magrittr")
 context("ext2: Data generation")
 
 N <- sample(10:20, 1)
-J <- sample(2:20, 1)
+J <- sample(5:20, 1)
 # N <- 10
 # J <- 2
 
@@ -69,12 +69,14 @@ context("ext2: Model fitting")
 M <- 200
 warmup <- 100
 
-res1 <- fit_irtree(dat1$X, fitModel = "ext2", fitMethod = "stan",
-                   revItem = dat1$revItem, traitItem = dat1$traitItem,
-                   M = M, warmup = warmup, n.chains = 1)
-res2 <- fit_irtree(dat2$X, fitModel = "ext2", fitMethod = "stan",
-                   revItem = dat2$revItem, traitItem = dat2$traitItem,
-                   M = M, warmup = warmup, n.chains = 1)
+invisible(capture.output(
+    res1 <- fit_irtree(dat1$X, fitModel = "ext2", fitMethod = "stan",
+                       revItem = dat1$revItem, traitItem = dat1$traitItem,
+                       M = M, warmup = warmup, n.chains = 1)
+    res2 <- fit_irtree(dat2$X, fitModel = "ext2", fitMethod = "stan",
+                       revItem = dat2$revItem, traitItem = dat2$traitItem,
+                       M = M, warmup = warmup, n.chains = 1)
+))
 
 test_that("fit_irtree() returns MCMC list", {
     expect_equal(unique(sapply(rstan::As.mcmc.list(res1$samples), nrow)), M)
@@ -85,15 +87,11 @@ test_that("fit_irtree() returns MCMC list", {
 
 context("ext2: Summarizing fitted models")
 
-iter <- 10
-
 res1b <- summarize_irtree_fit(res1)
 res1c <- tidyup_irtree_fit(res1b)
-res1d <- suppressMessages(pp_irtree(res1b, iter = iter, N = N))
 
 res2b <- summarize_irtree_fit(res2)
 res2c <- tidyup_irtree_fit(res2b)
-res2d <- suppressMessages(pp_irtree(res2b, iter = iter, N = N2))
 
 test_that("tidyup_irtree_fit() returns correlations", {
     expect_equal(unique(as.vector(sapply(res1c$Corr, dim))), res1b$args$S)
@@ -114,29 +112,6 @@ test_that("plot_irtree() returns a valid ggplot", {
     expect_true(ggplot2::is.ggplot(res2c$plot))
 })
 
-test_that("pp_irtree() returns valid values", {
-    expect_is(res1d, "data.frame")
-    expect_is(res2d, "data.frame")
-    
-    expect_equal(as.numeric(levels(res1d$Item)), 1:J)
-    expect_equal(as.numeric(levels(res2d$Item)), 1:J2)
-    
-    expect_equal(as.numeric(levels(res1d$Categ)), 1:5)
-    expect_equal(as.numeric(levels(res2d$Categ)), 1:5)
-    
-    expect_equal(unique(res1d$Persons), N)
-    expect_equal(unique(res2d$Persons), N2)
-    
-    expect_equal(unique(res1d$Samples), iter*res1b$args$n.chains)
-    expect_equal(unique(res2d$Samples), iter*res2b$args$n.chains)
-    
-    expect_gte(min(subset(res1d, select = -(Item:Samples))), 0)
-    expect_gte(min(subset(res2d, select = -(Item:Samples))), 0)
-    
-    expect_lte(min(subset(res1d, select = -(Item:Samples))), 1)
-    expect_lte(min(subset(res2d, select = -(Item:Samples))), 1)
-})
-
 # RECOVERY ----------------------------------------------------------------
 
 # context("ext2: Recovery")
@@ -151,3 +126,48 @@ test_that("pp_irtree() returns valid values", {
 #     cor4 <- cor(as.vector(dat2$theta), as.vector(res4c$theta$Median))
 #     # expect_gt(cor3, .65)
 # })
+
+# PPC ---------------------------------------------------------------------
+
+context("PPC")
+
+res1d <- post_prob_irtree(res1b, iter = 20)
+res1e <- ppc_irtree(prob = res1d, fit = res1b)
+invisible(capture.output(res1f <- print(res1e, na.rm = TRUE)))
+res1g <- ppc_resp_irtree(res1e)
+
+res2d <- post_prob_irtree(res2b, iter = 20)
+res2e <- ppc_irtree(prob = res2d, fit = res2b)
+invisible(capture.output(res2f <- print(res2e, na.rm = TRUE)))
+res2g <- ppc_resp_irtree(res2e)
+
+test_that("ppc_resp_irtree() returns valid values", {
+    expect_is(res1f, "matrix")
+    expect_is(res2f, "matrix")
+    
+    expect_gte(min(res1f), 0)
+    expect_gte(min(res2f), 0)
+    
+    expect_lte(min(res1f), 1)
+    expect_lte(min(res2f), 1)
+})
+
+test_that("print(ppc_irtree()) returns valid values", {
+    expect_is(res1g, "data.frame")
+    expect_is(res2g, "data.frame")
+    
+    expect_equal(as.numeric(unique(res1g$Item)), 1:J)
+    expect_equal(as.numeric(unique(res2g$Item)), 1:J2)
+    
+    expect_equal(as.numeric(unique(res1g$Categ)), 1:5)
+    expect_equal(as.numeric(unique(res2g$Categ)), 1:5)
+    
+    expect_equal(unique(res1g$Persons), N)
+    expect_equal(unique(res2g$Persons), N2)
+    
+    expect_gte(min(subset(res1g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
+    expect_gte(min(subset(res2g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
+    
+    expect_lte(min(subset(res1g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
+    expect_lte(min(subset(res2g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
+})

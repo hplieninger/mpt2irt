@@ -169,15 +169,12 @@ test_that("fit_irtree() returns MCMC list", {
 
 context("PCM, Steps: Summarizing fitted models")
 
-iter <- 20
-
 # res1b <- summarize_irtree_fit(res1)
 # res1c <- tidyup_irtree_fit(res1b)
 # res1d <- suppressMessages(pp_irtree(res1b, iter = iter, N = N))
 
 res2b <- summarize_irtree_fit(res2)
 res2c <- tidyup_irtree_fit(res2b)
-res2d <- suppressMessages(pp_irtree(res2b, iter = iter, N = N))
 
 # res3b <- summarize_irtree_fit(res3)
 # res3c <- tidyup_irtree_fit(res3b)
@@ -185,7 +182,6 @@ res2d <- suppressMessages(pp_irtree(res2b, iter = iter, N = N))
 
 res4b <- summarize_irtree_fit(res4)
 res4c <- tidyup_irtree_fit(res4b)
-res4d <- suppressMessages(pp_irtree(res4b, iter = iter, N = N))
 
 test_that("tidyup_irtree_fit() returns correlations", {
     # expect_equal(unique(as.vector(sapply(res1c$Corr, dim))), 1)
@@ -214,48 +210,6 @@ test_that("plot_irtree() returns a valid ggplot", {
     expect_true(ggplot2::is.ggplot(res4c$plot))
 })
 
-test_that("pp_irtree() returns valid values", {
-    # expect_is(res1d, "data.frame")
-    expect_is(res2d, "data.frame")
-    # expect_is(res3d, "data.frame")
-    expect_is(res4d, "data.frame")
-    
-    # expect_equal(as.numeric(levels(res1d$Item)), 1:J)
-    expect_equal(as.numeric(levels(res2d$Item)), 1:J)
-    # expect_equal(as.numeric(levels(res3d$Item)), 1:J)
-    expect_equal(as.numeric(levels(res4d$Item)), 1:J)
-    
-    # expect_equal(as.numeric(levels(res1d$Categ)), 1:5)
-    expect_equal(as.numeric(levels(res2d$Categ)), 1:5)
-    # expect_equal(as.numeric(levels(res3d$Categ)), 1:5)
-    expect_equal(as.numeric(levels(res4d$Categ)), 1:5)
-    
-    # # expect_equal(ncol(res1d), 9)
-    # expect_equal(ncol(res2d), 9)
-    # # expect_equal(ncol(res3d), 9)
-    # expect_equal(ncol(res4d), 9)
-    
-    # expect_equal(unique(res1d$Persons), N)
-    expect_equal(unique(res2d$Persons), N)
-    # expect_equal(unique(res3d$Persons), N)
-    expect_equal(unique(res4d$Persons), N)
-    
-    # expect_equal(unique(res1d$Samples), iter*res1b$args$n.chains)
-    expect_equal(unique(res2d$Samples), iter*res2b$args$n.chains)
-    # expect_equal(unique(res3d$Samples), iter*res3b$args$n.chains)
-    expect_equal(unique(res4d$Samples), iter*res4b$args$n.chains)
-    
-    # expect_gte(min(subset(res1d, select = -(Item:Samples))), 0)
-    expect_gte(min(subset(res2d, select = -(Item:Samples))), 0)
-    # expect_gte(min(subset(res3d, select = -(Item:Samples))), 0)
-    expect_gte(min(subset(res4d, select = -(Item:Samples))), 0)
-    
-    # expect_lte(min(subset(res1d, select = -(Item:Samples))), 1)
-    expect_lte(min(subset(res2d, select = -(Item:Samples))), 1)
-    # expect_lte(min(subset(res3d, select = -(Item:Samples))), 1)
-    expect_lte(min(subset(res4d, select = -(Item:Samples))), 1)
-})
-
 # RECOVERY ----------------------------------------------------------------
 
 test_that("Check that true model parameters are correctly recovered", {
@@ -273,4 +227,49 @@ test_that("Check that true model parameters are correctly recovered", {
     # expect_gt(cor3, .6)
     cor4 <- cor(as.vector(dat2$thres), as.vector(res4c$beta$Median))
     expect_gt(cor3, .65)
+})
+
+# PPC ---------------------------------------------------------------------
+
+context("PPC")
+
+res2d <- post_prob_irtree(res2b, iter = 20)
+res2e <- ppc_irtree(prob = res2d, fit = res2b)
+invisible(capture.output(res2f <- print(res2e, na.rm = TRUE)))
+res2g <- ppc_resp_irtree(res2e)
+
+res4d <- post_prob_irtree(res4b, iter = 20)
+res4e <- ppc_irtree(prob = res4d, fit = res4b)
+invisible(capture.output(res4f <- print(res4e, na.rm = TRUE)))
+res4g <- ppc_resp_irtree(res4e)
+
+test_that("ppc_resp_irtree() returns valid values", {
+    expect_is(res2f, "matrix")
+    expect_is(res4f, "matrix")
+    
+    expect_gte(min(res2f), 0)
+    expect_gte(min(res4f), 0)
+    
+    expect_lte(min(res2f), 1)
+    expect_lte(min(res4f), 1)
+})
+
+test_that("print(ppc_irtree()) returns valid values", {
+    expect_is(res2g, "data.frame")
+    expect_is(res4g, "data.frame")
+    
+    expect_equal(as.numeric(unique(res2g$Item)), 1:J)
+    expect_equal(as.numeric(unique(res4g$Item)), 1:J)
+    
+    expect_equal(as.numeric(unique(res2g$Categ)), 1:5)
+    expect_equal(as.numeric(unique(res4g$Categ)), 1:5)
+    
+    expect_equal(unique(res2g$Persons), N)
+    expect_equal(unique(res4g$Persons), N)
+    
+    expect_gte(min(subset(res2g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
+    expect_gte(min(subset(res4g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
+    
+    expect_lte(min(subset(res2g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
+    expect_lte(min(subset(res4g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
 })

@@ -6,6 +6,17 @@
 
 using namespace Rcpp;
 
+// sample_pp
+NumericVector sample_pp(NumericMatrix prob);
+RcppExport SEXP _mpt2irt_sample_pp(SEXP probSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type prob(probSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_pp(prob));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 RcppExport SEXP _rcpp_module_boot_stan_fit4stan_boeck_2012_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4stan_boeck_ext2_mod();
@@ -16,6 +27,7 @@ RcppExport SEXP _rcpp_module_boot_stan_fit4stan_pcm_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4stan_steps_mod();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_mpt2irt_sample_pp", (DL_FUNC) &_mpt2irt_sample_pp, 1},
     {"_rcpp_module_boot_stan_fit4stan_boeck_2012_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_2012_mod, 0},
     {"_rcpp_module_boot_stan_fit4stan_boeck_ext2_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_ext2_mod, 0},
     {"_rcpp_module_boot_stan_fit4stan_boeck_ext_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4stan_boeck_ext_mod, 0},
