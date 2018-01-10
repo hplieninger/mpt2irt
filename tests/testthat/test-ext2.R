@@ -72,7 +72,7 @@ warmup <- 100
 invisible(capture.output(
     res1 <- fit_irtree(dat1$X, fitModel = "ext2", fitMethod = "stan",
                        revItem = dat1$revItem, traitItem = dat1$traitItem,
-                       M = M, warmup = warmup, n.chains = 1)
+                       M = M, warmup = warmup, n.chains = 1),
     res2 <- fit_irtree(dat2$X, fitModel = "ext2", fitMethod = "stan",
                        revItem = dat2$revItem, traitItem = dat2$traitItem,
                        M = M, warmup = warmup, n.chains = 1)
