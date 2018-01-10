@@ -32,12 +32,13 @@ stan2mcmc.list <- function(fit) {
 #' name of choice.
 #' 
 #' @param file An RData file saved via \code{\link[base]{save}}.
+#' @inheritParams base::load
 #' @return The object save in \code{file}.
 #' @references \url{http://stackoverflow.com/a/5577647}
 #' @export
-load_rda <- function(file = NULL) {
+load_rda <- function(file = NULL, verbose = FALSE) {
     env <- new.env()
-    nm <- load(file, env)[1]
+    nm <- load(file, env, verbose = verbose)[1]
     env[[nm]]
 }
 

@@ -4,10 +4,12 @@
 \alias{load_rda}
 \title{Load RData file.}
 \usage{
-load_rda(file = NULL)
+load_rda(file = NULL, verbose = FALSE)
 }
 \arguments{
 \item{file}{An RData file saved via \code{\link[base]{save}}.}
+
+\item{verbose}{should item names be printed during loading?}
 }
 \value{
 The object save in \code{file}.
