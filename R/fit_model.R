@@ -21,6 +21,9 @@
 #' If more than a single trait is measured, theta has more columns accordingly
 #' (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
 #' 
+#' @param model If \code{NULL} (the usual case), this is determined by
+#'   \code{fitModel}. Otherwise, this is passed to \code{\link[rstan]{sampling}}
+#'   (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS).
 #' @param X an N x J matrix of observed responses for categories 1...5 (use
 #'   \code{\link{mult_to_cat}} to transform a multinomial frequency matrix with 1s/0s to
 #'   responses from 1...5)
@@ -91,6 +94,7 @@ fit_irtree <- function(X,
                        df = NULL,
                        V = NULL, 
                        fitModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
+                       model = NULL,
                        fitMethod = c("stan", "jags"), 
                        outFormat = NULL,
                        startSmall = FALSE,
@@ -329,25 +333,29 @@ fit_irtree <- function(X,
         #     # fitting "model" requires changing S2 to S2+1 (see above)
         #     stanExe <- boeck_stan_ext_HH
         # } else
-        if (fitModel == "ext") {
-            stanExe <- stanmodels$stan_boeck_ext
-        } else if (fitModel == "pcm") {
-            # better (?): http://mc-stan.org/users/documentation/case-studies/pcm_and_gpcm.html
-            message("Current Stan implementation of the PCM may be suboptimal. ",
-                    "Treat the results with caution unless you checked the recovery ",
-                    "through simulations.")
-            stanExe <- stanmodels$stan_pcm
-        } else if (fitModel == "steps") {
-            stanExe <- stanmodels$stan_steps
-        } else if (fitModel == "shift") {
-            stanExe <- stanmodels$stan_boeck_shift
-        } else if (fitModel == "2012") {
-            stanExe <- stanmodels$stan_boeck_2012
-        } else if (fitModel == "ext2") {
-            stanExe <- stanmodels$stan_boeck_ext2
+        
+        if (is.null(model)) {
+            if (fitModel == "ext") {
+                model <- stanmodels$stan_boeck_ext
+            } else if (fitModel == "pcm") {
+                # better (?): http://mc-stan.org/users/documentation/case-studies/pcm_and_gpcm.html
+                message("Current Stan implementation of the PCM may be suboptimal. ",
+                        "Treat the results with caution unless you checked the recovery ",
+                        "through simulations.")
+                model <- stanmodels$stan_pcm
+            } else if (fitModel == "steps") {
+                model <- stanmodels$stan_steps
+            } else if (fitModel == "shift") {
+                model <- stanmodels$stan_boeck_shift
+            } else if (fitModel == "2012") {
+                model <- stanmodels$stan_boeck_2012
+            } else if (fitModel == "ext2") {
+                model <- stanmodels$stan_boeck_ext2
+            }
         }
+        
         if (is.null(cores)) cores <- args$cores <- min(n.chains, parallel::detectCores() - 1)
-        boeck.samp <- rstan::sampling(stanExe,
+        boeck.samp <- rstan::sampling(object = model,
                                       data = datalist, pars = varlist, 
                                       chains = n.chains, iter = warmup + M*thin, 
                                       warmup = warmup, thin = thin,
