@@ -1,7 +1,7 @@
 Package: mpt2irt
 Type: Package
 Title: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles
-Version: 0.1.2
+Version: 0.1.3
 Date: 2018-01-10
 Authors@R: c(person("Hansjoerg", "Plieninger", email = "plieninger@uni-mannheim.de", role = "cre"),
              person("Daniel", "Heck", email = "heck@uni-mannheim.de", role = "aut"))

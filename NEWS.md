@@ -1,3 +1,7 @@
+## Version 0.1.3
+
+* Added JAGS version of the shift model (introduced only in Stan in 0.1.1)
+
 ## Version 0.1.2
 
 * Implementation of more thorough posterior predictive checking including

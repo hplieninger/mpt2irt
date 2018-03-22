@@ -115,7 +115,7 @@ fit_irtree <- function(X,
         fitModel <- match.arg(fitModel)
     } else {
         # PCM and Steps not yet implemented in JAGS
-        fitModel <- match.arg(fitModel, choices = c("ext", "2012"))
+        fitModel <- match.arg(fitModel, choices = c("ext", "2012", "shift"))
     }
     
     args <- c(as.list(environment()), list(...))

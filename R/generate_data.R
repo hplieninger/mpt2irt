@@ -319,6 +319,119 @@ generate_irtree_steps <- function(N = NULL,
                 traitItem = traitItem))
 }
 
+#' @title Generate data for Shift-Tree Model.
+#'
+#' @description Function generates categorical data 1...5 for \code{N} persons
+#'   and \code{J} items given the item parameters \code{betas}.
+#'
+#' @param betas Jx3 matrix with item parameters on three response dimensions
+#'   (middle, extreme, and relevant trait defined by \code{traitItem}).
+#' @inheritParams generate_irtree_ext
+#' @inheritParams fit_irtree
+#' @return The function returns a list containing the generated matrix of
+#'   responses X, the true parameters, as well as further specifications such as
+#'   \code{traitItem} or \code{revItem}.
+#' @examples
+#' N <- 20
+#' J <- 10
+#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 0))
+#' dat <- generate_irtree_shift(N = N, J = J, betas = betas)
+#' @export
+generate_irtree_shift <- function(N = NULL,
+                                  J = NULL,
+                                  betas = NULL,
+                                  traitItem = rep(1, J),
+                                  theta_vcov = NULL, 
+                                  prop.rev = .5,
+                                  revItem = NULL,
+                                  genModel = "shift",
+                                  # beta_ARS_extreme = NULL,
+                                  cat = TRUE,
+                                  theta = NULL) {
+    
+    checkmate::qassert(N, "X1[2,]")
+    checkmate::qassert(J, "X>0[1,]")
+    checkmate::assert_matrix(betas, mode = "double", any.missing = FALSE, 
+                             nrows = J, ncols = 3)
+    checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
+                                 len = J)
+    # checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
+    #                           len = length(unique(traitItem)))
+    
+    # multiple traits
+    n.trait <- length(unique(traitItem))
+    if (n.trait != 1 & (min(traitItem) != 1 | max(traitItem) != n.trait))
+        warning("Check definition of traitItem!")
+    S_style <- ifelse(as.character(genModel) != "2012", 3, 2)
+    S <- S_style + n.trait
+    # if (length(prop.rev) == 1) {
+    #     prop.rev <- rep(prop.rev, n.trait)
+    # }
+    if (is.null(theta)) {
+        if (missing(theta_vcov) | is.null(theta_vcov)) {
+            theta_vcov <- diag(S)
+        } else if (is.vector(theta_vcov)) {
+            theta_vcov <- theta_vcov * diag(S)
+        } else if (any(dim(theta_vcov) != S)) {
+            warning(paste0("check definition of theta_vcov: wrong dimension (required: ", S,")"))
+        }
+        
+        theta.mu <- rep(0, S)
+        theta <- MASS::mvrnorm(N, theta.mu, theta_vcov)
+    }
+    
+    
+    # decompose to person ability and item difficulty
+    p <- X <- array(NA, c(N, J, 5))
+    m <- y <- e <- a <- matrix(NA, N, J)
+    
+    # reversed items
+    revItem <- create_revItem(prop.rev = prop.rev, revItem = revItem, 
+                              J = J, n.trait = n.trait,
+                              traitItem = traitItem)
+    # revItem <- rep(0, J)
+    # for (tt in 1:n.trait) {
+    #     Jtmp <-  ceiling(prop.rev[tt] * sum(traitItem == tt))
+    #     tmp <- rep(0:1, c(sum(traitItem == tt) - Jtmp, Jtmp))
+    #     revItem[traitItem == tt] <- sample(  tmp )
+    # }
+    
+    # generate data
+    for (i in 1:N) {
+        for (j in 1:J) {      
+            m[i, j] <- pnorm(theta[i, 1] - betas[j, 1])
+            e[i, j] <- pnorm(theta[i, 2] - betas[j, 2])
+            # if(as.character(genModel) != "2012"){
+            #     a[i, j] <- pnorm(theta[i, 3] - betas[j, 3])
+            # }
+            y[i, j] <- pnorm(theta[i, 3] +
+                                 (-1)^revItem[j] * (theta[i, S_style+traitItem[j]] - betas[j, 3]))
+            
+            # reversed items: only relevant for trait-dimension/response process
+            # p.trait <- ifelse(revItem[j] == 1, 1-y[i, j], y[i, j])
+            
+            # response probabilities: MPT model from -2, -1, 0, 1, 2 // 0,1,2,3,4
+            p[i, j, 1] <- (1-m[i, j])*(1-y[i, j])*   e[i, j]
+            p[i, j, 2] <- (1-m[i, j])*(1-y[i, j])*(1-e[i, j])
+            p[i, j, 3] <-    m[i, j]
+            p[i, j, 4] <- (1-m[i, j])*   y[i, j] *(1-e[i, j])
+            p[i, j, 5] <- (1-m[i, j])*   y[i, j] *   e[i, j]
+            
+            
+            X[i, j, ] <- rmultinom(1, 1, p[i, j, 1:5])
+        }
+    }
+    if (cat) {
+        X <- mult_to_cat(X)
+    }
+    
+    res <- list(X = X, revItem = revItem, traitItem = traitItem, theta = theta,
+                betas = betas, theta_vcov = theta_vcov,
+                p = p, middle = m, trait = y, extreme = e, genModel = genModel)
+    # if(genModel != "2012") res$beta_ARS_extreme <- beta_ARS_extreme
+    return(res)
+}
+
 #' Generate item parameters.
 #' 
 #' Function used internally in \code{\link{recovery_irtree}} to generate item parameters.
@@ -518,3 +631,4 @@ create_revItem <- function(prop.rev = NULL, revItem = NULL, J = NULL, n.trait = 
         }
     }
     return(revItem)
+}
