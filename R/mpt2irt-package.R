@@ -25,7 +25,7 @@
 #'   extract_sparse_parts get_posterior_mean stanc
 #' @import Rcpp
 #' @import rstantools
-#' @importFrom utils menu object.size sessionInfo setTxtProgressBar txtProgressBar
+#' @importFrom utils menu object.size sessionInfo setTxtProgressBar txtProgressBar tail combn
 #' @import stats
 #' @importFrom grDevices heat.colors
 #' @importFrom graphics abline barplot hist legend lines par plot

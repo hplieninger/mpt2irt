@@ -1,4 +1,4 @@
-context("Models 'shift'")
+context("Models: 'shift'")
 
 # detach(package:magrittr)
 library("mpt2irt")
@@ -19,7 +19,8 @@ while (cond2 == FALSE) {
                                   J = J,
                                   betas = betas1,
                                   prop.rev = NULL,
-                                  revItem = c(1, 0, sample(0:1, J-2, T)),
+                                  revItem = c(sample(c(0,0,1,1)),
+                                              sample(0:1, J-4, T)),
                                   genModel = "shift")
     cond1 <- suppressWarnings(cor(dat1$X)) %>% is.na %>% any %>% magrittr::equals(FALSE)
     if (cond1 == TRUE) {
@@ -40,7 +41,7 @@ test_that("generate_irtree_shift() returns correct output", {
 context("shift: Model fitting")
 
 M <- 200
-warmup <- 100
+warmup <- 200
 
 invisible(capture.output(
     res1 <- fit_irtree(dat1$X, fitModel = "shift", fitMethod = "stan",
@@ -90,28 +91,28 @@ test_that("plot_irtree() returns a valid ggplot", {
 
 # RECOVERY ----------------------------------------------------------------
 
-context("shift: Recovery")
-
-test_that("Check that true model parameters are correctly recovered", {
-    
-    cor11 <- cor(dat1$theta, res1c$theta$Median)
-    cor12 <- cor(dat1$beta,  res1c$beta$Median)
-    
-    cor21 <- cor(dat1$theta, res2c$theta$Median)
-    cor22 <- cor(dat1$beta,  res2c$beta$Median)
-    
-    cor31 <- cor(res1c$theta$Median, res2c$theta$Median)
-    cor32 <- cor(res1c$beta$Median,  res2c$beta$Median)
-    
-    # expect_true(all(c(1, 5, 9) %in% tail(order(abs(cor2)), 3)),
-    #             label = "Correlations of true and observed betas show expected pattern")
-    
-    expect_gte(min(diag(cor31)), .8,
-              label = "Comparing Stan and JAGS, the minimum correlation of thetas")
-    expect_gte(min(diag(cor32)), .8,
-               label = "Comparing Stan and JAGS, the minimum correlation of beta")
-    
-})
+# context("shift: Recovery")
+# 
+# test_that("Check that true model parameters are correctly recovered", {
+#     
+#     cor11 <- cor(dat1$theta, res1c$theta$Median)
+#     cor12 <- cor(dat1$beta,  res1c$beta$Median)
+#     
+#     cor21 <- cor(dat1$theta, res2c$theta$Median)
+#     cor22 <- cor(dat1$beta,  res2c$beta$Median)
+#     
+#     cor31 <- cor(res1c$theta$Median, res2c$theta$Median)
+#     cor32 <- cor(res1c$beta$Median,  res2c$beta$Median)
+#     
+#     # expect_true(all(c(1, 5, 9) %in% tail(order(abs(cor2)), 3)),
+#     #             label = "Correlations of true and observed betas show expected pattern")
+#     
+#     expect_gte(min(diag(cor31)), .8,
+#               label = "Comparing Stan and JAGS, the minimum correlation of thetas")
+#     expect_gte(min(diag(cor32)), .8,
+#                label = "Comparing Stan and JAGS, the minimum correlation of beta")
+#     
+# })
 
 # PPC ---------------------------------------------------------------------
 

@@ -173,7 +173,7 @@ fit_irtree <- function(X,
         sapply(. %>% magrittr::is_less_than(0) %>% any)
     tmp_test_X$revItem <- split(revItem, traitItem) %>% 
         sapply(. %>% unique %>% length)
-    if (nrow(subset(tmp_test_X, revItem > 1 & cors == FALSE)) > 0) {
+    if (nrow(tmp_test_X[tmp_test_X$revItem > 1 & tmp_test_X$cors == FALSE, ]) > 0) {
         stop("Data should be provided in raw format such that",
              "reverse-coded and regular items correlate negatively.")
     }
