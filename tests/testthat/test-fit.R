@@ -1,3 +1,5 @@
+context("Models 'ext' and '2012'")
+
 # detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")

@@ -1,3 +1,5 @@
+context("Models 'steps' and 'pcm'")
+
 # detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")

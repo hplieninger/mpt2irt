@@ -1,3 +1,5 @@
+context("Models 'ext2'")
+
 # detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")
