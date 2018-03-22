@@ -6,8 +6,8 @@
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
   V = NULL, fitModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
-  fitMethod = c("stan", "jags"), outFormat = NULL, startSmall = FALSE,
-  M = 1000, warmup = 1000, n.chains = 2, thin = 1,
+  model = NULL, fitMethod = c("stan", "jags"), outFormat = NULL,
+  startSmall = FALSE, M = 1000, warmup = 1000, n.chains = 2, thin = 1,
   method = "parallel", add2varlist = NULL, cores = NULL,
   summarise = FALSE, N2 = 2, ...)
 }
@@ -33,6 +33,10 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
 (partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
 or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
+
+\item{model}{If \code{NULL} (the usual case), this is determined by
+\code{fitModel}. Otherwise, this is passed to \code{\link[rstan]{sampling}}
+(for Stan) or \code{\link[runjags]{run.jags}} (for JAGS).}
 
 \item{fitMethod}{whether to use JAGS or Stan}
 
