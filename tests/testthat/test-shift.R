@@ -96,10 +96,10 @@ test_that("plot_irtree() returns a valid ggplot", {
 # test_that("Check that true model parameters are correctly recovered", {
 #     
 #     cor11 <- cor(dat1$theta, res1c$theta$Median)
-#     cor12 <- cor(dat1$beta,  res1c$beta$Median)
+#     cor12 <- cor(dat1$betas,  res1c$beta$Median)
 #     
 #     cor21 <- cor(dat1$theta, res2c$theta$Median)
-#     cor22 <- cor(dat1$beta,  res2c$beta$Median)
+#     cor22 <- cor(dat1$betas,  res2c$beta$Median)
 #     
 #     cor31 <- cor(res1c$theta$Median, res2c$theta$Median)
 #     cor32 <- cor(res1c$beta$Median,  res2c$beta$Median)
