@@ -299,8 +299,11 @@ fit_irtree <- function(X,
     
     if (fitMethod == "jags") {
         ##################### fit JAGS ###############################################
-        boeck.jags <- runjags::run.jags(model = paste0(.libPaths()[1],"/mpt2irt/models/jags_boeck_",
-                                                     fitModel, ".txt"), 
+        if (is.null(model)) {
+            model <- system.file(paste0("models/jags_boeck_", fitModel, ".txt"),
+                                 package = "mpt2irt")
+        }
+        boeck.jags <- runjags::run.jags(model = model, 
                                         monitor = varlist, 
                                         data = datalist, inits = inits,
                                         n.chains = n.chains, sample = M, 
