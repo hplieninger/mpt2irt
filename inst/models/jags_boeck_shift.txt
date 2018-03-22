@@ -78,7 +78,7 @@ for(j in 1:J){
 # item hyperpriors
 # beta_ARS_extreme ~ dnorm(0,1) T(-5,5)
 # for(s in 1:S){
-for(s in 1:3){    
+for(s in 1:(S-1)){    
 	# xi_beta[s] ~ dunif(0,100)  # scale
 	mu_beta[s] ~ dnorm(0, 1) T(-5,5)  # raw item mean
 	tau_beta_raw[s] ~ dgamma(1,1)   # raw item variance

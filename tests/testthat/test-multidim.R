@@ -15,10 +15,12 @@ J <- sample(6:20, 1)
 
 betas1 <- mpt2irt:::gen_betas(genModel = "ext", J = J)
 betas2 <- mpt2irt:::gen_betas(genModel = "2012", J = J)
+betas4 <- mpt2irt:::gen_betas(genModel = "shift", J = J)
 
 test_that("gen_betas() returns matrix", {
     expect_is(betas1, "matrix")
     expect_is(betas2, "matrix")
+    expect_is(betas4, "matrix")
 })
 
 # Data 'ext'
@@ -62,6 +64,23 @@ while (cond2 == FALSE) {
     }
 }
 
+# Data Shift
+cond2 <- FALSE
+while (cond2 == FALSE) {
+    dat4 <- generate_irtree_shift(N = N,
+                                  J = J,
+                                  betas = betas4,
+                                  prop.rev = NULL,
+                                  revItem = c(sample(c(0,0,0,0,1,1)),
+                                              sample(0:1, J-6, T)),
+                                  traitItem = c(rep(1:2, 3), sample(1:2, J - 6, T)),
+                                  genModel = "shift")
+    cond1 <- suppressWarnings(cor(dat4$X)) %>% is.na %>% any %>% magrittr::equals(FALSE)
+    if (cond1 == TRUE) {
+        cond2 <- dat4$X %>% cor %>% sign %>% magrittr::equals(-1) %>% any
+    }
+}
+
 suppressWarnings(rm(cond1, cond2))
 
 
@@ -69,12 +88,15 @@ test_that("generate_irtree() returns correct output", {
     expect_is(dat1, "list")
     expect_is(dat2, "list")
     expect_is(dat3, "list")
+    expect_is(dat4, "list")
     expect_equal(ncol(dat1$X), J)
     expect_equal(ncol(dat2$X), J)
     expect_equal(ncol(dat3$X), J)
+    expect_equal(ncol(dat4$X), J)
     expect_equal(nrow(dat1$X), N)
     expect_equal(nrow(dat2$X), N)
     expect_equal(nrow(dat3$X), N)
+    expect_equal(nrow(dat4$X), N)
 })
 
 # MODEL FITTING -----------------------------------------------------------
@@ -100,20 +122,23 @@ invisible(capture.output(
     res5 <- fit_irtree(dat3$X, fitModel = "steps", fitMethod = "stan",
                        revItem = dat3$revItem, traitItem = dat3$traitItem,
                        M = M, warmup = warmup, n.chains = 1),
-    res6 <- fit_irtree(dat1$X, fitModel = "shift", fitMethod = "stan",
-                       revItem = dat1$revItem, traitItem = dat1$traitItem,
+    res6 <- fit_irtree(dat4$X, fitModel = "shift", fitMethod = "stan",
+                       revItem = dat4$revItem, traitItem = dat4$traitItem,
+                       M = M, warmup = warmup, n.chains = 1),
+    res7 <- fit_irtree(dat4$X, fitModel = "shift", fitMethod = "jags",
+                       revItem = dat4$revItem, traitItem = dat4$traitItem,
                        M = M, warmup = warmup, n.chains = 1)
 ))
 
-dat_over <- data.frame(name = paste0("res", 1:6),
-                       dat = c(2012, 2012, "ext", "ext", "shift", 2012),
-                       fitModel = NA, fitMethod = NA)
-
-for (iii in 1:6) {
-    assign("tmp1", get(paste0("res", iii)))
-    dat_over$fitModel[iii] <- tmp1$args$fitModel
-    dat_over$fitMethod[iii] <- tmp1$args$fitMethod
-}
+# dat_over <- data.frame(name = paste0("res", 1:7),
+#                        dat = c(2012, 2012, "ext", "ext", "steps", "shift", "shift"),
+#                        fitModel = NA, fitMethod = NA)
+# 
+# for (iii in 1:7) {
+#     assign("tmp1", get(paste0("res", iii)))
+#     dat_over$fitModel[iii] <- tmp1$args$fitModel
+#     dat_over$fitMethod[iii] <- tmp1$args$fitMethod
+# }
 
 test_that("fit_irtree() returns MCMC list", {
     expect_equal(unique(sapply(res1$samples$mcmc, nrow)), M)
@@ -122,6 +147,7 @@ test_that("fit_irtree() returns MCMC list", {
     expect_equal(unique(sapply(rstan::As.mcmc.list(res4$samples), nrow)), M)
     expect_equal(unique(sapply(rstan::As.mcmc.list(res5$samples), nrow)), M)
     expect_equal(unique(sapply(rstan::As.mcmc.list(res6$samples), nrow)), M)
+    expect_equal(unique(sapply(res7$samples$mcmc, nrow)), M)
 })
 
 # SUMMARIZING MODEL RESULTS -----------------------------------------------
@@ -146,6 +172,9 @@ res5c <- tidyup_irtree_fit(res5b)
 res6b <- summarize_irtree_fit(res6)
 res6c <- tidyup_irtree_fit(res6b)
 
+res7b <- summarize_irtree_fit(res7)
+res7c <- tidyup_irtree_fit(res7b)
+
 test_that("tidyup_irtree_fit() returns correlations", {
     expect_equal(unique(as.vector(sapply(res1c$Corr, dim))), res1b$args$S)
     expect_equal(unique(as.vector(sapply(res2c$Corr, dim))), res2b$args$S)
@@ -153,12 +182,14 @@ test_that("tidyup_irtree_fit() returns correlations", {
     expect_equal(unique(as.vector(sapply(res4c$Corr, dim))), res4b$args$S)
     expect_equal(unique(as.vector(sapply(res5c$Corr, dim))), res5b$args$S)
     expect_equal(unique(as.vector(sapply(res6c$Corr, dim))), res6b$args$S)
+    expect_equal(unique(as.vector(sapply(res7c$Corr, dim))), res6b$args$S)
     expect_equal(unique(as.vector(sapply(res1c$Sigma, dim))), res1b$args$S)
     expect_equal(unique(as.vector(sapply(res2c$Sigma, dim))), res2b$args$S)
     expect_equal(unique(as.vector(sapply(res3c$Sigma, dim))), res3b$args$S)
     expect_equal(unique(as.vector(sapply(res4c$Sigma, dim))), res4b$args$S)
     expect_equal(unique(as.vector(sapply(res5c$Sigma, dim))), res5b$args$S)
     expect_equal(unique(as.vector(sapply(res6c$Sigma, dim))), res6b$args$S)
+    expect_equal(unique(as.vector(sapply(res7c$Sigma, dim))), res7b$args$S)
 })
 
 test_that("tidyup_irtree_fit() returns correct number of parameters", {
@@ -168,21 +199,24 @@ test_that("tidyup_irtree_fit() returns correct number of parameters", {
     expect_equal(unique(sapply(res4c$beta, nrow)), J)
     expect_equal(unique(sapply(res5c$beta, nrow)), J)
     expect_equal(unique(sapply(res6c$beta, nrow)), J)
+    expect_equal(unique(sapply(res7c$beta, nrow)), J)
     expect_equal(unique(sapply(res1c$theta, nrow)), N)
     expect_equal(unique(sapply(res2c$theta, nrow)), N)
     expect_equal(unique(sapply(res3c$theta, nrow)), N)
     expect_equal(unique(sapply(res4c$theta, nrow)), N)
     expect_equal(unique(sapply(res5c$theta, nrow)), N)
     expect_equal(unique(sapply(res6c$theta, nrow)), N)
+    expect_equal(unique(sapply(res7c$theta, nrow)), N)
 })
 
 test_that("plot_irtree() returns a valid ggplot", {
-    expect_true(ggplot2::is.ggplot(res1c$plot))
-    expect_true(ggplot2::is.ggplot(res2c$plot))
-    expect_true(ggplot2::is.ggplot(res3c$plot))
-    expect_true(ggplot2::is.ggplot(res4c$plot))
-    expect_true(ggplot2::is.ggplot(res5c$plot))
-    expect_true(ggplot2::is.ggplot(res6c$plot))
+    expect_is(res1c$plot, "ggplot")
+    expect_is(res2c$plot, "ggplot")
+    expect_is(res3c$plot, "ggplot")
+    expect_is(res4c$plot, "ggplot")
+    expect_is(res5c$plot, "ggplot")
+    expect_is(res6c$plot, "ggplot")
+    expect_is(res7c$plot, "ggplot")
 })
 
 # PPC ---------------------------------------------------------------------
@@ -219,6 +253,11 @@ res6e <- ppc_irtree(prob = res6d, fit = res6b)
 invisible(capture.output(res6f <- print(res6e, na.rm = TRUE)))
 res6g <- ppc_resp_irtree(res6e)
 
+res7d <- post_prob_irtree(res7b, iter = 20)
+res7e <- ppc_irtree(prob = res7d, fit = res7b)
+invisible(capture.output(res7f <- print(res7e, na.rm = TRUE)))
+res7g <- ppc_resp_irtree(res7e)
+
 test_that("ppc_resp_irtree() returns valid values", {
     expect_is(res1f, "matrix")
     expect_is(res2f, "matrix")
@@ -226,6 +265,7 @@ test_that("ppc_resp_irtree() returns valid values", {
     expect_is(res4f, "matrix")
     expect_is(res5f, "matrix")
     expect_is(res6f, "matrix")
+    expect_is(res7f, "matrix")
     
     expect_gte(min(res1f), 0)
     expect_gte(min(res2f), 0)
@@ -233,6 +273,7 @@ test_that("ppc_resp_irtree() returns valid values", {
     expect_gte(min(res4f), 0)
     expect_gte(min(res5f), 0)
     expect_gte(min(res6f), 0)
+    expect_gte(min(res7f), 0)
     
     expect_lte(min(res1f), 1)
     expect_lte(min(res2f), 1)
@@ -240,6 +281,7 @@ test_that("ppc_resp_irtree() returns valid values", {
     expect_lte(min(res4f), 1)
     expect_lte(min(res5f), 1)
     expect_lte(min(res6f), 1)
+    expect_lte(min(res7f), 1)
 })
 
 test_that("print(ppc_irtree()) returns valid values", {
@@ -249,6 +291,7 @@ test_that("print(ppc_irtree()) returns valid values", {
     expect_is(res4g, "data.frame")
     expect_is(res5g, "data.frame")
     expect_is(res6g, "data.frame")
+    expect_is(res7g, "data.frame")
     
     expect_equal(as.numeric(unique(res1g$Item)), 1:J)
     expect_equal(as.numeric(unique(res2g$Item)), 1:J)
@@ -256,6 +299,7 @@ test_that("print(ppc_irtree()) returns valid values", {
     expect_equal(as.numeric(unique(res4g$Item)), 1:J)
     expect_equal(as.numeric(unique(res5g$Item)), 1:J)
     expect_equal(as.numeric(unique(res6g$Item)), 1:J)
+    expect_equal(as.numeric(unique(res7g$Item)), 1:J)
     
     expect_equal(as.numeric(unique(res1g$Categ)), 1:5)
     expect_equal(as.numeric(unique(res2g$Categ)), 1:5)
@@ -263,6 +307,7 @@ test_that("print(ppc_irtree()) returns valid values", {
     expect_equal(as.numeric(unique(res4g$Categ)), 1:5)
     expect_equal(as.numeric(unique(res5g$Categ)), 1:5)
     expect_equal(as.numeric(unique(res6g$Categ)), 1:5)
+    expect_equal(as.numeric(unique(res7g$Categ)), 1:5)
     
     expect_equal(unique(res1g$Persons), N)
     expect_equal(unique(res2g$Persons), N)
@@ -270,6 +315,7 @@ test_that("print(ppc_irtree()) returns valid values", {
     expect_equal(unique(res4g$Persons), N)
     expect_equal(unique(res5g$Persons), N)
     expect_equal(unique(res6g$Persons), N)
+    expect_equal(unique(res7g$Persons), N)
     
     expect_gte(min(subset(res1g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
     expect_gte(min(subset(res2g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
@@ -277,6 +323,7 @@ test_that("print(ppc_irtree()) returns valid values", {
     expect_gte(min(subset(res4g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
     expect_gte(min(subset(res5g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
     expect_gte(min(subset(res6g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
+    expect_gte(min(subset(res7g, select = c(Obs, q025, q975, q16, q84, q50))), 0)
     
     expect_lte(min(subset(res1g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
     expect_lte(min(subset(res2g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
@@ -284,4 +331,28 @@ test_that("print(ppc_irtree()) returns valid values", {
     expect_lte(min(subset(res4g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
     expect_lte(min(subset(res5g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
     expect_lte(min(subset(res6g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
+    expect_lte(min(subset(res7g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
 })
+
+# context("multidim: Recovery")
+# 
+# test_that("Check that true model parameters are correctly recovered", {
+# 
+#     cor11 <- cor(dat4$theta, res7c$theta$Median)
+#     cor12 <- cor(dat4$betas,  res7c$beta$Median)
+# 
+#     cor21 <- cor(dat4$theta, res6c$theta$Median)
+#     cor22 <- cor(dat4$betas,  res6c$beta$Median)
+# 
+#     cor31 <- cor(res7c$theta$Median, res6c$theta$Median)
+#     cor32 <- cor(res7c$beta$Median,  res6c$beta$Median)
+# 
+#     # expect_true(all(c(1, 5, 9) %in% tail(order(abs(cor2)), 3)),
+#     #             label = "Correlations of true and observed betas show expected pattern")
+# 
+#     expect_gte(min(diag(cor31)), .8,
+#               label = "Comparing Stan and JAGS, the minimum correlation of thetas")
+#     expect_gte(min(diag(cor32)), .8,
+#                label = "Comparing Stan and JAGS, the minimum correlation of beta")
+# 
+# })
