@@ -5,24 +5,34 @@
 \title{Generate data for Acquiescence Model.}
 \usage{
 generate_irtree_ext(N = NULL, J = NULL, betas = NULL, traitItem = rep(1,
-  J), theta_vcov = NULL, prop.rev = 0.5, genModel = c("ext", "ext2"),
-  beta_ARS_extreme = NULL, cat = TRUE, theta = NULL)
+  J), theta_vcov = NULL, prop.rev = 0.5, revItem = NULL,
+  genModel = c("ext", "ext2"), beta_ARS_extreme = NULL, cat = TRUE,
+  theta = NULL)
 }
 \arguments{
 \item{N}{number of persons}
 
 \item{J}{number of items}
 
-\item{betas}{Jx4 matrix with item parameters on four response dimensions (middle, extreme, acquiescence, relevant trait defined by \code{traitItem}).}
+\item{betas}{Jx4 matrix with item parameters on four response dimensions
+(middle, extreme, acquiescence, relevant trait defined by
+\code{traitItem}).}
 
 \item{traitItem}{vector of length J specifying the underlying traits (e.g.,
 indexed from 1...5). Standard: only a single trait is measured by all
 items. If the Big5 are measures, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{theta_vcov}{4x4 covariance matrix for middle, extremity, acquiescence, trait(s) (can be a vector of length 4 with variances for uncorrelated processes).}
+\item{theta_vcov}{4x4 covariance matrix for middle, extremity, acquiescence,
+trait(s) (can be a vector of length 4 with variances for uncorrelated
+processes).}
 
-\item{prop.rev}{proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.}
+\item{prop.rev}{proportion of reversed items (rounded to next integer). Can
+be a vector if multiple traits are specified by \code{traitItem}. Only used
+if \code{revItem = NULL}.}
+
+\item{revItem}{vector of length J specifying reversed items (1=reversed,
+0=not reversed). Overrides argument \code{prop.rev}.}
 
 \item{genModel}{Character. Either \code{"2012"} (Boeckenholt Model without
 acquiescence) or \code{"ext"} (Acquiescence Model)}
@@ -33,7 +43,8 @@ probit scale) of choosing category 5 (vs.4) in case of ARS}
 \item{cat}{whether to return categorical data (response categories 1...5) or
 multinomial data (frequencies of 0 and 1)}
 
-\item{theta}{Numeric. Optional matrix with \code{N} rows containing the true person parameters theta.}
+\item{theta}{Numeric. Optional matrix with \code{N} rows containing the true
+person parameters theta.}
 }
 \value{
 The function returns a list containing the generated matrix of
@@ -41,7 +52,8 @@ The function returns a list containing the generated matrix of
   values of the parameters.
 }
 \description{
-Function generates categorical data 1...5 for \code{N} persons and \code{J} items given the item parameters \code{betas}.
+Function generates categorical data 1...5 for \code{N} persons and \code{J}
+items given the item parameters \code{betas}.
 }
 \examples{
 N <- 20

@@ -7,8 +7,8 @@
 #' @param rep number of points in parameter space to check identification
 #' @param betas optional matrix with beta parameters
 #' @param theta optional matrix with theta parameters (note that the parameters of the first person will be set to to minus the theta-column means if \code{fixed.theta=TRUE})
-#' @inheritParams generate_irtree_ext
 #' @inheritParams fit_irtree
+#' @inheritParams generate_irtree_ext
 # @importFrom numDeriv jacobian
 #' @examples 
 #' # Standard model identified, even without reversed items:

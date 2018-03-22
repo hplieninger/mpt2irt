@@ -13,7 +13,9 @@ boeck_predict(fit_sum = NULL, theta = matrix(0, N, S2), betas = NULL,
 
 \item{theta}{Matrix. A matrix of person parameters for which the predictions should be made.}
 
-\item{betas}{Jx4 matrix with item parameters on four response dimensions (middle, extreme, acquiescence, relevant trait defined by \code{traitItem}).}
+\item{betas}{Jx4 matrix with item parameters on four response dimensions
+(middle, extreme, acquiescence, relevant trait defined by
+\code{traitItem}).}
 
 \item{beta_ARS_extreme}{only for \code{genModel="ext"}: probability (on
 probit scale) of choosing category 5 (vs.4) in case of ARS}

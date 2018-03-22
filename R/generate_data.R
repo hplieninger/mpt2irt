@@ -1,19 +1,29 @@
 #' Generate data for Acquiescence Model.
 #'
-#' Function generates categorical data 1...5 for \code{N} persons and \code{J} items given the item parameters \code{betas}.
+#' Function generates categorical data 1...5 for \code{N} persons and \code{J}
+#' items given the item parameters \code{betas}.
 #' 
 #' @param N number of persons
 #' @param J number of items
-#' @param betas Jx4 matrix with item parameters on four response dimensions (middle, extreme, acquiescence, relevant trait defined by \code{traitItem}).
-#' @param theta_vcov 4x4 covariance matrix for middle, extremity, acquiescence, trait(s) (can be a vector of length 4 with variances for uncorrelated processes).
-#' @param prop.rev proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.
+#' @param betas Jx4 matrix with item parameters on four response dimensions
+#'   (middle, extreme, acquiescence, relevant trait defined by
+#'   \code{traitItem}).
+#' @param theta_vcov 4x4 covariance matrix for middle, extremity, acquiescence,
+#'   trait(s) (can be a vector of length 4 with variances for uncorrelated
+#'   processes).
+#' @param prop.rev proportion of reversed items (rounded to next integer). Can
+#'   be a vector if multiple traits are specified by \code{traitItem}. Only used
+#'   if \code{revItem = NULL}.
+#' @param revItem vector of length J specifying reversed items (1=reversed,
+#'   0=not reversed). Overrides argument \code{prop.rev}.
 #' @param genModel Character. Either \code{"2012"} (Boeckenholt Model without
 #'   acquiescence) or \code{"ext"} (Acquiescence Model)
 #' @param beta_ARS_extreme only for \code{genModel="ext"}: probability (on
 #'   probit scale) of choosing category 5 (vs.4) in case of ARS
 #' @param cat whether to return categorical data (response categories 1...5) or
 #'   multinomial data (frequencies of 0 and 1)
-#' @param theta Numeric. Optional matrix with \code{N} rows containing the true person parameters theta.
+#' @param theta Numeric. Optional matrix with \code{N} rows containing the true
+#'   person parameters theta.
 #' @inheritParams fit_irtree
 #' @return The function returns a list containing the generated matrix of
 #'   responses X, a vector revItem indicating reversed items and true, latent
@@ -31,6 +41,7 @@ generate_irtree_ext <- function(N = NULL,
                                 traitItem = rep(1,J),
                                 theta_vcov = NULL, 
                                 prop.rev = .5,
+                                revItem = NULL,
                                 genModel = c("ext", "ext2"),
                                 beta_ARS_extreme = NULL,
                                 cat = TRUE,
@@ -44,8 +55,8 @@ generate_irtree_ext <- function(N = NULL,
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
                                  len = J)
     # checkmate::qassert(prop.rev, "N1[0,1]")
-    checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
-                              min.len = 1, max.len = length(unique(traitItem)))
+    # checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
+    #                           min.len = 1, max.len = length(unique(traitItem)))
     checkmate::assert_number(beta_ARS_extreme, finite = TRUE,
                              null.ok = ifelse(genModel == "ext", F, T))
     
@@ -55,9 +66,9 @@ generate_irtree_ext <- function(N = NULL,
         warning("Check definition of traitItem!")
     S_style <- ifelse(as.character(genModel) != "2012", 3, 2)
     S <- S_style + n.trait + ifelse(genModel == "ext3", 1, 0)
-    if (length(prop.rev) == 1) {
-        prop.rev <- rep(prop.rev, n.trait)
-    }
+    # if (length(prop.rev) == 1) {
+    #     prop.rev <- rep(prop.rev, n.trait)
+    # }
     if (is.null(theta)) {
         if (missing(theta_vcov) | is.null(theta_vcov)) {
             theta_vcov <- diag(S)
@@ -75,16 +86,18 @@ generate_irtree_ext <- function(N = NULL,
     # decompose to person ability and item difficulty
     p <- X <- array(NA, c(N, J, 5))
     m <- y <- e <- a <- matrix(NA, N, J)
-    # reversed items
-    revItem <- rep(0, J)
-    for (tt in 1:n.trait) {
-        Jtmp <-  ceiling(prop.rev[tt] * sum(traitItem == tt))
-        tmp <- rep(0:1, c(sum(traitItem == tt) - Jtmp,Jtmp))
-        revItem[traitItem == tt] <- sample(  tmp )
-    }
-    #   if(prop.rev != 0)
-    #     revItem[1:ceiling(J*prop.rev)] <- 1
-    #   revItem <- sample(revItem, J)
+    
+    # # reversed items
+    revItem <- create_revItem(prop.rev = prop.rev, revItem = revItem, 
+                              J = J, n.trait = n.trait,
+                              traitItem = traitItem)
+    # revItem <- rep(0, J)
+    # for (tt in 1:n.trait) {
+    #     Jtmp <-  ceiling(prop.rev[tt] * sum(traitItem == tt))
+    #     tmp <- rep(0:1, c(sum(traitItem == tt) - Jtmp,Jtmp))
+    #     revItem[traitItem == tt] <- sample(  tmp )
+    # }
+    
     # generate data
     for (i in 1:N) {
         for (j in 1:J) {      
@@ -150,6 +163,7 @@ generate_irtree_2012 <- function(N = NULL,
                                  traitItem = rep(1, J),
                                  theta_vcov = NULL,
                                  prop.rev = .5,
+                                 revItem = NULL,
                                  cat = TRUE){
     
     checkmate::qassert(N, "X1[2,]")
@@ -159,8 +173,8 @@ generate_irtree_2012 <- function(N = NULL,
     checkmate::assert_integerish(traitItem, lower = 1, any.missing = FALSE,
                                  len = J)
     # checkmate::qassert(prop.rev, "N1[0,1]")
-    checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
-                              min.len = 1, max.len = length(unique(traitItem)))
+    # checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
+    #                           min.len = 1, max.len = length(unique(traitItem)))
     
     
     n.trait <- length(unique(traitItem))
@@ -173,22 +187,22 @@ generate_irtree_2012 <- function(N = NULL,
     }else if (is.vector(theta_vcov)){
         theta_vcov <- theta_vcov * diag(S)
     }
-    if(length(prop.rev) == 1)
-        prop.rev <- rep(prop.rev, n.trait)
+    # if(length(prop.rev) == 1)
+    #     prop.rev <- rep(prop.rev, n.trait)
     
     theta.mu <- rep(0, S)
     theta <- MASS::mvrnorm(N, theta.mu, theta_vcov)
     
     # reversed items
-    revItem <- rep(0,J)
-    for(tt in 1:n.trait){
-        Jtmp <-  ceiling(prop.rev[tt] * sum(traitItem == tt))
-        tmp <- rep(0:1, c(sum(traitItem == tt)-Jtmp,Jtmp))
-        revItem[traitItem == tt] <- sample(  tmp )
-    }
-    #   if(prop.rev != 0)
-    #     revItem[1:ceiling(J*prop.rev)] <- 1
-    #   revItem <- sample(revItem, J)
+    revItem <- create_revItem(prop.rev = prop.rev, revItem = revItem, 
+                              J = J, n.trait = n.trait,
+                              traitItem = traitItem)
+    # revItem <- rep(0,J)
+    # for(tt in 1:n.trait){
+    #     Jtmp <-  ceiling(prop.rev[tt] * sum(traitItem == tt))
+    #     tmp <- rep(0:1, c(sum(traitItem == tt)-Jtmp,Jtmp))
+    #     revItem[traitItem == tt] <- sample(  tmp )
+    # }
     
     # decompose to person ability and item difficulty
     p <- X <- array(NA, c(N, J, 5))
@@ -235,9 +249,7 @@ generate_irtree_2012 <- function(N = NULL,
 #' Handbook of modern item response theory (pp. 123-138).
 #' doi:10.1007/978-1-4757-2691-6_7
 #' 
-#' @param N number of persons
-#' @param J number of items
-#' @inheritParams fit_irtree
+#' @inheritParams generate_irtree_ext
 #' @return The function returns a list containing the generated matrix of
 #'   responses X, a vector revItem indicating reversed items and true, latent
 #'   values of the parameters.
@@ -248,6 +260,7 @@ generate_irtree_2012 <- function(N = NULL,
 #' @export
 generate_irtree_steps <- function(N = NULL,
                                   J = NULL,
+                                  prop.rev = .5,
                                   revItem = NULL,
                                   traitItem = NULL) {
     
@@ -257,8 +270,11 @@ generate_irtree_steps <- function(N = NULL,
                                  any.missing = FALSE, len = J, null.ok = TRUE)
     checkmate::assert_integerish(traitItem, lower = 1, # upper = 1,
                                  any.missing = FALSE, len = J, null.ok = TRUE)
-    if (is.null(revItem)) revItem <- rbinom(J, 1, .33)
     if (is.null(traitItem)) traitItem <- rep(1, J)
+    # if (is.null(revItem)) revItem <- rbinom(J, 1, .33)
+    revItem <- create_revItem(prop.rev = prop.rev, revItem = revItem, 
+                              J = J, n.trait = length(unique(traitItem)),
+                              traitItem = traitItem)
     
     thres <- matrix(rnorm(J*4), J, 4) %>%
         apply(1, sort) %>%
@@ -476,3 +492,29 @@ cat_to_mult <- function(X, C=5){
     }
     return(X.mult)
 }
+
+#' @title Internal function to create revItem from prop.rev
+#' @description Creates \code{revItem}  from \code{prop.rev} or simply returns \code{revItem} if supplied.
+#' @param n.trait Integer, number of content-related traits.
+#' @inheritParams generate_irtree_ext
+#' @return vector \code{revItem} comprised of 0s and 1s.
+create_revItem <- function(prop.rev = NULL, revItem = NULL, J = NULL, n.trait = NULL,
+                           traitItem = NULL) {
+    if (!is.null(revItem)) {
+        checkmate::assert_integerish(revItem, lower = 0, upper = 1, any.missing = FALSE,
+                                     len = J)
+        # return(revItem)
+    } else {
+        checkmate::assert_numeric(prop.rev, lower = 0, upper = 1, any.missing = FALSE,
+                                  min.len = 1, max.len = n.trait)
+        if (length(prop.rev) == 1) {
+            prop.rev <- rep(prop.rev, n.trait)
+        }
+        revItem <- rep(0, J)
+        for (tt in 1:n.trait) {
+            Jtmp <-  ceiling(prop.rev[tt] * sum(traitItem == tt))
+            tmp <- rep(0:1, c(sum(traitItem == tt) - Jtmp, Jtmp))
+            revItem[traitItem == tt] <- sample(tmp)
+        }
+    }
+    return(revItem)

@@ -5,7 +5,8 @@
 \title{Generate data for Boeckenholt Model.}
 \usage{
 generate_irtree_2012(N = NULL, J = NULL, betas = NULL,
-  traitItem = rep(1, J), theta_vcov = NULL, prop.rev = 0.5, cat = TRUE)
+  traitItem = rep(1, J), theta_vcov = NULL, prop.rev = 0.5,
+  revItem = NULL, cat = TRUE)
 }
 \arguments{
 \item{N}{number of persons}
@@ -21,7 +22,12 @@ c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{theta_vcov}{3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).}
 
-\item{prop.rev}{proportion of reversed items (rounded to next integer). can be a vector if multiple traits are specified by \code{traitItem}.}
+\item{prop.rev}{proportion of reversed items (rounded to next integer). Can
+be a vector if multiple traits are specified by \code{traitItem}. Only used
+if \code{revItem = NULL}.}
+
+\item{revItem}{vector of length J specifying reversed items (1=reversed,
+0=not reversed)}
 
 \item{cat}{whether to return categorical data (response categories 1...5) or
 multinomial data (frequencies of 0 and 1)}

@@ -4,16 +4,20 @@
 \alias{generate_irtree_steps}
 \title{Generate data for Steps Model.}
 \usage{
-generate_irtree_steps(N = NULL, J = NULL, revItem = NULL,
-  traitItem = NULL)
+generate_irtree_steps(N = NULL, J = NULL, prop.rev = 0.5,
+  revItem = NULL, traitItem = NULL)
 }
 \arguments{
 \item{N}{number of persons}
 
 \item{J}{number of items}
 
+\item{prop.rev}{proportion of reversed items (rounded to next integer). Can
+be a vector if multiple traits are specified by \code{traitItem}. Only used
+if \code{revItem = NULL}.}
+
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
-0=not reversed)}
+0=not reversed). Overrides argument \code{prop.rev}.}
 
 \item{traitItem}{vector of length J specifying the underlying traits (e.g.,
 indexed from 1...5). Standard: only a single trait is measured by all
