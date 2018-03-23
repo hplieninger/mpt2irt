@@ -1,4 +1,4 @@
-#' Fit an mpt2irt model.
+#' Fit an mpt2irt model
 #' 
 #' This function fits an mpt2irt model. Either the so-called Boeckenholt Model
 #' can be fit (\code{fitModel = "2012"}) that assumes the three processes MRS,
@@ -21,6 +21,11 @@
 #' If more than a single trait is measured, theta has more columns accordingly
 #' (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
 #' 
+#' Note further that DIC can only be saved using \code{fitMethod = "jags"} in
+#' combination with \code{method = "simple"}. Furthermore, you need to
+#' explicitly request DIC using, for example, \code{add2varlist = c("deviance",
+#' "pd", "popt", "dic")}.
+#' 
 #' @param model If \code{NULL} (the usual case), this is determined by
 #'   \code{fitModel}. Otherwise, this is passed to \code{\link[rstan]{sampling}}
 #'   (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS).
@@ -35,13 +40,11 @@
 #'   c(1,1,1,2,2,2,...,5,5,5,5)
 #' @param df degrees of freedom for wishart prior on covariance of traits
 #'   (standard/minimum: number of processes + 1)
-# param items either "fixed" or "random" (with hierarchical normal-wishart structure estimated from the data)
 #' @param V prior for wishart distribution (standard: diagonal matrix)
 #' @param fitModel Character. Either \code{"2012"} (Boeckenholt Model without 
 #'   acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
 #'   (partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
 #'   or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).
-#  or \code{"ext2"} (separate probability of choosing category 5 in case of ARS; requires at least two trait scales) or \code{"ext3"} (separate person-estimates theta[i,S] for latent tendency to choose cat.4/5 in case of ARS).
 #' @param fitMethod whether to use JAGS or Stan
 #' @param outFormat either "mcmc.list" (can be analyzed with coda package) or
 #'   "stan" or "runjags"
@@ -54,7 +57,6 @@
 #'   for burnin)
 #' @param n.chains number of MCMC chains (and number of CPUs used)
 #' @param thin thinning of MCMC samples
-# @param mail email address to which a notification is sent when the simulation is finished (no dash "-" allowed!)
 # @param return_defaults Logical. Whether to return input specifications or not.
 #' @param add2varlist Additional variables to monitor (e.g., \code{c("deviance",
 #'   "pd", "popt", "dic")} for JAGS)
@@ -62,12 +64,14 @@
 #'   Specify equal to \code{nrow(X)} in order to draw values for all persons.
 #'   This is mainly implemented for efficiency reasons in order to avoid
 #'   massivly drawing samples which the user is not interested in.
-#' @param ... further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
-# @details  Note that the progress of Stan is shown in a text file in the
-#'   working directory ("_Stanprogress.txt")
-#' @inheritParams runjags::run.jags
-#' @inheritParams rstan::sampling
-#' @return Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
+#' @param method Passed to \code{\link[runjags]{run.jags}}. Can be, for example,
+#'   \code{parallel} or \code{simple}.
+#' @param ... further arguments passed to \code{\link[rstan]{sampling}} (for
+#'   Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
+# @inheritParams runjags::run.jags
+# @inheritParams rstan::sampling
+#' @return Returns a list where the output from either JAGS or Stan is stored in
+#'   the entry \code{samples}.
 #' @examples 
 #' \dontrun{
 #' N <- 20

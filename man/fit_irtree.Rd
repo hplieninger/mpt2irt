@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_model.R
 \name{fit_irtree}
 \alias{fit_irtree}
-\title{Fit an mpt2irt model.}
+\title{Fit an mpt2irt model}
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
   V = NULL, fitModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
@@ -57,28 +57,23 @@ for burnin)}
 
 \item{thin}{thinning of MCMC samples}
 
-\item{method}{the method with which to call JAGS; probably a character vector specifying one of 'rjags', 'simple', 'interruptible', 'parallel', 'rjparallel', 'background', 'bgparallel' or 'snow'. The 'rjags' and 'rjparallel' methods run JAGS using the rjags package, whereas other options do not require the rjags package and call JAGS as an external executable.  The advantage of the 'rjags' method is that the model will not need to be recompiled between successive calls to extend.jags, all other methods require a re-compilation (and adaptation if necessary) step at every call to extend.jags.  Note that the 'rjparallel' and 'snow' methods may leave behind zombie JAGS processes if the user interrupts the R session used to start the simulations - for this reason the 'parallel' method is recommended for interactive use with parallel chains. The 'background' and 'bgparallel' return a filename for the started simulation, which can be read using \code{\link{results.jags}}.  The 'parallel' and 'interruptible' methods for Windows require XP Professional, Vista or later (or any Unix-alike).  For more information refer to the userguide vignette.}
+\item{method}{Passed to \code{\link[runjags]{run.jags}}. Can be, for example,
+\code{parallel} or \code{simple}.}
 
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
-
-\item{cores}{Number of cores to use when executing the chains in parallel,
-    which defaults to 1 but we recommend setting the \code{mc.cores} option 
-    to be as many processors as the hardware and RAM allow (up to the 
-    number of chains).}
-
-\item{summarise}{should summary statistics be automatically calculated for the output chains?  Default TRUE (but see also ?runjags.options -> force.summary).}
 
 \item{N2}{Numeric. Number of persons for whom to draw posterior predictives.
 Specify equal to \code{nrow(X)} in order to draw values for all persons.
 This is mainly implemented for efficiency reasons in order to avoid
 massivly drawing samples which the user is not interested in.}
 
-\item{...}{further arguments passed to \code{\link[rstan]{sampling}} (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS)
-working directory ("_Stanprogress.txt")}
+\item{...}{further arguments passed to \code{\link[rstan]{sampling}} (for
+Stan) or \code{\link[runjags]{run.jags}} (for JAGS)}
 }
 \value{
-Returns a list where the output form either JAGS or Stan is stored in the entry \code{samples}.
+Returns a list where the output from either JAGS or Stan is stored in
+  the entry \code{samples}.
 }
 \description{
 This function fits an mpt2irt model. Either the so-called Boeckenholt Model
@@ -102,6 +97,11 @@ The estimated parameters are arranged as follows:
 }
 If more than a single trait is measured, theta has more columns accordingly
 (e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
+
+Note further that DIC can only be saved using \code{fitMethod = "jags"} in
+combination with \code{method = "simple"}. Furthermore, you need to
+explicitly request DIC using, for example, \code{add2varlist = c("deviance",
+"pd", "popt", "dic")}.
 }
 \examples{
 \dontrun{
