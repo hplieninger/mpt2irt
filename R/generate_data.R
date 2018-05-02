@@ -15,7 +15,7 @@
 #'   be a vector if multiple traits are specified by \code{traitItem}. Only used
 #'   if \code{revItem = NULL}.
 #' @param revItem vector of length J specifying reversed items (1=reversed,
-#'   0=not reversed). Overrides argument \code{prop.rev}.
+#'   0=regular). Overrides argument \code{prop.rev}.
 #' @param genModel Character. Either \code{"2012"} (Boeckenholt Model without
 #'   acquiescence) or \code{"ext"} (Acquiescence Model)
 #' @param beta_ARS_extreme only for \code{genModel="ext"}: probability (on
@@ -146,9 +146,13 @@ generate_irtree_ext <- function(N = NULL,
 #'
 #' Function generates categorical data 1...5 for \code{N} persons and \code{J} items given the item parameters \code{betas}.
 #' 
-#' @param betas Jx3 matrix with item parameters on three response dimensions (middle, extreme, target trait defined by \code{traitItem}).
-#' @param theta_vcov 3x3 covariance matrix for middle, extremity, trait(s) (can be a vector of length 3 with variances for uncorrelated processes).
-#' @return The function returns a list containing the generated matrix of responses X, a vector revItem indicating reversed items and true, latent values of the parameters.
+#' @param betas Jx3 matrix with item parameters on three response dimensions
+#'   (middle, extreme, target trait defined by \code{traitItem}).
+#' @param theta_vcov 3x3 covariance matrix for middle, extremity, trait(s) (can
+#'   be a vector of length 3 with variances for uncorrelated processes).
+#' @return The function returns a list containing the generated matrix of
+#'   responses X, a vector revItem indicating reversed items and true, latent
+#'   values of the parameters.
 #' @inheritParams fit_irtree
 #' @inheritParams generate_irtree_ext
 #' @examples

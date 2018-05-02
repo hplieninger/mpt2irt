@@ -17,22 +17,21 @@ fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
 responses from 1...5)}
 
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
-0=not reversed)}
+0=regular)}
 
 \item{traitItem}{vector of length J specifying the underlying traits (e.g.,
 indexed from 1...5). Standard: only a single trait is measured by all
-items. If the Big5 are measures, might be something like
+items. If the Big5 are measured, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 
 \item{df}{degrees of freedom for wishart prior on covariance of traits
-(standard/minimum: number of processes + 1)}
+(default: number of processes + 1)}
 
-\item{V}{prior for wishart distribution (standard: diagonal matrix)}
+\item{V}{prior for wishart distribution (default: diagonal matrix)}
 
-\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without 
-acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
-(partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
-or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
+acquiescence) or \code{"ext"} (Acquiescence Model). Details about all
+implemented models are described in the section Models below.}
 
 \item{model}{If \code{NULL} (the usual case), this is determined by
 \code{fitModel}. Otherwise, this is passed to \code{\link[rstan]{sampling}}
@@ -43,14 +42,14 @@ or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
 \item{outFormat}{either "mcmc.list" (can be analyzed with coda package) or
 "stan" or "runjags"}
 
-\item{startSmall}{Whether to use random starting values for
-beta sampled from "wide" (startSmall=F, generated within JAGS) or "narrow"
-priors (startSmall=T; beta and theta closer to 0; might solve problems with
-slow convergence of some chains for extreme starting values).}
+\item{startSmall}{Whether to use random starting values for beta sampled from
+"wide" (FALSE) or "narrow" priors (TRUE; beta and theta
+closer to 0; might solve problems with slow convergence of some chains for
+extreme starting values).}
 
 \item{M}{number of MCMC samples (after warmup)}
 
-\item{warmup}{number of samples for warmup (in JAGS: 1/5 for adaption, 4/5
+\item{warmup}{number of samples for warmup (in JAGS: 1/5 for adaptation, 4/5
 for burnin)}
 
 \item{n.chains}{number of MCMC chains (and number of CPUs used)}
@@ -62,6 +61,13 @@ for burnin)}
 
 \item{add2varlist}{Additional variables to monitor (e.g., \code{c("deviance",
 "pd", "popt", "dic")} for JAGS)}
+
+\item{cores}{Passed to \code{\link[rstan]{sampling}}: Number of cores to use
+when executing the chains in parallel.}
+
+\item{summarise}{Passed to \code{\link[runjags]{run.jags}}: Should summary
+statistics be automatically calculated for the output chains? Defaults to
+FALSE, summaries can be calculated using \code{\link{tidyup_irtree_fit}.}}
 
 \item{N2}{Numeric. Number of persons for whom to draw posterior predictives.
 Specify equal to \code{nrow(X)} in order to draw values for all persons.
@@ -82,27 +88,66 @@ ERS, and target trait; or the so-called Acquiescence Model can be fit that
 additionally takes ARS into account (\code{fitModel = "ext"}).
 }
 \details{
-The estimated parameters are arranged as follows:
-\itemize{
-\item Model "2012" (S = 2 + number of traits):
-\itemize{
- \item theta[i, 1:S] = c(middle, extreme, trait(s))
- \item beta[j, 1:3] = c(middle, extreme, trait) (which trait depends on \code{traitItem}!)
- }
-\item Model "ext" (S = 3 + number of traits):
-\itemize{
- \item theta[i, 1:S] = c(middle, extreme, acquiesence, trait(s))
- \item beta[j, 1:4] = c(middle, extreme, acquiesence, trait) (which trait depends on \code{traitItem}!)
- }
-}
-If more than a single trait is measured, theta has more columns accordingly
-(e.g., theta[i,1:6]=c(mid, extr, acq, trait1,..., trait3))
-
-Note further that DIC can only be saved using \code{fitMethod = "jags"} in
+Note that DIC can only be saved using \code{fitMethod = "jags"} in
 combination with \code{method = "simple"}. Furthermore, you need to
 explicitly request DIC using, for example, \code{add2varlist = c("deviance",
 "pd", "popt", "dic")}.
 }
+\section{Models}{
+
+
+The following models are currently implemented:
+\describe{
+  \item{\code{2012}}{This is the response style model proposed by Boeckenholt (2012) with parameters m (MRS), e (ERS), and t (target trait).}
+  \item{\code{ext}}{This is the Acquiescence Model proposed by Plieninger and Heck
+  (2018) with parameters m (MRS), e (ERS), a (ARS), and t (target trait). The
+  e* parameter is constrained, namely, all item parameters are constrained to
+  be equal.}
+  \item{\code{steps}}{This is an ordinal IRT model without response styles as
+  proposed by Tutz (1990) and Verhelst et al. (1997). It is also based on a
+  tree structure but has only the parameter t (target trait).}
+  \item{\code{pcm}}{This is an ordinal IRT model without response styles,
+  namely, the partial credit model, which has only the parameter t (target
+  trait).}
+  \item{\code{shift}}{This is the tree-shift model proposed by Plieninger and
+  Heck (2018) in Appendix A with parameters m (MRS), e (ERS), and ta (target
+  trait and ARS). For regular items, ta = t + a, whereas for reversed items,
+  ta = -t + a. Unlike the Acquiescence Model (\code{ext}), this model is not
+  a mixture model.}
+  \item{\code{ext2}}{This is the unrestricted version of the Acquiescence
+  Model. Therein, fewer constraints are imposed on the e* parameter, and all
+  its item parameters are free to vary.}
+}
+}
+
+\section{Note on Output}{
+
+
+In the output, the estimated parameters are always arranged in the order MRS,
+ERS, ARS, target trait(s). For example, a \code{2012}-model with two target
+traits (specified via \code{traitItem}), has four person parameters and MRS
+is the first, ERS the second, and the two target traits the third and fourth.
+
+Furthermore, only one subscript and column is used for each type of item
+parameter. That is, all \eqn{\beta_t} (i.e., target-trait difficulites) are stored
+in one column and \code{traitItem} indicates which parameter pertains to
+which target trait.
+
+This is illustrated for two models in the following:
+\itemize{
+\item Model \code{2012} (S = 2 + number of traits):
+\itemize{
+ \item theta[i, 1:S] = c(MRS, ERS, target trait(s))
+ \item beta[j, 1:3] = c(MRS, ERS, target trait)
+ }
+\item Model \code{ext} (S = 3 + number of traits):
+\itemize{
+ \item theta[i, 1:S] = c(MRS, ERS, ARS, target trait(s))
+ \item beta[j, 1:4] = c(MRS, ERS, ARS, target trait)
+ }
+}
+}
+
 \examples{
 \dontrun{
 N <- 20
@@ -117,4 +162,9 @@ res3 <- tidyup_irtree_fit(res2)
 names(res3)
 res3$plot
 }
+}
+\references{
+Plieninger, H., & Heck, D. W. (in press). A new model for
+  acquiescence at the interface of psychometrics and cognitive psychology.
+  Multivariate Behavioral Research. doi:10.1080/00273171.2018.1469966
 }

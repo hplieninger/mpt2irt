@@ -13,3 +13,4 @@ mcmc.list2stan(x)
 Converts an mcmc.list (each list entry: rows=MCMC samples; cols=parameters) to a 3 dimensional array (MCMC samples; chains; parameters)
 Property of ??? (Internet!)
 }
+\keyword{internal}

@@ -3,6 +3,7 @@
 #' Converts an mcmc.list (each list entry: rows=MCMC samples; cols=parameters) to a 3 dimensional array (MCMC samples; chains; parameters)
 #' Property of ??? (Internet!)
 #' @param x mcmc.list (e.g., from JAGS) 
+#' @keywords internal
 #' @export
 mcmc.list2stan <- function(x) {
         print(class(x))
@@ -19,6 +20,7 @@ mcmc.list2stan <- function(x) {
 #' 
 #' Convert a 3 dimensional array (MCMC samples; chains; parameters) to an mcmc.list object for analysis with the coda package
 #' @param fit fitted Stan object
+#' @keywords internal
 #' @export
 stan2mcmc.list <- function(fit) {
     #   if(class(fit) != "stan")
@@ -35,6 +37,7 @@ stan2mcmc.list <- function(fit) {
 #' @inheritParams base::load
 #' @return The object save in \code{file}.
 #' @references \url{http://stackoverflow.com/a/5577647}
+#' @keywords internal
 #' @export
 load_rda <- function(file = NULL, verbose = FALSE) {
     env <- new.env()
@@ -47,6 +50,7 @@ load_rda <- function(file = NULL, verbose = FALSE) {
 #' Check if dir exists and otherwise creates one.
 #' 
 #' @param dir Character.
+#' @keywords internal
 #' @return Character, namely, an existing directory.
 # @export
 get_dir <- function(dir = NULL) {

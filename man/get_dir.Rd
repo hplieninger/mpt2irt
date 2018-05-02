@@ -15,3 +15,4 @@ Character, namely, an existing directory.
 \description{
 Check if dir exists and otherwise creates one.
 }
+\keyword{internal}

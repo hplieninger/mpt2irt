@@ -4,7 +4,7 @@ Title: Bringing Multinomial Processing Tree Models To Item Response Theory To In
 Version: 0.1.3
 Date: 2018-01-10
 Authors@R: c(person("Hansjoerg", "Plieninger", email = "plieninger@uni-mannheim.de", role = "cre"),
-             person("Daniel", "Heck", email = "heck@uni-mannheim.de", role = "aut"))
+             person("Daniel W.", "Heck", email = "heck@uni-mannheim.de", role = "aut"))
 Description: Multinomial processing tree (MPT) models are used to differentiate
     between different cognitive processes in categorical data. Those can be
     lifted to hierarchical MPT models to account for person- and/or item effects
@@ -44,8 +44,6 @@ Suggests:
     testthat (>= 1.0.2),
     tibble,
     tidyr
-Remotes: 
-    olafmersmann/truncnorm
 LinkingTo: StanHeaders (>= 2.14.0), rstan (>= 2.14.1), BH (>= 1.62.0), Rcpp (>=
     0.12.0), RcppEigen
 LazyData: true

@@ -18,17 +18,16 @@ tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
 \item{J}{number of items}
 
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
-0=not reversed)}
+0=regular)}
 
 \item{traitItem}{vector of length J specifying the underlying traits (e.g.,
 indexed from 1...5). Standard: only a single trait is measured by all
-items. If the Big5 are measures, might be something like
+items. If the Big5 are measured, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 
-\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without 
-acquiescence), or \code{"ext"} (Acquiescence Model), or \code{"pcm"}
-(partial credit model), or \code{"steps"} (Steps Model [Verhelst; Tutz]),
-or \code{"shift"} (shift model, i.e., \code{"2012"} +  ars-shift).}
+\item{fitModel}{Character. Either \code{"2012"} (Boeckenholt Model without
+acquiescence) or \code{"ext"} (Acquiescence Model). Details about all
+implemented models are described in the section Models below.}
 
 \item{fitMethod}{whether to use JAGS or Stan}
 

@@ -134,7 +134,7 @@ plot_singlefit <- function(N, J, S, model, jags.samp, stan.samp,
 #' @param fit a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{tidyup_irtree_fit}}.
 # @param N number of participants
 # @param J number of items
-# @param revItem a vector with 1=reversed / 0=not reversed
+# @param revItem a vector with 1=reversed / 0=regular
 # @param traitItem a vector specifying the trait of the item (e.g., with values from 1 to 5 for Big5)
 # @param trait either "sample" (using the posterior mean estimates for each
 #'   person) or a numeric value specifying the trait value used to plot response

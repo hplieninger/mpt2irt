@@ -1,16 +1,16 @@
 citHeader("To cite mpt2irt in publications use:")
 
-citEntry(entry = "Manual",
-  title        = "{mpt2irt}: Bringing Multinomial Processing Tree Models to Item Response Theory to Investigate Response Styles",
-  author       = personList(as.person("Hansjoerg Plieninger"),
-                   as.person("Daniel W. Heck")),
-  year         = "2018",
-  version      = "0.1.3",
-  url          = "https://github.com/hplieninger/mpt2irt/",
+citEntry(entry = "Article",
+  title        = "A new model for acquiescence at the interface of psychometrics and cognitive psychology",
+  author       = personList(as.person("Hansj\\\"{o}rg Plieninger"),
+                            as.person("Daniel W. Heck")),
+  journal      = "Multivariate Behavioral Research",
+  year         = "in press",
+  doi          = "10.1080/00273171.2018.1469966",
 
   textVersion  =
-  paste("Plieninger, H. & Heck, D. W. (2018).",
-        "mpt2irt: Bringing multinomial processing tree models to item response theory to investigate response styles",
-        "[R package version 0.1.3].",
-        "Retrieved from https://github.com/hplieninger/mpt2irt/")
+  paste("Plieninger, H., & Heck, D. W. (in press).",
+        "A new model for acquiescence at the interface of psychometrics and cognitive psychology.",
+        "Multivariate Behavioral Research.",
+        "doi:10.1080/00273171.2018.1469966")
 )

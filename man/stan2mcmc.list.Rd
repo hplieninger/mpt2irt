@@ -12,3 +12,4 @@ stan2mcmc.list(fit)
 \description{
 Convert a 3 dimensional array (MCMC samples; chains; parameters) to an mcmc.list object for analysis with the coda package
 }
+\keyword{internal}

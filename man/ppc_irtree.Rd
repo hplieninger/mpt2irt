@@ -28,11 +28,11 @@ measures to use.}
 }}
 
 \item{revItem}{vector of length J specifying reversed items (1=reversed,
-0=not reversed)}
+0=regular)}
 
 \item{traitItem}{vector of length J specifying the underlying traits (e.g.,
 indexed from 1...5). Standard: only a single trait is measured by all
-items. If the Big5 are measures, might be something like
+items. If the Big5 are measured, might be something like
 c(1,1,1,2,2,2,...,5,5,5,5)}
 }
 \value{

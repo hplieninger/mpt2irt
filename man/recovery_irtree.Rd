@@ -45,9 +45,9 @@ those may have arguments passed to \code{\link[truncnorm]{rtruncnorm}}.}
 qnorm(.9))}.}
 
 \item{df}{degrees of freedom for wishart prior on covariance of traits
-(standard/minimum: number of processes + 1)}
+(default: number of processes + 1)}
 
-\item{V}{prior for wishart distribution (standard: diagonal matrix)}
+\item{V}{prior for wishart distribution (default: diagonal matrix)}
 
 \item{M}{number of MCMC samples (after warmup)}
 
@@ -55,7 +55,7 @@ qnorm(.9))}.}
 
 \item{thin}{thinning of MCMC samples}
 
-\item{warmup}{number of samples for warmup (in JAGS: 1/5 for adaption, 4/5
+\item{warmup}{number of samples for warmup (in JAGS: 1/5 for adaptation, 4/5
 for burnin)}
 
 \item{method}{Passed to \code{\link[runjags]{run.jags}}. Can be, for example,
@@ -64,10 +64,10 @@ for burnin)}
 \item{outFormat}{either "mcmc.list" (can be analyzed with coda package) or
 "stan" or "runjags"}
 
-\item{startSmall}{Whether to use random starting values for
-beta sampled from "wide" (startSmall=F, generated within JAGS) or "narrow"
-priors (startSmall=T; beta and theta closer to 0; might solve problems with
-slow convergence of some chains for extreme starting values).}
+\item{startSmall}{Whether to use random starting values for beta sampled from
+"wide" (FALSE) or "narrow" priors (TRUE; beta and theta
+closer to 0; might solve problems with slow convergence of some chains for
+extreme starting values).}
 
 \item{df_vcov}{Numeric. Degrees of freedom for wishart distribution from
 which the variance-covariance matrix for generating the data is drawn.}

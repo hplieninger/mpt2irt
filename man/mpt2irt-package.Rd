@@ -17,7 +17,9 @@ extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
 Bayesian hierarchical models requiring JAGS or Stan.
 }
 \details{
-The package requires installation of JAGS (\url{http://mcmc-jags.sourceforge.net}) and/or Stan (\url{http://mc-stan.org}) to sample from the posterior.
+The package requires installation of JAGS
+(\url{http://mcmc-jags.sourceforge.net}) and/or Stan
+(\url{http://mc-stan.org}) to sample from the posterior.
 }
 \examples{
 \dontrun{
@@ -36,9 +38,9 @@ res3$plot
 
 }
 \references{
-Boeckenholt, U. (2012). Modeling multiple response processes in judgment and choice. Psychological Methods, 17, 665-678. doi:10.1037/a0028111
-
-Matzke, D., Dolan, C. V., Batchelder, W. H., & Wagenmakers, E.-J. (2015). Bayesian estimation of multinomial processing tree models with heterogeneity in participants and items. Psychometrika, 80, 205-235. doi:10.1007/s11336-013-9374-9
+Plieninger, H., & Heck, D. W. (in press). A new model for
+  acquiescence at the interface of psychometrics and cognitive psychology.
+  Multivariate Behavioral Research. doi:10.1080/00273171.2018.1469966
 }
 \author{
 Hansjoerg Plieninger & Daniel W. Heck
