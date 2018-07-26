@@ -5,12 +5,14 @@ citEntry(entry = "Article",
   author       = personList(as.person("Hansj\\\"{o}rg Plieninger"),
                             as.person("Daniel W. Heck")),
   journal      = "Multivariate Behavioral Research",
-  year         = "in press",
+  year         = "2018",
   doi          = "10.1080/00273171.2018.1469966",
+  note         = "Advance online publication",
 
   textVersion  =
-  paste("Plieninger, H., & Heck, D. W. (in press).",
+  paste("Plieninger, H., & Heck, D. W. (2018).",
         "A new model for acquiescence at the interface of psychometrics and cognitive psychology.",
         "Multivariate Behavioral Research.",
+        "Advance online publication.",
         "doi:10.1080/00273171.2018.1469966")
 )

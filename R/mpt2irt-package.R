@@ -18,9 +18,10 @@
 #' @name mpt2irt-package
 #' @aliases mpt2irt
 #' @author Hansjoerg Plieninger & Daniel W. Heck
-#' @references Plieninger, H., & Heck, D. W. (in press). A new model for
+#' @references Plieninger, H., & Heck, D. W. (2018). A new model for
 #'   acquiescence at the interface of psychometrics and cognitive psychology.
-#'   Multivariate Behavioral Research. doi:10.1080/00273171.2018.1469966
+#'   Multivariate Behavioral Research. Advance online publication.
+#'   doi:10.1080/00273171.2018.1469966
 #' @useDynLib mpt2irt, .registration = TRUE 
 #' 
 #' @import methods
