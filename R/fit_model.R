@@ -14,7 +14,8 @@
 #' 
 #' The following models are currently implemented:
 #' \describe{
-#'   \item{\code{2012}}{This is the response style model proposed by Boeckenholt (2012) with parameters m (MRS), e (ERS), and t (target trait).}
+#'   \item{\code{2012}}{This is the response style model proposed by Boeckenholt
+#'   (2012) with parameters m (MRS), e (ERS), and t (target trait).}
 #'   \item{\code{ext}}{This is the Acquiescence Model proposed by Plieninger and Heck
 #'   (2018) with parameters m (MRS), e (ERS), a (ARS), and t (target trait). The
 #'   e* parameter is constrained, namely, all item parameters are constrained to
