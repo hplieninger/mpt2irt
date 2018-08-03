@@ -75,7 +75,11 @@ transformed parameters {
     simplex[5] p_cat[N, J];              // response category probabilities
   
     // scaling of variance
-    Sigma = diag_matrix(xi_theta) * Sigma_raw* diag_matrix(xi_theta);
+    if (S == 1) {
+        Sigma = Sigma_raw;
+    } else {
+        Sigma = quad_form_diag(Sigma_raw, xi_theta);
+    }
 
     // print("log-posterior = ", target());
 
@@ -92,9 +96,15 @@ transformed parameters {
     
      for(i in 1:N){	
     	// rescale trait values
-    	for(s in 1:S){
-    		theta[i,s] = theta_raw[i,s] * xi_theta[s];
-    	}
+    	if (S == 1) {
+            for(s in 1:S){
+        		theta[i,s] = theta_raw[i,s];
+        	}
+        } else {
+            for(s in 1:S){
+        		theta[i,s] = theta_raw[i,s] * xi_theta[s];
+        	}
+        }
     	
     	// loop across items
     	for(j in 1:J){
@@ -117,7 +127,11 @@ model {
     // implicit uniform on scaling parameters
     mu_beta_vec ~ normal(0, 1);            // raw item mean
     sigma2_beta_raw ~ inv_gamma(1,1);  // raw item variance
-    Sigma_raw ~ inv_wishart(df, V);    // person hyperprior
+    if (S == 1) {
+        Sigma_raw[1, 1] ~ inv_gamma(1, 0.5);     // person hyperprior
+    } else {
+        Sigma_raw       ~ inv_wishart(df, V);    // person hyperprior
+    }
     
     for(i in 1:N){
     	for(j in 1:J){

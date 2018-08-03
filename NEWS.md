@@ -1,3 +1,8 @@
+## Version 0.1.4
+
+* Fixed bug in estimation of latent variance Sigma for uni-dimensional models
+(i.e., Steps and PCM)
+
 ## Version 0.1.3
 
 * Added JAGS version of the shift model (introduced only in Stan in 0.1.1)

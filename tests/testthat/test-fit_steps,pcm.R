@@ -225,7 +225,7 @@ test_that("plot_irtree() returns a valid ggplot", {
 #     #              message(sprintf(c("Model 'steps' -- theta -- r=%.2f, N=%i, J=%i"),
 #     #                              cor2, N, J))
 #     #          })
-#     cor3 <- cor(as.vector(t(dat1$thres)), as.vector(res2c$beta$Median))
+#     cor3 <- cor(as.vector(dat1$thres), as.vector(res2c$beta$Median))
 #     # expect_gt(cor3, .6)
 #     cor4 <- cor(as.vector(dat2$thres), as.vector(res4c$beta$Median))
 #     expect_gt(cor3, .65)

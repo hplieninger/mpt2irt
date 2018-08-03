@@ -1,8 +1,8 @@
-Package: mpt2irt
 Type: Package
+Package: mpt2irt
 Title: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles
-Version: 0.1.3
-Date: 2018-01-10
+Version: 0.1.4
+Date: 2018-08-02
 Authors@R: c(person("Hansjoerg", "Plieninger", email = "plieninger@uni-mannheim.de", role = "cre"),
              person("Daniel W.", "Heck", email = "heck@uni-mannheim.de", role = "aut"))
 Description: Multinomial processing tree (MPT) models are used to differentiate
@@ -14,24 +14,24 @@ Description: Multinomial processing tree (MPT) models are used to differentiate
     responding (ERS), and the target trait. This package allows to fit an
     extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
     Bayesian hierarchical models requiring Stan or JAGS.
-License: GPL (>=3)
-Depends:
+License: GPL-3
+Depends: 
+    methods,
     R (>= 3.0.2),
-    Rcpp (>= 0.12.0),
-    methods
-Imports:
-    ggplot2,
-    rstan (>= 2.14.1),
-    rstantools (>= 1.1.0),
+    Rcpp (>= 0.12.0)
+Imports: 
     checkmate,
     coda,
+    ggplot2,
     magrittr,
     MASS,
     parallel,
     rlang,
+    rstan (>= 2.14.1),
+    rstantools (>= 1.1.0),
     runjags,
     truncnorm
-Suggests:
+Suggests: 
     dplyr,
     knitr (>= 1.15.1),
     numDeriv,
@@ -44,8 +44,13 @@ Suggests:
     testthat (>= 1.0.2),
     tibble,
     tidyr
-LinkingTo: StanHeaders (>= 2.14.0), rstan (>= 2.14.1), BH (>= 1.62.0), Rcpp (>=
-    0.12.0), RcppEigen
+LinkingTo: 
+    BH (>= 1.62.0),
+    Rcpp (>=
+    0.12.0),
+    RcppEigen,
+    rstan (>= 2.14.1),
+    StanHeaders (>= 2.14.0)
 LazyData: true
 NeedsCompilation: yes
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
