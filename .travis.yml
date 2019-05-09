@@ -4,6 +4,30 @@ language: R
 cache: packages
 r_check_args: --no-manual
 
+r_binary_packages:
+  - checkmate
+  - coda
+  - ggplot2
+  - magrittr
+  - MASS
+  - methods
+  - parallel
+  - Rcpp
+  - rlang
+  - rstan
+  - runjags
+  - truncnorm
+  - dplyr
+  - knitr
+  - numDeriv
+  - polycor
+  - purrr
+  - reshape2
+  - rmarkdown
+  - roxygen2
+  - shinystan
+  - testthat
+
 before_install:
   - sudo apt-get install jags
 
