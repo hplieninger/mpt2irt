@@ -74,10 +74,6 @@ post_prob_irtree <- function(fit_sum = NULL,
                                 len = 1, null.ok = !is.null(fit_sum$args$fitModel))
     checkmate::qassert(new_theta, "B1")
     
-    # if (is.null(revItem)) revItem <- fit_sum$revItem
-    # if (is.null(traitItem)) traitItem <- fit_sum$traitItem
-    # if (is.null(fitModel)) fitModel <- fit_sum$fitModel
-    # if (is.null(N)) N <- fit_sum$N
     if (is.null(revItem)) revItem <- fit_sum$args$revItem
     if (is.null(traitItem)) traitItem <- fit_sum$args$traitItem
     if (is.null(fitModel)) fitModel <- fit_sum$args$fitModel
@@ -133,15 +129,6 @@ post_prob_irtree <- function(fit_sum = NULL,
     reps <- seq_len(nrow(fit_mcmc2))
     R <- length(reps)
     
-    # beta <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta", collapse.chains = F) %>% 
-    #     tibble::as_tibble() %>% 
-    #     dplyr::select(., dplyr::matches("beta\\[")) %>% 
-    #     dplyr::select(sapply(1:S_b1, . %>% seq(., by = S_b1, length = J)) %>%
-    #                       as.vector) %>%
-    #     t %>% 
-    #     matrix %>% 
-    #     array(dim = c(J, S_b1, length(reps)))
-    
     tmp1 <- runjags::combine.mcmc(fit_mcmc2, vars = "^beta", collapse.chains = F) %>% 
         as.data.frame %>% 
         dplyr::select(., dplyr::matches("beta\\[")) %>% 
@@ -167,15 +154,6 @@ post_prob_irtree <- function(fit_sum = NULL,
                                            Sigma = matrix(Sigma[rrr, ], S, S))
         
     } else {
-        # # sel_theta <- grepl("theta\\[[0-9]+,[0-9]+\\]", colnames(fit_mcmc2))
-        # theta <- runjags::combine.mcmc(fit_mcmc2, vars = "^theta", collapse.chains = F) %>%
-        #     tibble::as_tibble() %>% 
-        #     dplyr::select(., dplyr::matches("theta\\[")) %>% 
-        #     dplyr::select(sapply(1:S, . %>% seq(., by = S, length = N)) %>%
-        #                       as.vector) %>%
-        #     t %>% 
-        #     matrix %>% 
-        #     array(dim = c(N, S, R))
         
         tmp1 <- runjags::combine.mcmc(fit_mcmc2, vars = "^theta", collapse.chains = F) %>% 
             as.data.frame %>% 

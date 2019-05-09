@@ -1,12 +1,7 @@
-context("Models 'ext' and '2012'")
-
-# detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")
 
 # DATA GENERATION ---------------------------------------------------------
-
-context("Data generation")
 
 N <- sample(10:20, 1)
 J <- sample(5:20, 1)
@@ -15,17 +10,6 @@ J <- sample(5:20, 1)
 
 betas1 <- mpt2irt:::gen_betas(genModel = "ext", J = J)
 betas2 <- mpt2irt:::gen_betas(genModel = "2012", J = J)
-
-# dat1 <- generate_irtree_ext(N = N,
-#                             J = J,
-#                             betas = betas1,
-#                             prop.rev = runif(1),
-#                             genModel = "ext",
-#                             beta_ARS_extreme = rnorm(1))
-# dat2 <- generate_irtree_2012(N = N,
-#                              J = J,
-#                              betas = betas2,
-#                              prop.rev = runif(1))
 
 cond2 <- FALSE
 while (cond2 == FALSE) {
@@ -70,8 +54,6 @@ test_that("generate_irtree() returns correct output", {
 
 # MODEL FITTING -----------------------------------------------------------
 
-context("Model fitting")
-
 M <- 200
 warmup <- 100
 
@@ -97,23 +79,7 @@ test_that("fit_irtree() returns MCMC list", {
     expect_equal(unique(sapply(rstan::As.mcmc.list(res4$samples), nrow)), M)
 })
 
-# res1 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-#                    M = 100, warmup = 100, n.chains = 1,
-#                    fitModel = "2012", fitMethod = "jags")
-# res2 <- fit_irtree(dat1$X, revItem = dat1$revItem,
-#                    M = 100, warmup = 100, n.chains = 1,
-#                    fitModel = "ext", fitMethod = "stan")
-# res3 <- fit_irtree(dat2$X, revItem = dat1$revItem,
-#                    M = 100, warmup = 100, n.chains = 1,
-#                    fitModel = "ext", fitMethod = "jags")
-# res4 <- fit_irtree(dat2$X, revItem = dat1$revItem,
-#                    M = 100, warmup = 100, n.chains = 1,
-#                    fitModel = "2012", fitMethod = "stan")
-
-
 # SUMMARIZING MODEL RESULTS -----------------------------------------------
-
-context("Summarizing fitted models")
 
 res1b <- summarize_irtree_fit(res1)
 res1c <- tidyup_irtree_fit(res1b)
@@ -204,8 +170,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 
 # RECOVERY ----------------------------------------------------------------
 
-# context("Recovery")
-# 
 # test_that("Check that true model parameters are correctly recovered", {
 #     cor1 <- cor(as.vector(dat1$theta[, c(1, 2, 4)]), as.vector(res1c$theta$Median))
 #     # expect_gt(cor1, .7)
@@ -219,8 +183,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 
 
 # PPC ---------------------------------------------------------------------
-
-context("PPC")
 
 res1d <- post_prob_irtree(res1b, iter = 20)
 res1e <- ppc_irtree(prob = res1d, fit = res1b)

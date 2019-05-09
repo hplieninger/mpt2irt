@@ -193,22 +193,6 @@ fit_irtree <- function(X,
         stop("Check definition of traitItem")
     }
     
-    # tmp1 <- split(data.frame(t(X)), traitItem) %>% 
-    #     lapply(t) %>% 
-    #     lapply(cor) %>% 
-    #     lapply(function(x) x[lower.tri(x)]) %>% 
-    #     sapply(. %>% sign %>% unique %>% length)
-    # 
-    # tmp2 <- split(revItem, traitItem) %>% 
-    #     sapply(. %>% unique %>% length)
-    # 
-    # if (sum(tmp2 == 2) > 0) {
-    #     if (tmp1[tmp2 == 2] < 2) {
-    #         stop("Items have only positive bivariate correlations;",
-    #              "however, data should be provided in raw format such that",
-    #              "reverse-coded and regular items correlate negatively.")
-    #     }
-    # }
     tmp_test_X <- data.frame("traitItem" = levels(factor(traitItem)),
                              # "n" = as.vector(table(tmp1)),
                              "revItem" = NA,
@@ -348,7 +332,7 @@ fit_irtree <- function(X,
     if (fitMethod == "jags") {
         ##################### fit JAGS ###############################################
         if (is.null(model)) {
-            model <- system.file(paste0("models/jags_boeck_", fitModel, ".txt"),
+            model <- system.file("jags", paste0("jags_boeck_", fitModel, ".txt"),
                                  package = "mpt2irt")
         }
         boeck.jags <- runjags::run.jags(model = model, 
@@ -387,21 +371,21 @@ fit_irtree <- function(X,
         
         if (is.null(model)) {
             if (fitModel == "ext") {
-                model <- stanmodels$stan_boeck_ext
+                model <- mpt2irtStan:::stanmodels$stan_boeck_ext
             } else if (fitModel == "pcm") {
                 # better (?): http://mc-stan.org/users/documentation/case-studies/pcm_and_gpcm.html
                 message("Current Stan implementation of the PCM may be suboptimal. ",
                         "Treat the results with caution unless you checked the recovery ",
                         "through simulations.")
-                model <- stanmodels$stan_pcm
+                model <- mpt2irtStan:::stanmodels$stan_pcm
             } else if (fitModel == "steps") {
-                model <- stanmodels$stan_steps
+                model <- mpt2irtStan:::stanmodels$stan_steps
             } else if (fitModel == "shift") {
-                model <- stanmodels$stan_boeck_shift
+                model <- mpt2irtStan:::stanmodels$stan_boeck_shift
             } else if (fitModel == "2012") {
-                model <- stanmodels$stan_boeck_2012
+                model <- mpt2irtStan:::stanmodels$stan_boeck_2012
             } else if (fitModel == "ext2") {
-                model <- stanmodels$stan_boeck_ext2
+                model <- mpt2irtStan:::stanmodels$stan_boeck_ext2
             }
         }
         

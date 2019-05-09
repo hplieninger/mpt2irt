@@ -9,12 +9,14 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @param points how many resposne categories in Likert scale
 #' @param ... Additional arguments passed to \code{\link[graphics]{barplot}}.
 #' @inheritParams fit_irtree
-#' @examples 
-#' N <- 20
-#' J <- 10
-#' betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
-#' dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
-#' plot_responses(dat$X, revItem = dat$revItem, traitItem = dat$traitItem)
+#' @examples
+#' \dontrun{
+#'   N <- 20
+#'   J <- 10
+#'   betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+#'   dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+#'   plot_responses(dat$X, revItem = dat$revItem, traitItem = dat$traitItem)
+#' }
 #' @export
 plot_responses <- function(X,
                            revItem = rep(0, ncol(X)),

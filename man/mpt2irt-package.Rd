@@ -38,10 +38,11 @@ res3$plot
 
 }
 \references{
-Plieninger, H., & Heck, D. W. (in press). A new model for
+Plieninger, H., & Heck, D. W. (2018). A new model for
   acquiescence at the interface of psychometrics and cognitive psychology.
-  Multivariate Behavioral Research. doi:10.1080/00273171.2018.1469966
+  Multivariate Behavioral Research, 53(3), 633-654.
+  doi:10.1080/00273171.2018.1469966
 }
 \author{
-Hansjoerg Plieninger & Daniel W. Heck
+Hansjörg Plieninger & Daniel W. Heck
 }

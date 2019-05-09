@@ -1,75 +1,12 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: R
-sudo: required
-r: release
 cache: packages
-
-r_build_args: --no-build-vignettes
-r_check_args: --no-build-vignettes
-
-r_packages:
-  - devtools
-
-# r_github_packages:
-#   - hadley/rlang
-
-# r_binary_packages: 
-#   - assertthat
-#   - base64enc
-#   - bitops
-#   - brew
-#   - caTools
-#   - checkmate
-#   - colorspace
-#   - dplyr
-#   - dichromat
-#   - highr
-#   - htmltools
-#   - labeling
-#   - lattice
-#   - magrittr
-#   - markdown
-#   - MASS
-#   - munsell
-#   - numDeriv
-#   - praise
-#   - purrr
-#   - RColorBrewer
-#   - reshape2
-#   - rmarkdown
-#   - scales
-#   - testthat
-#   - tidyr
-#   - truncnorm
-#   - tibble
-
-env:
-  matrix: 
-    - CXX_OLEVEL=2 CXX=clang++
+r_check_args: --no-manual
 
 before_install:
   - sudo apt-get install jags
-  - mkdir -p ~/.R/
-  - echo "CXX = `R CMD config CXX`" >> ~/.R/Makevars
-  - echo "CXXFLAGS = `R CMD config CXXFLAGS` -pedantic -g0" >> ~/.R/Makevars 
-  - export CLANG_EXTRA_ARG=""
-  - if [[ $CXX = "clang++" ]] ;  then export CLANG_EXTRA_ARG=" -Qunused-arguments -fcolor-diagnostics " ; fi
-  - sed -i.bak "s/ g++/ ${CXX}${CLANG_EXTRA_ARG}/" ~/.R/Makevars
-  - sed -i.bak "s/O[0-3]/O$CXX_OLEVEL/" ~/.R/Makevars
-
-script: 
-  - |
-    travis_wait R CMD build .
-    travis_wait 60 R CMD check mpt2irt*tar.gz
-
-after_script:
-  - tar -ztvf mpt2irt_*.tar.gz
-  - echo ${NOT_CRAN}
-
-after_success:
-  - travis_wait 40 tar -C .. -xf $PKG_TARBALL
-  - travis_wait 40 Rscript -e 'covr::codecov()'
 
 after_failure:
   - cat mpt2irt.Rcheck/00*
+

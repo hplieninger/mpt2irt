@@ -6,3 +6,4 @@ compile_stan_models.R
 ^README-.*\.png$
 ^\.travis\.yml$
 ^\.github$
+LICENSE

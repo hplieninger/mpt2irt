@@ -1,12 +1,7 @@
-context("Models 'ext2'")
-
-# detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")
 
 # DATA GENERATION ---------------------------------------------------------
-
-context("ext2: Data generation")
 
 N <- sample(10:20, 1)
 J <- sample(5:20, 1)
@@ -66,8 +61,6 @@ test_that("generate_irtree() returns correct output", {
 
 # MODEL FITTING -----------------------------------------------------------
 
-context("ext2: Model fitting")
-
 M <- 200
 warmup <- 100
 
@@ -86,8 +79,6 @@ test_that("fit_irtree() returns MCMC list", {
 })
 
 # SUMMARIZING MODEL RESULTS -----------------------------------------------
-
-context("ext2: Summarizing fitted models")
 
 res1b <- summarize_irtree_fit(res1)
 res1c <- tidyup_irtree_fit(res1b)
@@ -116,8 +107,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 
 # RECOVERY ----------------------------------------------------------------
 
-# context("ext2: Recovery")
-# 
 # test_that("Check that true model parameters are correctly recovered", {
 #     cor1 <- cor(as.vector(dat1$theta[, c(1, 2, 4)]), as.vector(res1c$theta$Median))
 #     # expect_gt(cor1, .7)
@@ -130,8 +119,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 # })
 
 # PPC ---------------------------------------------------------------------
-
-context("PPC")
 
 res1d <- post_prob_irtree(res1b, iter = 20)
 res1e <- ppc_irtree(prob = res1d, fit = res1b)

@@ -1,6 +1,3 @@
-context("Models 'steps' and 'pcm'")
-
-# detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")
 
@@ -96,8 +93,6 @@ generate_pcm <- function(N = NULL, J = NULL, revItem = NULL) {
 
 # DATA GENERATION ---------------------------------------------------------
 
-context("PCM, Steps: Data generation")
-
 N <- sample(10:20, 1)
 J <- sample(5:20, 1)
 # N <- 10
@@ -133,8 +128,6 @@ test_that("generate_pcm() returns correct output", {
 
 # MODEL FITTING -----------------------------------------------------------
 
-context("PCM, Steps: Model fitting")
-
 M <- 200
 warmup <- 100
 
@@ -168,8 +161,6 @@ test_that("fit_irtree() returns MCMC list", {
 
 
 # SUMMARIZING MODEL RESULTS -----------------------------------------------
-
-context("PCM, Steps: Summarizing fitted models")
 
 # res1b <- summarize_irtree_fit(res1)
 # res1c <- tidyup_irtree_fit(res1b)
@@ -232,8 +223,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 # })
 
 # PPC ---------------------------------------------------------------------
-
-context("PPC")
 
 res2d <- post_prob_irtree(res2b, iter = 20)
 res2e <- ppc_irtree(prob = res2d, fit = res2b)
