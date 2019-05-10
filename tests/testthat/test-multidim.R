@@ -1,12 +1,7 @@
-context("Multidimensional Models 'ext', '2012', 'shift', and 'steps'")
-
-# detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")
 
 # DATA GENERATION ---------------------------------------------------------
-
-context("Multidim: Data generation")
 
 N <- sample(10:20, 1)
 J <- sample(6:20, 1)
@@ -83,7 +78,6 @@ while (cond2 == FALSE) {
 
 suppressWarnings(rm(cond1, cond2))
 
-
 test_that("generate_irtree() returns correct output", {
     expect_is(dat1, "list")
     expect_is(dat2, "list")
@@ -100,8 +94,6 @@ test_that("generate_irtree() returns correct output", {
 })
 
 # MODEL FITTING -----------------------------------------------------------
-
-context("Multidim: Model fitting")
 
 M <- 200
 warmup <- 100
@@ -151,8 +143,6 @@ test_that("fit_irtree() returns MCMC list", {
 })
 
 # SUMMARIZING MODEL RESULTS -----------------------------------------------
-
-context("Multidim: Summarizing fitted models")
 
 res1b <- summarize_irtree_fit(res1)
 res1c <- tidyup_irtree_fit(res1b)
@@ -220,8 +210,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 })
 
 # PPC ---------------------------------------------------------------------
-
-context("PPC")
 
 res1d <- post_prob_irtree(res1b, iter = 20)
 res1e <- ppc_irtree(prob = res1d, fit = res1b)
@@ -334,8 +322,6 @@ test_that("print(ppc_irtree()) returns valid values", {
     expect_lte(min(subset(res7g, select = c(Obs, q025, q975, q16, q84, q50))), 1)
 })
 
-# context("multidim: Recovery")
-# 
 # test_that("Check that true model parameters are correctly recovered", {
 # 
 #     cor11 <- cor(dat4$theta, res7c$theta$Median)

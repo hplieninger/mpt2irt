@@ -6,7 +6,8 @@
 \usage{
 boeck_predict(fit_sum = NULL, theta = matrix(0, N, S2), betas = NULL,
   beta_ARS_extreme = NULL, measure = c("Median", "Mean"), S = NULL,
-  N = 1, J = NULL, revItem = NULL, traitItem = NULL, fitModel = NULL)
+  N = 1, J = NULL, revItem = NULL, traitItem = NULL,
+  fitModel = NULL)
 }
 \arguments{
 \item{fit_sum}{List. A summary of theta and beta parameters as returned from \code{\link{tidyup_irtree_fit}}.}

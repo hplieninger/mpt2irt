@@ -5,11 +5,11 @@
 \title{Fit an mpt2irt model}
 \usage{
 fit_irtree(X, revItem = NULL, traitItem = rep(1, ncol(X)), df = NULL,
-  V = NULL, fitModel = c("ext", "2012", "pcm", "steps", "shift", "ext2"),
-  model = NULL, fitMethod = c("stan", "jags"), outFormat = NULL,
-  startSmall = FALSE, M = 1000, warmup = 1000, n.chains = 2, thin = 1,
-  method = "parallel", add2varlist = NULL, cores = NULL,
-  summarise = FALSE, N2 = 2, ...)
+  V = NULL, fitModel = c("ext", "2012", "pcm", "steps", "shift",
+  "ext2"), model = NULL, fitMethod = c("stan", "jags"),
+  outFormat = NULL, startSmall = FALSE, M = 1000, warmup = 1000,
+  n.chains = 2, thin = 1, method = "parallel", add2varlist = NULL,
+  cores = NULL, summarise = FALSE, N2 = 2, ...)
 }
 \arguments{
 \item{X}{an N x J matrix of observed responses for categories 1...5 (use
@@ -98,7 +98,8 @@ explicitly request DIC using, for example, \code{add2varlist = c("deviance",
 
 The following models are currently implemented:
 \describe{
-  \item{\code{2012}}{This is the response style model proposed by Boeckenholt (2012) with parameters m (MRS), e (ERS), and t (target trait).}
+  \item{\code{2012}}{This is the response style model proposed by Boeckenholt
+  (2012) with parameters m (MRS), e (ERS), and t (target trait).}
   \item{\code{ext}}{This is the Acquiescence Model proposed by Plieninger and Heck
   (2018) with parameters m (MRS), e (ERS), a (ARS), and t (target trait). The
   e* parameter is constrained, namely, all item parameters are constrained to
@@ -162,9 +163,4 @@ res3 <- tidyup_irtree_fit(res2)
 names(res3)
 res3$plot
 }
-}
-\references{
-Plieninger, H., & Heck, D. W. (in press). A new model for
-  acquiescence at the interface of psychometrics and cognitive psychology.
-  Multivariate Behavioral Research. doi:10.1080/00273171.2018.1469966
 }

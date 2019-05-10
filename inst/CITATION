@@ -7,12 +7,14 @@ citEntry(entry = "Article",
   journal      = "Multivariate Behavioral Research",
   year         = "2018",
   doi          = "10.1080/00273171.2018.1469966",
-  note         = "Advance online publication",
+  volume       = "53",
+  number       = "5",
+  pages        = "633--654",
+  url          = "https://doi.org/10.1080/00273171.2018.1469966",
 
   textVersion  =
   paste("Plieninger, H., & Heck, D. W. (2018).",
         "A new model for acquiescence at the interface of psychometrics and cognitive psychology.",
-        "Multivariate Behavioral Research.",
-        "Advance online publication.",
+        "Multivariate Behavioral Research, 53(3), 633-654.",
         "doi:10.1080/00273171.2018.1469966")
 )

@@ -17,24 +17,23 @@
 #' @docType package
 #' @name mpt2irt-package
 #' @aliases mpt2irt
-#' @author Hansjoerg Plieninger & Daniel W. Heck
+#' @author Hansjörg Plieninger & Daniel W. Heck
 #' @references Plieninger, H., & Heck, D. W. (2018). A new model for
 #'   acquiescence at the interface of psychometrics and cognitive psychology.
-#'   Multivariate Behavioral Research. Advance online publication.
+#'   Multivariate Behavioral Research, 53(3), 633-654.
 #'   doi:10.1080/00273171.2018.1469966
-#' @useDynLib mpt2irt, .registration = TRUE 
-#' 
+#'   
+#' @useDynLib mpt2irt
+#'
 #' @import methods
-#' @importFrom rstan optimizing sampling vb constrain_pars extract
-#'   extract_sparse_parts get_posterior_mean stanc
-#' @import Rcpp
-#' @import rstantools
+#' @importFrom Rcpp evalCpp
+#' @importFrom rstan sampling
 #' @importFrom utils menu object.size sessionInfo setTxtProgressBar txtProgressBar tail combn
 #' @import stats
 #' @importFrom grDevices heat.colors
 #' @importFrom graphics abline barplot hist legend lines par plot
 #' @importFrom magrittr %>%
-#' 
+#'
 #' @examples 
 #' \dontrun{
 #' N <- 20

@@ -4,8 +4,9 @@
 \alias{tidyup_irtree_fit}
 \title{Summarize and tidy up a fitted model.}
 \usage{
-tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL, revItem = NULL,
-  traitItem = NULL, fitModel = NULL, fitMethod = NULL, plot = TRUE, ...)
+tidyup_irtree_fit(fit, S = NULL, N = NULL, J = NULL,
+  revItem = NULL, traitItem = NULL, fitModel = NULL,
+  fitMethod = NULL, plot = TRUE, ...)
 }
 \arguments{
 \item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from

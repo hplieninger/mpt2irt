@@ -4,8 +4,8 @@
 \alias{plot_Geweke}
 \title{Plot Geweke statistic.}
 \usage{
-plot_Geweke(fit, parameter = "beta", D = 1, frac1 = 0.1, frac2 = 0.5,
-  plot = TRUE, ...)
+plot_Geweke(fit, parameter = "beta", D = 1, frac1 = 0.1,
+  frac2 = 0.5, plot = TRUE, ...)
 }
 \arguments{
 \item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{tidyup_irtree_fit}}.

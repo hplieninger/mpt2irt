@@ -1,12 +1,7 @@
-context("Models: 'shift'")
-
-# detach(package:magrittr)
 library("mpt2irt")
 library("magrittr")
 
 # DATA GENERATION ---------------------------------------------------------
-
-context("shift: Data generation")
 
 N <- sample(10:20, 1)
 J <- sample(5:20, 1)
@@ -38,8 +33,6 @@ test_that("generate_irtree_shift() returns correct output", {
 
 # MODEL FITTING -----------------------------------------------------------
 
-context("shift: Model fitting")
-
 M <- 200
 warmup <- 200
 
@@ -62,8 +55,6 @@ test_that("fit_irtree() returns MCMC list", {
 })
 
 # SUMMARIZING MODEL RESULTS -----------------------------------------------
-
-context("shift: Summarizing fitted models")
 
 res1b <- summarize_irtree_fit(res1)
 res1c <- tidyup_irtree_fit(res1b)
@@ -95,8 +86,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 
 # RECOVERY ----------------------------------------------------------------
 
-# context("shift: Recovery")
-# 
 # test_that("Check that true model parameters are correctly recovered", {
 #     
 #     cor11 <- cor(dat1$theta, res1c$theta$Median)
@@ -119,8 +108,6 @@ test_that("plot_irtree() returns a valid ggplot", {
 # })
 
 # PPC ---------------------------------------------------------------------
-
-context("PPC")
 
 res1d <- post_prob_irtree(res1b, iter = 20)
 res1e <- ppc_irtree(prob = res1d, fit = res1b)

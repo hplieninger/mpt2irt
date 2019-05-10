@@ -5,13 +5,14 @@
 \title{Recovery simulation of mpt2irt models.}
 \usage{
 recovery_irtree(rrr = NULL, N = NULL, J = NULL, prop.rev = 0.5,
-  genModel = c("ext", "2012"), fitModel = c("ext", "2012", "pcm", "steps",
-  "shift", "ext2"), fitMethod = c("stan", "jags"), theta_vcov = NULL,
-  betas = NULL, beta_ARS_extreme = NULL, df = NULL, V = NULL, M = 500,
-  n.chains = 3, thin = 1, warmup = 500, method = "simple",
-  outFormat = NULL, startSmall = FALSE, df_vcov = 50, dir = NULL,
-  keep_mcmc = FALSE, savext_all = FALSE, savext_mcmc = TRUE,
-  add2varlist = c("deviance", "pd", "popt", "dic"), ...)
+  genModel = c("ext", "2012"), fitModel = c("ext", "2012", "pcm",
+  "steps", "shift", "ext2"), fitMethod = c("stan", "jags"),
+  theta_vcov = NULL, betas = NULL, beta_ARS_extreme = NULL,
+  df = NULL, V = NULL, M = 500, n.chains = 3, thin = 1,
+  warmup = 500, method = "simple", outFormat = NULL,
+  startSmall = FALSE, df_vcov = 50, dir = NULL, keep_mcmc = FALSE,
+  savext_all = FALSE, savext_mcmc = TRUE, add2varlist = c("deviance",
+  "pd", "popt", "dic"), ...)
 }
 \arguments{
 \item{rrr}{Sequence of integers (e.g., \code{1:100}) of length greater or

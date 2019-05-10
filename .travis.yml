@@ -1,75 +1,73 @@
-# R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
-
 language: R
 sudo: required
-r: release
 cache: packages
-
-r_build_args: --no-build-vignettes
-r_check_args: --no-build-vignettes
+r_check_args: --no-manual
 
 r_packages:
+  - rstan
+
+r_binary_packages:
   - devtools
+  - checkmate
+  - coda
+  - ggplot2
+  - magrittr
+  - MASS
+  - Rcpp
+  - rlang
+  - runjags
+  - truncnorm
+  - dplyr
+  - knitr
+  - numDeriv
+  - polycor
+  - purrr
+  - reshape2
+  - rmarkdown
+  - roxygen2
+  - shinystan
+  - testthat
 
-# r_github_packages:
-#   - hadley/rlang
-
-# r_binary_packages: 
-#   - assertthat
-#   - base64enc
-#   - bitops
-#   - brew
-#   - caTools
-#   - checkmate
-#   - colorspace
-#   - dplyr
-#   - dichromat
-#   - highr
-#   - htmltools
-#   - labeling
-#   - lattice
-#   - magrittr
-#   - markdown
-#   - MASS
-#   - munsell
-#   - numDeriv
-#   - praise
-#   - purrr
-#   - RColorBrewer
-#   - reshape2
-#   - rmarkdown
-#   - scales
-#   - testthat
-#   - tidyr
-#   - truncnorm
-#   - tibble
-
-env:
-  matrix: 
-    - CXX_OLEVEL=2 CXX=clang++
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      r: release
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+#     - os: linux
+#       dist: trusty
+#       r: devel
+#       r_binary_packages:
+#         - devtools
+#       addons:
+#         apt:
+#           sources:
+#             - ubuntu-toolchain-r-test
+#           packages:
+#             - g++-7
+#       env:
+#         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+#     - os: osx
+#       fortran: true
+#       osx_image: xcode10
+#       r: release
 
 before_install:
   - sudo apt-get install jags
   - mkdir -p ~/.R/
-  - echo "CXX = `R CMD config CXX`" >> ~/.R/Makevars
-  - echo "CXXFLAGS = `R CMD config CXXFLAGS` -pedantic -g0" >> ~/.R/Makevars 
-  - export CLANG_EXTRA_ARG=""
-  - if [[ $CXX = "clang++" ]] ;  then export CLANG_EXTRA_ARG=" -Qunused-arguments -fcolor-diagnostics " ; fi
-  - sed -i.bak "s/ g++/ ${CXX}${CLANG_EXTRA_ARG}/" ~/.R/Makevars
-  - sed -i.bak "s/O[0-3]/O$CXX_OLEVEL/" ~/.R/Makevars
-
-script: 
-  - |
-    travis_wait R CMD build .
-    travis_wait 60 R CMD check mpt2irt*tar.gz
-
-after_script:
-  - tar -ztvf mpt2irt_*.tar.gz
-  - echo ${NOT_CRAN}
-
-after_success:
-  - travis_wait 40 tar -C .. -xf $PKG_TARBALL
-  - travis_wait 40 Rscript -e 'covr::codecov()'
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo "CXX14 = g++-7 -fPIC -flto=2" >> ~/.R/Makevars; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo "CXX14FLAGS = -mtune=native -march=native -Wno-unused-variable -Wno-unused-function -Wno-unused-local-typedefs -Wno-ignored-attributes -Wno-deprecated-declarations -Wno-attributes -O3" >> ~/.R/Makevars; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then echo "CXX14 = clang++ -arch x86_64 -ftemplate-depth-256" >> ~/.R/Makevars; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then echo "CXX14FLAGS = -O3 -mtune=native -march=native -Wno-unused-variable -Wno-unused-function  -Wno-unknown-pragmas" >> ~/.R/Makevars; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then echo "CC = clang" >> ~/.R/Makevars; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo tlmgr install inconsolata; fi
 
 after_failure:
   - cat mpt2irt.Rcheck/00*

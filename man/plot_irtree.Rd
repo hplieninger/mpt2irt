@@ -5,8 +5,8 @@
 \title{Plot item parameters of an mpt2irt model.}
 \usage{
 plot_irtree(fit, fitModel = NULL, revItem = NULL, traitItem = NULL,
-  return_data = FALSE, tt_names = NULL, measure = c("Median", "Mean"),
-  rs_names = NULL)
+  return_data = FALSE, tt_names = NULL, measure = c("Median",
+  "Mean"), rs_names = NULL)
 }
 \arguments{
 \item{fit}{a fitted object from \code{\link{fit_irtree}} or preferably from \code{\link{tidyup_irtree_fit}}.

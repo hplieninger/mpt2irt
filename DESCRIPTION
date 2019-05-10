@@ -1,9 +1,9 @@
 Type: Package
 Package: mpt2irt
 Title: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles
-Version: 0.1.4
-Date: 2018-08-02
-Authors@R: c(person("Hansjoerg", "Plieninger", email = "plieninger@uni-mannheim.de", role = "cre"),
+Version: 0.2.0
+Date: 2019-05-10
+Authors@R: c(person("Hansjörg", "Plieninger", email = "plieninger@uni-mannheim.de", role = "cre"),
              person("Daniel W.", "Heck", email = "heck@uni-mannheim.de", role = "aut"))
 Description: Multinomial processing tree (MPT) models are used to differentiate
     between different cognitive processes in categorical data. Those can be
@@ -14,23 +14,28 @@ Description: Multinomial processing tree (MPT) models are used to differentiate
     responding (ERS), and the target trait. This package allows to fit an
     extension of this Boeckenholt Model to acquiescence (ARS). It makes use of
     Bayesian hierarchical models requiring Stan or JAGS.
+URL: https://github.com/hplieninger/mpt2irt/
+BugReports: https://github.com/hplieninger/mpt2irt/issues
 License: GPL-3
-Depends: 
-    methods,
-    R (>= 3.0.2),
-    Rcpp (>= 0.12.0)
+Encoding: UTF-8
+LazyData: true
+Biarch: true
+Depends:
+    R (>= 3.4.0)
 Imports: 
     checkmate,
     coda,
     ggplot2,
     magrittr,
     MASS,
+    methods,
     parallel,
+    Rcpp (>= 1.0.1),
     rlang,
-    rstan (>= 2.14.1),
-    rstantools (>= 1.1.0),
+    rstan (>= 2.18.1),
     runjags,
-    truncnorm
+    truncnorm,
+    mpt2irtStan
 Suggests: 
     dplyr,
     knitr (>= 1.15.1),
@@ -41,16 +46,12 @@ Suggests:
     rmarkdown,
     roxygen2,
     shinystan,
-    testthat (>= 1.0.2),
-    tibble,
-    tidyr
+    testthat (>= 1.0.2)
 LinkingTo: 
-    BH (>= 1.62.0),
-    Rcpp (>=
-    0.12.0),
-    RcppEigen,
-    rstan (>= 2.14.1),
-    StanHeaders (>= 2.14.0)
-LazyData: true
+    Rcpp (>= 1.0.1),
+    rstan (>= 2.18.1),
+    StanHeaders (>= 2.18.0)
+Remotes: hplieninger/mpt2irtStan
 NeedsCompilation: yes
-RoxygenNote: 6.1.0
+SystemRequirements: JAGS
+RoxygenNote: 6.1.1

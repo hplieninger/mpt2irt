@@ -4,8 +4,8 @@
 \alias{plot_responses}
 \title{Plot observed frequencies.}
 \usage{
-plot_responses(X, revItem = rep(0, ncol(X)), traitItem = rep(1, ncol(X)),
-  points = 5, ...)
+plot_responses(X, revItem = rep(0, ncol(X)), traitItem = rep(1,
+  ncol(X)), points = 5, ...)
 }
 \arguments{
 \item{X}{an N x J matrix of observed responses for categories 1...5 (use
@@ -30,9 +30,11 @@ This is especially helpful to judge whether simulated data are reasonable
 (i.e., unimodal etc.).
 }
 \examples{
-N <- 20
-J <- 10
-betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
-dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
-plot_responses(dat$X, revItem = dat$revItem, traitItem = dat$traitItem)
+\dontrun{
+  N <- 20
+  J <- 10
+  betas <- cbind(rnorm(J, .5), rnorm(J, .5), rnorm(J, 1.5), rnorm(J, 0))
+  dat <- generate_irtree_ext(N = N, J = J, betas = betas, beta_ARS_extreme = .5)
+  plot_responses(dat$X, revItem = dat$revItem, traitItem = dat$traitItem)
+}
 }
