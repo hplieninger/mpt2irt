@@ -62,10 +62,6 @@
 #'  }
 #' }
 #' 
-#' @references Plieninger, H., & Heck, D. W. (in press). A new model for
-#'   acquiescence at the interface of psychometrics and cognitive psychology.
-#'   Multivariate Behavioral Research. doi:10.1080/00273171.2018.1469966
-#' 
 #' @param model If \code{NULL} (the usual case), this is determined by
 #'   \code{fitModel}. Otherwise, this is passed to \code{\link[rstan]{sampling}}
 #'   (for Stan) or \code{\link[runjags]{run.jags}} (for JAGS).
