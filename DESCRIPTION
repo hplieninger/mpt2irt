@@ -2,7 +2,7 @@ Type: Package
 Package: mpt2irt
 Title: Bringing Multinomial Processing Tree Models To Item Response Theory To Investigate Response Styles
 Version: 0.2.0
-Date: 2019-05-08
+Date: 2019-05-10
 Authors@R: c(person("Hansjörg", "Plieninger", email = "plieninger@uni-mannheim.de", role = "cre"),
              person("Daniel W.", "Heck", email = "heck@uni-mannheim.de", role = "aut"))
 Description: Multinomial processing tree (MPT) models are used to differentiate
